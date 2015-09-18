@@ -1,0 +1,20 @@
+# troop type,width,depth
+Infantry,20,20
+Infantry,25,25
+Cavalry,25,50
+Large Infantry,40,40
+Large Infantry,50,50
+Large Cavalry,50,50
+Large Cavalry,50,100
+War Engine,50,50
+Monster,50,50
+Monster,75,75
+Hero(Inf),20,20
+Hero(Inf),25,25
+Hero(Cav),25,50
+Hero(Large Inf),40,40
+Hero(Large Inf),50,50
+Hero(Large Cav),50,50
+Hero(Large Cav),50,100
+Hero(Monster),50,50
+Hero(Monster),75,75

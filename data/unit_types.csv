@@ -1,0 +1,20 @@
+# troop type,unit size,width,depth
+Infantry,Troop,5,2
+Infantry,Regiment,5,4
+Infantry,Horde,10,4
+Infantry,Legion,10,6
+Cavalry,Troop,5,1
+Cavalry,Regiment,5,2
+Cavalry,Horde,10,2
+Large Infantry,Regiment,3,1
+Large Infantry,Horde,3,2
+Large Infantry,Legion,6,2
+Large Cavalry,Regiment,3,1
+Large Cavalry,Horde,3,2
+Monster,Individual,1,1
+War Engine,Individual,1,1
+Hero(Inf),Individual,1,1
+Hero(Cav),Individual,1,1
+Hero(Large Inf),Individual,1,1
+Hero(Large Cav),Individual,1,1
+Hero(Monster),Individual,1,1
