@@ -1,8 +1,15 @@
+# -*- coding: utf-8 -*-
+
+
+### ARC TEMPLATES BESSER ALS DIREKT ZU DEN UNITS ZUGEHOERIG DEFINIEREN!!!
+### SO KOENNEN SIE FUER JEDE UNIT SEPARAT GETOGGLET WERDEN UND BEWEGEN SICH AUCH GLEICH MIT!
+
+
 from PySide import QtGui, QtCore
 from PySide.QtCore import Qt
 
 from constants import *
-from util import dot2d
+from util import dot2d, len2d
 
 import math 
 
@@ -32,6 +39,8 @@ class BattlefieldScene(QtGui.QGraphicsScene):
    
    def __init__(self):
       super(BattlefieldScene, self).__init__()
+      
+      self.mouseMode = MOUSE_DEFAULT
       
       margin = 4
       tableSize = (72,48)
@@ -69,12 +78,14 @@ class BattlefieldScene(QtGui.QGraphicsScene):
       self.distCounter.setScale(0.15)
       self.distCounter.setVisible(False)
       
+      # add an empty list for sight/facing arc templates
+      self.showArcs = False
+      
       # add test unit
       #testUnit = RectBaseItem(20. / 2.54, 8. / 2.54)
       testUnit = RectBaseUnit("Sea Guard Horde (40)", (200 * MM_TO_IN, 80 * MM_TO_IN))
       testUnit.setPos(36, 38)
       self.addItem(testUnit)
-      
       
       testUnit2 = RectBaseUnit("Ax Horde (40)", (250 * MM_TO_IN, 100 * MM_TO_IN))
       testUnit2.setPos(32, 7.5)
@@ -87,17 +98,30 @@ class BattlefieldScene(QtGui.QGraphicsScene):
     
    def InitConnections(self):
       self.selectionChanged.connect(self.HandleSelectionChanged)
+   
+   def AbortMouseAction(self):
+      self.mouseMode = MOUSE_DEFAULT
+      self.ClearDistCounter()
+      self.ResetStatusMessage()
           
    def HandleSelectionChanged(self):
+      self.ResetStatusMessage()
+      
+#       # clear arc templates
+#       for itm in self.arcTemplates:
+#          self.removeItem(itm)
+#       self.arcTemplates = []
+      
       if len(self.selectedItems())>1:
          raise BaseException("Why is there more than one item selected?!")
       
       elif len(self.selectedItems())==1:
-         sel = self.selectedItems()[0]
-         self.siStatusMessage.emit("%s selected." % sel.name)
-         
-      else:
-         self.siStatusMessage.emit("")
+         pass
+#          sel = self.selectedItems()[0]
+#          
+#          template = sel.GetFrontArcTemplate()
+#          self.arcTemplates.append(template)
+#          self.addItem(template)
    
    def ClearDistCounter(self):
       self.distCounter.setPlainText("")
@@ -107,6 +131,47 @@ class BattlefieldScene(QtGui.QGraphicsScene):
       self.distCounter.setPlainText(text)
       self.distCounter.setPos(pos)
       self.distCounter.setVisible(True)
+      
+   def ResetStatusMessage(self):
+      if len(self.selectedItems())==1:
+         self.siStatusMessage.emit("%s selected." % self.selectedItems()[0].name)
+      else:
+         self.siStatusMessage.emit("Ready.")
+            
+   def mouseMoveEvent(self, e):
+      if self.mouseMode == MOUSE_ROTATE_UNIT:
+         e.accept()
+         if len(self.selectedItems()) != 1: raise BaseException("Invalid number of selected units!")
+         else:
+            sel = self.selectedItems()[0]
+            sel.RotateToPoint(e.scenePos())
+            if sel.movementTemplate is not None: # RectBaseUnit instance with its own movement template
+               angle = sel.movementTemplate.rotation() - sel.rotation()
+            else: # MovementTemplate itself is selected
+               angle = sel.rotation() - sel.parentUnit.rotation()
+            self.SetDistCounter(u"%.1f °" % angle, self.selectedItems()[0].scenePos())
+
+      else:
+         super(BattlefieldScene, self).mouseMoveEvent(e)
+      
+   def mousePressEvent(self, e):    
+      if self.mouseMode == MOUSE_ROTATE_UNIT and e.button() == Qt.LeftButton:
+         e.accept()
+         self.mouseMode = MOUSE_DEFAULT
+         self.siStatusMessage.emit("%s selected." % self.selectedItems()[0].name)
+         
+      elif self.mouseMode == MOUSE_ALIGN_TO and e.button() == Qt.LeftButton and self.itemAt(e.scenePos()) is not None:
+         target = self.itemAt(e.scenePos())
+         self.selectedItems()[0].AlignToUnitFront(target)
+         
+         self.AbortMouseAction()
+         
+      elif self.mouseMode == MOUSE_ALIGN_TO and (self.itemAt(e.scenePos()) is None or e.button() == Qt.RightButton):
+         self.AbortMouseAction()
+         super(BattlefieldScene, self).mousePressEvent(e)
+         
+      else:
+         super(BattlefieldScene, self).mousePressEvent(e)
       
       
 class BattlefieldView(QtGui.QGraphicsView):
@@ -185,15 +250,19 @@ class BattlefieldView(QtGui.QGraphicsView):
 class RectBaseUnit(QtGui.QGraphicsRectItem):
    DefaultColor = QtGui.QColor(34,134,219)
    
-   def __init__(self, name="Unnamed unit", baseSize=(100*MM_TO_IN, 80*MM_TO_IN), parent=None):
+   def __init__(self, name="Unnamed unit", baseSize=(100*MM_TO_IN, 80*MM_TO_IN), formation=None, parent=None):
       super(RectBaseUnit, self).__init__(parent)
       
       self.name = name
+      self.formation = formation
       
       self.setFlags(QtGui.QGraphicsItem.ItemIsSelectable | QtGui.QGraphicsItem.ItemSendsGeometryChanges) # | QtGui.QGraphicsItem.ItemIsMovable 
       self.setToolTip(name)
       
+      # child templates
       self.movementTemplate = None
+      self.frontArcTemplate = None
+      
       self.movementInitiated = False
       
       # draw
@@ -208,6 +277,15 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
       elif w != 0 or h != 0:
          raise ValueError("Must initialize RectBaseItem either without width and height or with both!")
       
+   def AlignToUnitFront(self, unit):
+      self.setRotation(unit.rotation()+180)
+   def AlignToUnitRear(self, unit):
+      self.setRotation(unit.rotation())
+   def AlignToUnitLeftFlank(self, unit):
+      self.setRotation(unit.rotation()+90)
+   def AlignToUnitRearFlank(self, unit):
+      self.setRotation(unit.rotation()-90)
+      
    def CancelMovement(self):
       self.movementInitiated = False
       self.scene().distCounter.setVisible(False)
@@ -219,6 +297,7 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
    def FinalizeMovement(self):
       if self.movementTemplate:
          self.setPos(self.movementTemplate.scenePos())
+         self.setRotation(self.movementTemplate.rotation())
          self.CancelMovement()
       
    def GetNormalVectorFront(self):
@@ -235,11 +314,24 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
       
       return normal
    
+   def GetNormalVectorSide(self):
+      # normal vector is always (-1, 0) at center location (0, 0) in local coordinates
+      normalDir = QtCore.QPointF(-1, 0)
+      normalLoc = QtCore.QPointF(0, 0)
+      
+      # map to scene
+      scNormalDir = self.mapToScene(normalDir)
+      scNormalLoc = self.mapToScene(normalLoc)
+      
+      # return in scene coordinates
+      normal = QtCore.QLineF( scNormalLoc, scNormalDir )
+      
+      return normal
+   
    def HandleMovementEvent(self, event, evtSource):
       e = event
       if (QtCore.QLineF(e.screenPos(), e.buttonDownScreenPos(Qt.LeftButton)).length() < QtGui.QApplication.startDragDistance()):
             return
-      
       
       # initiate movement
       self.SpawnMovementTemplate()
@@ -252,7 +344,7 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
       
       # emit status message
       if not self.movementTemplate.restrictedMovementAxis: self.scene().siStatusMessage.emit("Moving %s." % self.name)
-      else: self.scene().siStatusMessage.emit("Moving %s FORWARD." % self.name)
+      else: self.scene().siStatusMessage.emit("Moving %s %s." % (self.name, self.movementTemplate.restrictedMovementAxis.name))
       
       # handle movement event itself
       
@@ -263,19 +355,42 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
       # or, handle movement restricted to axis
       else: # orthogonal projection point x to axis u: P(x) = x dot u / u dot u * vec(u) 
          # vector from starting point to end point of movement axis
-         uVec = QtCore.QPointF( self.movementTemplate.restrictedMovementAxis.x2() - self.movementTemplate.restrictedMovementAxis.x1(),
-                                self.movementTemplate.restrictedMovementAxis.y2() - self.movementTemplate.restrictedMovementAxis.y1() )
-         xVec = e.scenePos() - self.movementTemplate.restrictedMovementAxis.p1()
+         uVec = QtCore.QPointF( self.movementTemplate.restrictedMovementAxis.axis.x2() - self.movementTemplate.restrictedMovementAxis.axis.x1(),
+                                self.movementTemplate.restrictedMovementAxis.axis.y2() - self.movementTemplate.restrictedMovementAxis.axis.y1() )
+         xVec = e.scenePos() - self.movementTemplate.restrictedMovementAxis.axis.p1()
          
          scalingFactor = dot2d(xVec, uVec) / dot2d(uVec, uVec)
          uVec *= scalingFactor
          
-         self.movementTemplate.setPos( uVec + self.movementTemplate.restrictedMovementAxis.p1() )
+         self.movementTemplate.setPos( uVec + self.movementTemplate.restrictedMovementAxis.axis.p1() )
       
       # update distance counter
       d = self.movementTemplate.scenePos() - self.scenePos()
       dist = math.sqrt(d.x()**2 + d.y()**2)
       self.scene().SetDistCounter("%.1f\"" % dist, self.movementTemplate.scenePos())
+      
+   def RotateToPoint(self, point):
+      self.SpawnMovementTemplate()
+      vecToPoint = point - self.movementTemplate.scenePos()
+      angle = (180. / math.pi) * math.atan2(vecToPoint.x(), -vecToPoint.y())
+      
+      self.movementTemplate.setRotation(angle)
+         
+   def SpawnFrontArcTemplate(self):
+      if self.frontArcTemplate is None:
+         topLeft = self.rect().topLeft()
+         topRight = self.rect().topRight()
+         
+         leftDir = self.rect().topLeft() + QtCore.QPointF(-10,-10)
+         rightDir = self.rect().topRight() + QtCore.QPointF(10, -10)
+         
+         arc = QtGui.QGraphicsPolygonItem( [topLeft, topRight, rightDir, leftDir] )
+         arc.setPen(Qt.NoPen)
+         arc.setBrush(QtGui.QColor(255,255,255,100))
+         arc.setParentItem(self)
+         arc.setVisible(False)
+         
+         self.frontArcTemplate = arc
 
    def SpawnMovementTemplate(self):
       # make sure that a movement template for this unit has already been created
@@ -298,9 +413,10 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
       return QtGui.QGraphicsItem.itemChange(self, change, value)
       
    def paint(self, painter, option, widget):
+      # draw normal rect
       super(RectBaseUnit, self).paint(painter, option, widget)
       
-      # determine triangle coordinates
+      # determine front facing triangle coordinates
       triW, triH = 4, 0.8
       if triW > self.rect().width():
          triW = self.rect().width()
@@ -317,21 +433,71 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
       painter.setPen(Qt.NoPen)
       
       painter.drawConvexPolygon(triPoints)
+      
+      # if a formation is set, lightly draw individual bases
+      if self.formation:
+         painter.setPen(QtGui.QColor(0,0,0,120))
+         
+         dx = 1.* self.rect().width() / self.formation[0]
+         for j in range(self.formation[0]-1):
+             painter.drawLine(QtCore.QLineF(self.rect().left()+(j+1)*dx, self.rect().top(), self.rect().left()+(j+1)*dx, self.rect().bottom()))
+         
+         dy = 1.* self.rect().height() / self.formation[1]
+         for i in range(self.formation[1]-1):
+             painter.drawLine(QtCore.QLineF(self.rect().left(), self.rect().top()+(i+1)*dy, self.rect().right(), self.rect().top()+(i+1)*dy))
    
    def keyPressEvent(self, e):
       if e.key() == Qt.Key_R: # rotate
-         self.SpawnMovementTemplate()
-         self.SpawnRotator()
+         e.accept()
+         if self.scene().mouseMode == MOUSE_ROTATE_UNIT:
+            self.scene().mouseMode == MOUSE_DEFAULT
+            self.scene().siStatusMessage.emit("%s selected." % self.name)
+         
+         else:
+            self.scene().mouseMode = MOUSE_ROTATE_UNIT
+            self.SpawnMovementTemplate()
+            #self.SpawnRotator()
+            self.scene().siStatusMessage.emit("Rotating %s." % self.name)
+            
+      elif e.key() == Qt.Key_N: # align to
+         e.accept()
+         if self.scene().mouseMode == MOUSE_ALIGN_TO:
+            self.scene().mouseMode == MOUSE_DEFAULT
+            self.scene().ResetStatusMessage()
+            
+         else:
+            self.scene().mouseMode = MOUSE_ALIGN_TO
+            self.scene().siStatusMessage.emit("Aligning %s." % self.name)
       
-      if e.key() == Qt.Key_F and self.movementInitiated: # restrict to forward axis
+      elif e.key() == Qt.Key_A: # toggle arc template
+         e.accept()
+         self.SpawnFrontArcTemplate()
+         self.frontArcTemplate.setVisible(not self.frontArcTemplate.isVisible())
+      
+      elif e.key() == Qt.Key_F and self.movementInitiated: # restrict to forward axis
+         e.accept()
          self.SpawnMovementTemplate()
          
-         if not self.movementTemplate.restrictedMovementAxis:
+         if not self.movementTemplate.restrictedMovementAxis or self.movementTemplate.restrictedMovementAxis.name != "FORWARD":
             self.scene().siStatusMessage.emit("Moving %s FORWARD." % self.name)
-            self.movementTemplate.restrictedMovementAxis = self.GetNormalVectorFront()
+            self.movementTemplate.restrictedMovementAxis = RestrictedMovementAxis("FORWARD", self.GetNormalVectorFront())
          else:
             self.scene().siStatusMessage.emit("Moving %s." % self.name)
             self.movementTemplate.restrictedMovementAxis = None
+      
+      elif e.key() == Qt.Key_S and self.movementInitiated: # restrict to sideways axis
+         e.accept()
+         self.SpawnMovementTemplate()
+         
+         if not self.movementTemplate.restrictedMovementAxis or self.movementTemplate.restrictedMovementAxis.name != "SIDEWAYS":
+            self.scene().siStatusMessage.emit("Moving %s SIDEWAYS." % self.name)
+            self.movementTemplate.restrictedMovementAxis = RestrictedMovementAxis("SIDEWAYS", self.GetNormalVectorSide())
+         else:
+            self.scene().siStatusMessage.emit("Moving %s." % self.name)
+            self.movementTemplate.restrictedMovementAxis = None
+            
+      else:
+         super(RectBaseUnit, self).keyPressEvent(e)
    
    def mousePressEvent(self, e):
       if e.button() == Qt.LeftButton:
@@ -359,8 +525,12 @@ class MovementTemplateContextMenu(QtGui.QMenu):
       
       self.finalizeAction = self.addAction("Finalize")
       self.cancelAction = self.addAction("Cancel")
-      
-        
+
+
+class RestrictedMovementAxis:
+   def __init__(self, name="", axis = QtCore.QLineF(0.,0.,0.,1.)):
+      self.name = name
+      self.axis = axis
          
 class RectBaseMovementTemplate(RectBaseUnit):
    Alpha = 145
@@ -390,6 +560,15 @@ class RectBaseMovementTemplate(RectBaseUnit):
       self.contextMenu = MovementTemplateContextMenu()
       self.contextMenu.finalizeAction.triggered.connect(self.parentUnit.FinalizeMovement)
       self.contextMenu.cancelAction.triggered.connect(self.parentUnit.CancelMovement)
+      
+   def RotateToPoint(self, point):
+      vecToPoint = point - self.scenePos()
+      angle = (180. / math.pi) * math.atan2(vecToPoint.x(), -vecToPoint.y())
+      self.setRotation(angle)
+      
+   def SpawnMovementTemplate(self):
+      # don't spawn a child template
+      pass
       
    def contextMenuEvent(self, e):
       self.contextMenu.exec_(e.screenPos())
