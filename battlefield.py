@@ -41,13 +41,12 @@ class MarkerContextMenu(QtGui.QMenu):
 #===============================================================================
 # MarkerItem
 #   Container class derived from QGraphicsPixmapItem, representing a marker
-#   attached to a unit on the battlefield.
+#   which must be attached to a unit on the battlefield.
 #===============================================================================
 class MarkerItem(QtGui.QGraphicsPixmapItem):
-   siStatusMessage = QtCore.Signal(str)
    MarkerSize = (2., 2.)
    
-   def __init__(self, markerType, parent=None):
+   def __init__(self, markerType, parent):
       super(MarkerItem, self).__init__(markerType.pixmap, parent)
       
       self.name = markerType.name
@@ -68,6 +67,8 @@ class MarkerItem(QtGui.QGraphicsPixmapItem):
          self.countText.moveBy(35,0)
          self.countText.scale(10,10)
          
+      self.scene().siLogEvent.emit("Added %s marker to %s." % (self.name, self.parentItem().name))
+         
    # property: count
    def getCount(self):
       return self._count
@@ -84,25 +85,28 @@ class MarkerItem(QtGui.QGraphicsPixmapItem):
       
    def Increase(self):
       self.count += 1
-      # self.siStatusMessage.emit("%s's %s marker increased by 1 to %i total." % (self.parentItem().name, self.name, self.count))
-      ### Warum geht .emit() nicht ???
+      self.scene().siLogEvent.emit("%s's %s marker increased by 1 to %i total." % (self.parentItem().name, self.name, self.count))
       print "%s's %s marker increased by 1 to %i total." % (self.parentItem().name, self.name, self.count)
       
    def Decrease(self):
       self.count -= 1
+      self.scene().siLogEvent.emit("%s's %s marker decreased by 1 to %i total." % (self.parentItem().name, self.name, self.count))
       
    def ModifyQuantity(self):
       increment, accepted = QtGui.QInputDialog.getInt(self.window(), self.name, "Modify by (can be negative):", 0, -999, 999, 1)
       if accepted:
          self.count += increment
+         self.scene().siLogEvent.emit("%s's %s marker modified by %i to %i total." % (self.parentItem().name, self.name, increment, self.count))
       
    def SetQuantity(self):
       newCount, accepted = QtGui.QInputDialog.getInt(self.window(), self.name, "New value:", self.count, 0, 999, 1)
       if accepted:
+         self.scene().siLogEvent.emit("%s's %s marker set to %i total (previously %i)." % (self.parentItem().name, self.name, newCount, self.count))
          self.count = newCount
    
    def Remove(self):
       self.parentItem().RemoveMarker(self.name)
+      self.scene().siLogEvent.emit("Removed %s marker from %s." % (self.name, self.parentItem().name))
 
 #===============================================================================
 # DialDialog
@@ -140,6 +144,7 @@ class DialDialog(QtGui.QDialog):
 #===============================================================================
 class BattlefieldScene(QtGui.QGraphicsScene):
    siStatusMessage = QtCore.Signal(str)
+   siLogEvent = QtCore.Signal(str)
    
    def __init__(self):
       super(BattlefieldScene, self).__init__()
@@ -258,7 +263,7 @@ class BattlefieldScene(QtGui.QGraphicsScene):
                angle = sel.movementTemplate.rotation() - sel.rotation()
             else: # MovementTemplate itself is selected
                angle = sel.rotation() - sel.parentUnit.rotation()
-            self.SetDistCounter(u"%.1f °" % angle, self.selectedItems()[0].scenePos())
+            self.SetDistCounter(u"%.0f°" % math.fabs(angle), self.selectedItems()[0].scenePos())
 
       else:
          super(BattlefieldScene, self).mouseMoveEvent(e)
@@ -275,7 +280,9 @@ class BattlefieldScene(QtGui.QGraphicsScene):
          
       elif self.mouseMode == MOUSE_ALIGN_TO and e.button() == Qt.LeftButton and self.itemAt(e.scenePos()) is not None:
          target = self.itemAt(e.scenePos())
-         self.selectedItems()[0].AlignToUnitFront(target)
+         
+         if type(target) == RectBaseUnit and target != self.selectedItems()[0]: # don't align to non-unit objects or to self
+            self.selectedItems()[0].AlignToUnitFront(target)
          
          self.AbortMouseAction()
          
@@ -410,9 +417,10 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
       
       else:
          rank = len(self.markers.keys())
-         item = MarkerItem(marker)
+         item = MarkerItem(marker, self) # this implicitly adds the marker graphics item to the scene as child of the RectBaseUnit item
+         
+         # BUG: If you add two markers (ranks 0 and 1), remove the first one, and add it again, both markers are at rank 1. 
          item.rank = rank
-         item.setParentItem(self) # this implicitly adds the marker graphics item to the scene as child of the RectBaseUnit item
          item.moveBy(1+2*rank, 1)
          
          self.markers[markerName] = item
@@ -436,6 +444,52 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
          
    def FinalizeMovement(self):
       if self.movementTemplate:
+         # determine distance (center to center)
+         d = self.movementTemplate.scenePos() - self.scenePos()
+         dist = math.sqrt(d.x()**2 + d.y()**2)
+         
+         moveType = "freely"
+         
+         # determine which type of movement was executed (if any)
+         if self.movementTemplate.restrictedMovementAxis:
+            ax = self.movementTemplate.restrictedMovementAxis
+            moveType = ax.name
+            
+            # determine movement distance along axis
+            uVec = QtCore.QPointF( self.movementTemplate.restrictedMovementAxis.axis.x2() - self.movementTemplate.restrictedMovementAxis.axis.x1(),
+                                self.movementTemplate.restrictedMovementAxis.axis.y2() - self.movementTemplate.restrictedMovementAxis.axis.y1() )
+            xVec = self.movementTemplate.scenePos() - self.movementTemplate.restrictedMovementAxis.axis.p1()
+            dist = dot2d(xVec, uVec) / dot2d(uVec, uVec)
+            
+            if moveType == "FORWARD" and dist<0:
+               moveType = "BACKWARD"
+               dist = -dist
+            elif moveType == "SIDEWAYS":
+               if dist > 0: moveType = "to the left"
+               elif dist < 0:
+                  moveType = "to the right"
+                  dist = -dist
+                  
+         moveType = moveType.lower()
+         
+         # determine rotation
+         angle = self.movementTemplate.rotation() - self.rotation()
+         rotType = "right"
+         if angle<0:
+            angle = -angle
+            rotType = "left"
+         
+         eps = 0.05
+         
+         # print output, depending on whether the unit moved, rotated, or both
+         if(dist > eps and angle<=eps):
+            self.scene().siLogEvent.emit("%s moved %.1f\" %s." % (self.name, dist, moveType))
+         elif(angle > eps and dist<=eps):
+            self.scene().siLogEvent.emit("%s rotated %.0f&deg; to the %s." % (self.name, angle, rotType))
+         elif(angle > eps and dist > eps):
+            self.scene().siLogEvent.emit("%s moved %.1f\" %s and rotated %.0f&deg; to the %s." % (self.name, dist, moveType, angle, rotType))
+         
+         # finalize movement
          self.setPos(self.movementTemplate.scenePos())
          self.setRotation(self.movementTemplate.rotation())
          self.CancelMovement()
@@ -508,6 +562,15 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
       d = self.movementTemplate.scenePos() - self.scenePos()
       dist = math.sqrt(d.x()**2 + d.y()**2)
       self.scene().SetDistCounter("%.1f\"" % dist, self.movementTemplate.scenePos())
+      
+   def InitAlignTo(self):
+      if self.scene().mouseMode == MOUSE_ALIGN_TO:
+         self.scene().mouseMode == MOUSE_DEFAULT
+         self.scene().ResetStatusMessage()
+
+      else:
+         self.scene().mouseMode = MOUSE_ALIGN_TO
+         self.scene().siStatusMessage.emit("Aligning %s." % self.name)
       
    def InitRotation(self):
       if self.scene().mouseMode == MOUSE_ROTATE_UNIT:
@@ -613,13 +676,7 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
             
       elif e.key() == Qt.Key_N: # align to
          e.accept()
-         if self.scene().mouseMode == MOUSE_ALIGN_TO:
-            self.scene().mouseMode == MOUSE_DEFAULT
-            self.scene().ResetStatusMessage()
-            
-         else:
-            self.scene().mouseMode = MOUSE_ALIGN_TO
-            self.scene().siStatusMessage.emit("Aligning %s." % self.name)
+         self.InitAlignTo()
       
       elif e.key() == Qt.Key_A: # toggle arc template
          e.accept()
@@ -663,7 +720,8 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
          self.setCursor(Qt.ArrowCursor)
          self.scene().siStatusMessage.emit("%s selected." % self.name)
          self.movementInitiated = False
-         if self.movementTemplate: self.movementTemplate.restrictedMovementAxis = None
+         # Don't remove restricted axis just when releasing the mouse for a while
+         #if self.movementTemplate: self.movementTemplate.restrictedMovementAxis = None
          
       super(RectBaseUnit, self).mouseReleaseEvent(e)
        
@@ -691,6 +749,9 @@ class UnitContextMenu(QtGui.QMenu):
       rot = self.addAction("Rotate")
       rot.triggered.connect(self.parentUnit.InitRotation)
       
+      # Align to
+      algn = self.addAction("Align to")
+      algn.triggered.connect(self.parentUnit.InitAlignTo)      
          
 
 class MovementTemplateContextMenu(QtGui.QMenu):
@@ -745,6 +806,7 @@ class RectBaseMovementTemplate(RectBaseUnit):
       pass
       
    def contextMenuEvent(self, e):
+      self.setSelected(True)
       self.contextMenu.exec_(e.screenPos())
       
    def keyPressEvent(self, e):
@@ -767,5 +829,5 @@ class RectBaseMovementTemplate(RectBaseUnit):
    def mouseReleaseEvent(self, e):
       super(RectBaseMovementTemplate, self).mouseReleaseEvent(e)
       
-      if e.button() == Qt.LeftButton:
-         self.restrictedMovementAxis = None
+      #if e.button() == Qt.LeftButton:
+      #   self.restrictedMovementAxis = None

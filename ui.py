@@ -34,6 +34,7 @@ class MainWindow(QtGui.QMainWindow):
       
    def InitConnections(self):
       self.centralWidget().battlefieldView.scene().siStatusMessage.connect(self.HandleStatusMessage)
+      self.centralWidget().battlefieldView.scene().siLogEvent.connect(self.centralWidget().chatWidget.AddHistoryItem)
       
    def HandleStatusMessage(self, msg):
       if len(msg)>0:
