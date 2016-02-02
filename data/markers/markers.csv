@@ -1,0 +1,3 @@
+# marker name,file,bgr,bgg,bgb,bga,cumulative
+Damage,dmg_marker.png,0,0,0,255,yes
+Wavering,wavering.png,0,0,0,0,no

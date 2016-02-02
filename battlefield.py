@@ -13,6 +13,102 @@ from util import dot2d, len2d
 
 import math 
 
+#===============================================================================
+# MarkerContextMenu
+#   Context menu class relating to a MarkerItem object.
+#===============================================================================
+class MarkerContextMenu(QtGui.QMenu):
+   def __init__(self, parentMarker):
+      super(MarkerContextMenu, self).__init__()
+      
+      self.parentMarker = parentMarker
+      
+      if parentMarker.cumulative:
+         inc = self.addAction("Increase by 1")
+         dec = self.addAction("Decrease by 1")
+         mod = self.addAction("Modify...")
+         #setTo = self.addAction("Set to...")
+         
+         inc.triggered.connect(self.parentMarker.Increase)
+         dec.triggered.connect(self.parentMarker.Decrease)
+         mod.triggered.connect(self.parentMarker.ModifyQuantity)
+         #setTo.triggered.connect(self.parentMarker.SetQuantity)
+         
+      rem = self.addAction("Remove")
+      rem.triggered.connect(self.parentMarker.Remove)
+      
+      
+#===============================================================================
+# MarkerItem
+#   Container class derived from QGraphicsPixmapItem, representing a marker
+#   attached to a unit on the battlefield.
+#===============================================================================
+class MarkerItem(QtGui.QGraphicsPixmapItem):
+   siStatusMessage = QtCore.Signal(str)
+   MarkerSize = (2., 2.)
+   
+   def __init__(self, markerType, parent=None):
+      super(MarkerItem, self).__init__(markerType.pixmap, parent)
+      
+      self.name = markerType.name
+      
+      scaleX = MarkerItem.MarkerSize[0] / self.boundingRect().width()
+      scaleY = MarkerItem.MarkerSize[1] / self.boundingRect().height()
+      self.scale(scaleX, scaleY) # scale to apprx. 1 inch
+      
+      self._count = 1
+      self.cumulative = markerType.cumulative
+      self.rank = 0 # markers are drawn in order of their rank
+      
+      self.contextMenu = MarkerContextMenu(self)
+      
+      if self.cumulative:
+         self.countText = QtGui.QGraphicsTextItem("%i" % self._count, self)
+         self.countText.setDefaultTextColor(QtGui.QColor(255,255,255))
+         self.countText.moveBy(35,0)
+         self.countText.scale(10,10)
+         
+   # property: count
+   def getCount(self):
+      return self._count
+   def setCount(self, val):
+      self._count = val
+      self.countText.setPlainText("%i" % self.count)
+      if self.count <= 0:
+         self.Remove()
+   #
+   count = property(getCount, setCount)
+      
+   def contextMenuEvent(self, e):
+      self.contextMenu.exec_(e.screenPos())
+      
+   def Increase(self):
+      self.count += 1
+      # self.siStatusMessage.emit("%s's %s marker increased by 1 to %i total." % (self.parentItem().name, self.name, self.count))
+      ### Warum geht .emit() nicht ???
+      print "%s's %s marker increased by 1 to %i total." % (self.parentItem().name, self.name, self.count)
+      
+   def Decrease(self):
+      self.count -= 1
+      
+   def ModifyQuantity(self):
+      increment, accepted = QtGui.QInputDialog.getInt(self.window(), self.name, "Modify by (can be negative):", 0, -999, 999, 1)
+      if accepted:
+         self.count += increment
+      
+   def SetQuantity(self):
+      newCount, accepted = QtGui.QInputDialog.getInt(self.window(), self.name, "New value:", self.count, 0, 999, 1)
+      if accepted:
+         self.count = newCount
+   
+   def Remove(self):
+      self.parentItem().RemoveMarker(self.name)
+
+#===============================================================================
+# DialDialog
+# - obsolete -
+#   Dialog enabling to rotate a unit (no longer in use).
+#===============================================================================
 class DialDialog(QtGui.QDialog):
    def __init__(self, startValue=0, min=0, max=359, parent=None):
       super(DialDialog, self).__init__(parent)
@@ -34,6 +130,14 @@ class DialDialog(QtGui.QDialog):
    def UpdateLabel(self):
       self.label.setText("%i" % self.dial.value())
 
+#===============================================================================
+# BattlefieldScene
+#   Scene class inheriting from QGraphicsScene which holds the battlefield
+#   geometry plus all other objects drawn on the battlefield, such as units,
+#   markers, templates, etc.
+#   Provides some logic for moving objects within the scene, measuring
+#   distances, and more.
+#===============================================================================
 class BattlefieldScene(QtGui.QGraphicsScene):
    siStatusMessage = QtCore.Signal(str)
    
@@ -78,16 +182,16 @@ class BattlefieldScene(QtGui.QGraphicsScene):
       self.distCounter.setScale(0.15)
       self.distCounter.setVisible(False)
       
-      # add an empty list for sight/facing arc templates
-      self.showArcs = False
+      # add a placeable unit container
+      self.unitToPlace = None
       
       # add test unit
       #testUnit = RectBaseItem(20. / 2.54, 8. / 2.54)
-      testUnit = RectBaseUnit("Sea Guard Horde (40)", (200 * MM_TO_IN, 80 * MM_TO_IN))
+      testUnit = RectBaseUnit("Sea Guard Horde (40)", (200 * MM_TO_IN, 80 * MM_TO_IN), (10,4))
       testUnit.setPos(36, 38)
       self.addItem(testUnit)
       
-      testUnit2 = RectBaseUnit("Ax Horde (40)", (250 * MM_TO_IN, 100 * MM_TO_IN))
+      testUnit2 = RectBaseUnit("Ax Horde (40)", (250 * MM_TO_IN, 100 * MM_TO_IN), (10,4))
       testUnit2.setPos(32, 7.5)
       testUnit2.setRotation(173)
       print testUnit2.rotation()
@@ -100,6 +204,11 @@ class BattlefieldScene(QtGui.QGraphicsScene):
       self.selectionChanged.connect(self.HandleSelectionChanged)
    
    def AbortMouseAction(self):
+      sel = self.selectedItems()[0]
+      
+      if self.mouseMode == MOUSE_ROTATE_UNIT:
+         sel.CancelMovement()
+         
       self.mouseMode = MOUSE_DEFAULT
       self.ClearDistCounter()
       self.ResetStatusMessage()
@@ -160,6 +269,10 @@ class BattlefieldScene(QtGui.QGraphicsScene):
          self.mouseMode = MOUSE_DEFAULT
          self.siStatusMessage.emit("%s selected." % self.selectedItems()[0].name)
          
+      elif self.mouseMode == MOUSE_ROTATE_UNIT and e.button() == Qt.RightButton:
+         e.accept()
+         self.AbortMouseAction()
+         
       elif self.mouseMode == MOUSE_ALIGN_TO and e.button() == Qt.LeftButton and self.itemAt(e.scenePos()) is not None:
          target = self.itemAt(e.scenePos())
          self.selectedItems()[0].AlignToUnitFront(target)
@@ -184,6 +297,8 @@ class BattlefieldView(QtGui.QGraphicsView):
       
       self.setScene(scene)
       self.fitInView(scene.sceneRect())
+      
+      self.scale(1.44, 1.44)
       
       #self.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
       
@@ -277,6 +392,31 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
       elif w != 0 or h != 0:
          raise ValueError("Must initialize RectBaseItem either without width and height or with both!")
       
+      # set context menu
+      self.contextMenu = UnitContextMenu(self)
+      
+      # container for markers
+      self.markers = {} # (markerName : quantity) tuples
+      
+   @QtCore.Slot(str)
+   def AddMarker(self, markerName):
+      marker = QtGui.qApp.DataManager.MarkerByName(markerName)
+      
+      if markerName in self.markers.keys() and not marker.cumulative:
+         return # marker is unique and already present
+      
+      elif markerName in self.markers.keys():
+         self.markers[markerName].Increase()
+      
+      else:
+         rank = len(self.markers.keys())
+         item = MarkerItem(marker)
+         item.rank = rank
+         item.setParentItem(self) # this implicitly adds the marker graphics item to the scene as child of the RectBaseUnit item
+         item.moveBy(1+2*rank, 1)
+         
+         self.markers[markerName] = item
+      
    def AlignToUnitFront(self, unit):
       self.setRotation(unit.rotation()+180)
    def AlignToUnitRear(self, unit):
@@ -369,6 +509,22 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
       dist = math.sqrt(d.x()**2 + d.y()**2)
       self.scene().SetDistCounter("%.1f\"" % dist, self.movementTemplate.scenePos())
       
+   def InitRotation(self):
+      if self.scene().mouseMode == MOUSE_ROTATE_UNIT:
+         self.scene().mouseMode == MOUSE_DEFAULT
+         self.scene().siStatusMessage.emit("%s selected." % self.name)
+      
+      else:
+         self.scene().mouseMode = MOUSE_ROTATE_UNIT
+         self.SpawnMovementTemplate()
+         #self.SpawnRotator()
+         self.scene().siStatusMessage.emit("Rotating %s." % self.name)
+      
+   def RemoveMarker(self, name):
+      if name in self.markers:
+         self.scene().removeItem(self.markers[name])
+         del self.markers[name]
+      
    def RotateToPoint(self, point):
       self.SpawnMovementTemplate()
       vecToPoint = point - self.movementTemplate.scenePos()
@@ -404,11 +560,15 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
       diag.move(QtGui.QCursor.pos())
       diag.dial.valueChanged.connect(self.movementTemplate.setRotation)
       diag.exec_()
+      
+   def contextMenuEvent(self, e):
+      self.setSelected(True)
+      self.contextMenu.exec_(e.screenPos())
    
    def itemChange(self, change, value):
       if change == QtGui.QGraphicsItem.ItemPositionChange:
          if not Qt.LeftButton & int(QtGui.QApplication.mouseButtons()):
-            print "Moved"
+            pass #print "Moved"
          
       return QtGui.QGraphicsItem.itemChange(self, change, value)
       
@@ -449,15 +609,7 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
    def keyPressEvent(self, e):
       if e.key() == Qt.Key_R: # rotate
          e.accept()
-         if self.scene().mouseMode == MOUSE_ROTATE_UNIT:
-            self.scene().mouseMode == MOUSE_DEFAULT
-            self.scene().siStatusMessage.emit("%s selected." % self.name)
-         
-         else:
-            self.scene().mouseMode = MOUSE_ROTATE_UNIT
-            self.SpawnMovementTemplate()
-            #self.SpawnRotator()
-            self.scene().siStatusMessage.emit("Rotating %s." % self.name)
+         self.InitRotation()
             
       elif e.key() == Qt.Key_N: # align to
          e.accept()
@@ -518,6 +670,28 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
    def mouseMoveEvent(self, e):
       if Qt.LeftButton & int(e.buttons()): # left mouse dragging
          self.HandleMovementEvent(e, self)
+         
+class UnitContextMenu(QtGui.QMenu):
+   def __init__(self, parentUnit):
+      super(UnitContextMenu, self).__init__()
+      self.parentUnit = parentUnit
+      
+      # Add marker menu
+      self.signalMapper = QtCore.QSignalMapper(self)
+      self.addMarkerMenu = self.addMenu("Add marker...")
+      for mrk in QtGui.qApp.DataManager.GetMarkers():
+         act = self.addMarkerMenu.addAction(mrk.name)
+         # use signal mapper to identify each action by its marker name
+         self.signalMapper.setMapping(act, mrk.name)
+         act.triggered.connect(self.signalMapper.map)
+      # signal mapper propagates the signal to parent unit, along with the respective marker name
+      self.signalMapper.mapped[str].connect(self.parentUnit.AddMarker)
+      
+      # Rotate
+      rot = self.addAction("Rotate")
+      rot.triggered.connect(self.parentUnit.InitRotation)
+      
+         
 
 class MovementTemplateContextMenu(QtGui.QMenu):
    def __init__(self):

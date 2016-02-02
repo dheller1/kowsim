@@ -7,7 +7,7 @@ from battlefield import BattlefieldScene
 def main():
    app = QtGui.QApplication(sys.argv)
 
-   scene = BattlefieldScene()
+   #scene = BattlefieldScene()
    w = MainWindow()
    w.show()
 

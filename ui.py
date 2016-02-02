@@ -17,11 +17,12 @@ class MainWindow(QtGui.QMainWindow):
       QtGui.qApp.DataManager = DataManager()
       QtGui.qApp.DataManager.LoadUnitTypes()
       QtGui.qApp.DataManager.LoadBaseSizes()
+      QtGui.qApp.DataManager.LoadMarkers()
       
       #=========================================================================
       # Init main window
       #=========================================================================
-      self.resize(1024, 600)
+      self.resize(1280, 750)
       self.setWindowTitle("vbattle")
       
       self.setCentralWidget(MainWindowCentralWidget())
@@ -75,7 +76,10 @@ class MainMenu(QtGui.QMenuBar):
    def AddUnit(self):
       dlg = AddUnitDialog()
       dlg.exec_()
-      
+      if dlg.result()==QtGui.QDialog.Accepted:
+         self.parent().unitToPlace = dlg.unit
+         self.parent().mouseMode = MOUSE_PLACE_UNIT
+         
 
 class AddUnitDialog(QtGui.QDialog):
    def __init__(self):
@@ -117,12 +121,16 @@ class AddUnitDialog(QtGui.QDialog):
       self.previewGv.setScene(self.previewScene)
       self.previewGv.scale(20,20)
       
+      self.acceptBtn = QtGui.QPushButton("Add >>")
+      self.cancelBtn = QtGui.QPushButton("Cancel")
+      
       
       #=========================================================================
       # Init layout
       #=========================================================================
       lay = QtGui.QVBoxLayout()
       mainLay = QtGui.QHBoxLayout()
+      btnLay = QtGui.QHBoxLayout()
       
       # general group box
       genGrpBox = QtGui.QGroupBox("General")
@@ -151,7 +159,13 @@ class AddUnitDialog(QtGui.QDialog):
       genGrpBox.setLayout(genLay)
       mainLay.addWidget(genGrpBox)
       mainLay.addWidget(self.previewGv, stretch=1)
+      
+      btnLay.addWidget(self.cancelBtn)
+      btnLay.addStretch(1)
+      btnLay.addWidget(self.acceptBtn)
+      
       lay.addLayout(mainLay)
+      lay.addLayout(btnLay)
       
       self.setLayout(lay)
       
@@ -161,6 +175,9 @@ class AddUnitDialog(QtGui.QDialog):
       self.unitTypeCb.currentIndexChanged.connect(self.UpdateSizeOptions)
       self.unitSizeCb.currentIndexChanged.connect(self.UnitSettingsChanged)
       self.baseSizeCb.currentIndexChanged.connect(self.UnitSettingsChanged)
+      
+      self.cancelBtn.clicked.connect(self.reject)
+      self.acceptBtn.clicked.connect(self.accept)
       
       #=========================================================================
       # FINAL INITIALIZATION
@@ -218,7 +235,7 @@ class ChatWidget(QtGui.QWidget):
    _TimestampCss = 'color:#999999;'
    _ErrorCss = 'color:#a0a0a0;font-weight:bold;font-style:italic;'
    
-   _SupportedCommands = ("r")
+   _SupportedCommands = ("r", "h")
    
    def __init__(self):
       super(ChatWidget, self).__init__()
@@ -264,16 +281,24 @@ class ChatWidget(QtGui.QWidget):
          
          command = commandText.split()[0]
          if command not in ChatWidget._SupportedCommands:
-            self.PrintError("Error: Unknown command '%s'!" % command)
+            self.PrintError("Error: Unknown command '%s'. Type /h for help." % command)
             return
             
          elif command == "r": # Roll
-            rollString = commandText[1:].strip()
-            self.AddHistoryItem("<i>%s</i>" % text)
-            rollHndlr = RollHandler()
-            rollHndlr.InterpretString(rollString)
-   
-            results = rollHndlr.Roll()
-            
-            if rollHndlr.numDice < 10 and len(rollHndlr.individualRolls) <= 1:
+            try:
+               rollString = commandText[1:].strip()
+               self.AddHistoryItem("<i>%s</i>" % text)
+               rollHndlr = RollHandler()
+               rollHndlr.InterpretString(rollString)
+      
+               results = rollHndlr.Roll()
+               
+               #if rollHndlr.numDice < 10 and len(rollHndlr.individualRolls) <= 1:
                self.AddHistoryItem(rollHndlr.RollModeToString() + " " + rollHndlr.AllResultsToString())
+            except ValueError as e:
+               self.PrintError(str(e))
+               
+         elif command == "h": # Help
+            helpText = """ <u>Help</u><br> You can use this box to chat with other players or for some functionality in support of the game.<br>
+             To send a chat message, simply type in any text.\n Supported commands:<br>   - /r Roll some (virtual) dice. """
+            self.AddHistoryItem("<i>%s</i>" % helpText)
