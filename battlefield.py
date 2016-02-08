@@ -9,7 +9,7 @@ from PySide import QtGui, QtCore
 from PySide.QtCore import Qt
 
 from constants import *
-from util import dot2d, len2d
+from util import dot2d, len2d, dist2d
 
 import math 
 
@@ -145,6 +145,7 @@ class DialDialog(QtGui.QDialog):
 class BattlefieldScene(QtGui.QGraphicsScene):
    siStatusMessage = QtCore.Signal(str)
    siLogEvent = QtCore.Signal(str)
+   siUnitSelected = QtCore.Signal(bool)
    
    def __init__(self):
       super(BattlefieldScene, self).__init__()
@@ -207,9 +208,15 @@ class BattlefieldScene(QtGui.QGraphicsScene):
     
    def InitConnections(self):
       self.selectionChanged.connect(self.HandleSelectionChanged)
+      
+   def InitRotation(self):
+      """ Initialize rotation on a selected unit (invoked from outside such as a pressed toolbutton). """
+      if len(self.selectedItems())==1:
+         self.selectedItems()[0].InitRotation()
    
    def AbortMouseAction(self):
-      sel = self.selectedItems()[0]
+      if(len(self.selectedItems())>0):
+         sel = self.selectedItems()[0]
       
       if self.mouseMode == MOUSE_ROTATE_UNIT:
          sel.CancelMovement()
@@ -230,7 +237,10 @@ class BattlefieldScene(QtGui.QGraphicsScene):
          raise BaseException("Why is there more than one item selected?!")
       
       elif len(self.selectedItems())==1:
-         pass
+         self.siUnitSelected.emit(True)
+      
+      elif len(self.selectedItems())==0:
+         self.siUnitSelected.emit(False)
 #          sel = self.selectedItems()[0]
 #          
 #          template = sel.GetFrontArcTemplate()
@@ -245,6 +255,12 @@ class BattlefieldScene(QtGui.QGraphicsScene):
       self.distCounter.setPlainText(text)
       self.distCounter.setPos(pos)
       self.distCounter.setVisible(True)
+      
+   def SelectedItem(self):
+      if(len(self.selectedItems())>0):
+         return self.selectedItems()[0]
+      else:
+         return None
       
    def ResetStatusMessage(self):
       if len(self.selectedItems())==1:
@@ -263,7 +279,11 @@ class BattlefieldScene(QtGui.QGraphicsScene):
                angle = sel.movementTemplate.rotation() - sel.rotation()
             else: # MovementTemplate itself is selected
                angle = sel.rotation() - sel.parentUnit.rotation()
-            self.SetDistCounter(u"%.0f°" % math.fabs(angle), self.selectedItems()[0].scenePos())
+            
+            angle = math.fabs(angle)
+            if angle > 180.: # instead of "345° to the right", output "15° to the left"
+               angle = 360.-angle
+            self.SetDistCounter(u"%.0f°" % (angle), self.selectedItems()[0].scenePos())
 
       else:
          super(BattlefieldScene, self).mouseMoveEvent(e)
@@ -272,7 +292,10 @@ class BattlefieldScene(QtGui.QGraphicsScene):
       if self.mouseMode == MOUSE_ROTATE_UNIT and e.button() == Qt.LeftButton:
          e.accept()
          self.mouseMode = MOUSE_DEFAULT
-         self.siStatusMessage.emit("%s selected." % self.selectedItems()[0].name)
+         if(len(self.selectedItems())>0):
+            self.siStatusMessage.emit("%s selected." % self.selectedItems()[0].name)
+         else:
+            self.siStatusMessage.emit("Ready.")
          
       elif self.mouseMode == MOUSE_ROTATE_UNIT and e.button() == Qt.RightButton:
          e.accept()
@@ -282,11 +305,41 @@ class BattlefieldScene(QtGui.QGraphicsScene):
          target = self.itemAt(e.scenePos())
          
          if type(target) == RectBaseUnit and target != self.selectedItems()[0]: # don't align to non-unit objects or to self
-            self.selectedItems()[0].AlignToUnitFront(target)
+            self.selectedItems()[0].AlignToUnit(target) # unit decides to which exact facing it aligns based on its position
          
          self.AbortMouseAction()
          
       elif self.mouseMode == MOUSE_ALIGN_TO and (self.itemAt(e.scenePos()) is None or e.button() == Qt.RightButton):
+         self.AbortMouseAction()
+         super(BattlefieldScene, self).mousePressEvent(e)
+         
+      elif self.mouseMode == MOUSE_CHECK_ARC and e.button() == Qt.LeftButton:
+         self.AbortMouseAction()
+         target = self.itemAt(e.scenePos())
+         if (target is not None) and (type(target) is RectBaseUnit) and self.SelectedItem():
+            arc = self.SelectedItem().DetermineArc(target)
+            if arc == ARC_FRONT: text = "front arc"
+            elif arc == ARC_REAR: text = "rear arc"
+            elif arc == ARC_LEFT: text = "left flank"
+            elif arc == ARC_RIGHT: text = "right flank"
+            
+            self.siLogEvent.emit("%s is currently in %s's %s." % (self.SelectedItem().name, target.name, text))
+            
+         
+      elif self.mouseMode == MOUSE_CHECK_ARC and (self.itemAt(e.scenePos()) is None or e.button() == Qt.RightButton):
+         self.AbortMouseAction()
+         super(BattlefieldScene, self).mousePressEvent(e)
+         
+      elif self.mouseMode == MOUSE_CHECK_DIST and e.button() == Qt.LeftButton:
+         self.AbortMouseAction()
+         target = self.itemAt(e.scenePos())
+         if (target is not None) and (type(target) is RectBaseUnit) and self.SelectedItem():
+            
+            p, d = self.SelectedItem().DistanceToUnit(target)
+            self.siLogEvent.emit("Distance from %s's unit leader point to the closest point of %s is %.2f\"." % (self.SelectedItem().name, target.name, d))
+            self.addLine(QtCore.QLineF(self.SelectedItem().GetUnitLeaderPoint(), p))
+
+      elif self.mouseMode == MOUSE_CHECK_DIST and (self.itemAt(e.scenePos()) is None or e.button() == Qt.RightButton):
          self.AbortMouseAction()
          super(BattlefieldScene, self).mousePressEvent(e)
          
@@ -383,9 +436,10 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
       
       # child templates
       self.movementTemplate = None
-      self.frontArcTemplate = None
+      self.arcTemplates = []
       
       self.movementInitiated = False
+      self.rotationInitiated = False
       
       # draw
       self.setBrush(RectBaseUnit.DefaultColor)
@@ -424,6 +478,14 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
          item.moveBy(1+2*rank, 1)
          
          self.markers[markerName] = item
+         
+   def AlignToUnit(self, unit):
+      # check facing and align
+      arc = self.DetermineArc(unit)
+      if arc == ARC_FRONT: self.AlignToUnitFront(unit)
+      elif arc == ARC_REAR: self.AlignToUnitRear(unit)
+      elif arc == ARC_LEFT: self.AlignToUnitLeftFlank(unit)
+      elif arc == ARC_RIGHT: self.AlignToUnitRightFlank(unit)
       
    def AlignToUnitFront(self, unit):
       self.setRotation(unit.rotation()+180)
@@ -431,16 +493,103 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
       self.setRotation(unit.rotation())
    def AlignToUnitLeftFlank(self, unit):
       self.setRotation(unit.rotation()+90)
-   def AlignToUnitRearFlank(self, unit):
+   def AlignToUnitRightFlank(self, unit):
       self.setRotation(unit.rotation()-90)
       
    def CancelMovement(self):
       self.movementInitiated = False
       self.scene().distCounter.setVisible(False)
       if self.movementTemplate:
+         if(self.scene().SelectedItem() is self.movementTemplate):
+            self.scene().clearSelection()
+         
          self.scene().removeItem(self.movementTemplate)
          del self.movementTemplate
          self.movementTemplate = None
+                
+   def DetermineArc(self, unit):
+      """ Determine in which arc (front/rear/left/right) of a target unit this unit (i.e. this unit's leader point) is. """
+      if unit.mapToScene(unit.GetFrontArc()).containsPoint(self.GetUnitLeaderPoint(), Qt.OddEvenFill):
+         return ARC_FRONT
+      elif unit.mapToScene(unit.GetRearArc()).containsPoint(self.GetUnitLeaderPoint(), Qt.OddEvenFill):
+         return ARC_REAR
+      elif unit.mapToScene(unit.GetLeftArc()).containsPoint(self.GetUnitLeaderPoint(), Qt.OddEvenFill):
+         return ARC_LEFT
+      elif unit.mapToScene(unit.GetRightArc()).containsPoint(self.GetUnitLeaderPoint(), Qt.OddEvenFill):
+         return ARC_RIGHT
+      
+   def DistanceToUnit(self, unit):
+      """ Return (QPointF, float) tuple containing the closest point of the target unit and its distance to this unit's leader point. """
+      poly = unit.mapToScene(unit.rect()) # target (rotated) rect, now a QPolygonF with points (TL, TR, BR, BL, TL)
+      p = self.GetUnitLeaderPoint()
+      
+      TL = poly[0]
+      TR = poly[1]
+      BR = poly[2]
+      BL = poly[3]
+      
+      # distance from point to rectangle...
+      # two cases: A) point-to-corner is the closest distance
+      #            B) point-to-edge is the closest distance
+      # For A), just check the four corners.
+      # For B), project the point onto each of the four edges.
+      #         If the projection is inside the rect, calculate
+      #         distance from the projection to the point. ("Lot")
+      
+      # front projection: p to lf (line front)
+      lf = TR - TL
+      print "P:", p
+      print "LF:", lf
+      scale = dot2d(p, lf) / dot2d(lf, lf)
+      print "Scale F/R: %.2f" % scale
+      
+      # projection of p is only in between tr.topRight and tr.topLeft if the scaling factor is between 0 and 1
+      # in this case, the same is true for a rear arc projection, we just have to determine which one is closer
+      if (-1000. <= scale <= 10001.):
+         pprojF = scale * lf + TL
+         distF = dist2d(p, pprojF)
+         
+         lr = BR - BL
+         scale = dot2d(p, lr) / dot2d(lr, lr)
+         pprojR = scale * lr + BL
+         distR = dist2d(p, pprojR)
+         
+         #if(distF < distR):
+         return (pprojF, distF)
+         #else: return (pprojR, distR)
+         
+      else:
+         # check left/right flanks
+         ll = TL - BL
+         scale = dot2d(p, ll) / dot2d(ll, ll)
+         print "Scale L/R: %.2f" % scale   
+         if (0. <= scale <= 1.):
+            pprojL = scale * ll + BL
+            distL = dist2d(p, pprojL)
+            
+            lri = TR - BR
+            scale = dot2d(p, lri) / dot2d(lri, lri)
+            pprojRi = scale * lri + BR
+            distRi = dist2d(p, pprojRi)
+            
+            if(distL < distRi):
+               return (pprojL, distL)
+            else: return (pprojRi, distRi)
+            
+         else:
+            # projection is neither on front/rear nor on left/right segments.
+            # Thus one of the corners must be the closest point.
+            dMin = 1.e50
+            pMin = None
+            
+            for c in tr.topLeft(), tr.bottomLeft(), tr.bottomRight(), tr.topRight():
+               d = dist2d(p, c)
+               if(d < dMin):
+                  dMin = d
+                  pMin = c
+                  
+            return (pMin, dMin)
+      
          
    def FinalizeMovement(self):
       if self.movementTemplate:
@@ -478,6 +627,8 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
          if angle<0:
             angle = -angle
             rotType = "left"
+         if angle>180.:
+            angle = 360. - angle
          
          eps = 0.05
          
@@ -493,6 +644,50 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
          self.setPos(self.movementTemplate.scenePos())
          self.setRotation(self.movementTemplate.rotation())
          self.CancelMovement()
+
+   def GetFrontArc(self):
+      """ All arc polygons given in local (not scene) coordinates. """
+      topLeft = self.rect().topLeft()
+      topRight = self.rect().topRight()
+         
+      leftDir = self.rect().topLeft() + QtCore.QPointF(-100,-100)
+      rightDir = self.rect().topRight() + QtCore.QPointF(100, -100)
+         
+      arc = QtGui.QPolygonF( [topLeft, topRight, rightDir, leftDir] )
+      return arc
+   
+   def GetLeftArc(self):
+      """ All arc polygons given in local (not scene) coordinates. """
+      topLeft = self.rect().topLeft()
+      bottomLeft = self.rect().bottomLeft()
+         
+      topDir = self.rect().topLeft() + QtCore.QPointF(-100,-100)
+      bottomDir = self.rect().bottomLeft() + QtCore.QPointF(-100, 100)
+         
+      arc = QtGui.QPolygonF( [topLeft, topDir, bottomDir, bottomLeft] )
+      return arc
+   
+   def GetRearArc(self):
+      """ All arc polygons given in local (not scene) coordinates. """
+      bottomLeft = self.rect().bottomLeft()
+      bottomRight = self.rect().bottomRight()
+         
+      leftDir = self.rect().topLeft() + QtCore.QPointF(-100,100)
+      rightDir = self.rect().topRight() + QtCore.QPointF(100,100)
+         
+      arc = QtGui.QPolygonF( [bottomLeft, leftDir, rightDir, bottomRight] )
+      return arc
+   
+   def GetRightArc(self):
+      """ All arc polygons given in local (not scene) coordinates. """
+      topRight = self.rect().topRight()
+      bottomRight = self.rect().bottomRight()
+         
+      topDir = self.rect().topRight() + QtCore.QPointF(100,-100)
+      bottomDir = self.rect().bottomRight() + QtCore.QPointF(100,100)
+         
+      arc = QtGui.QPolygonF( [topRight, topDir, bottomDir, bottomRight] )
+      return arc
       
    def GetNormalVectorFront(self):
       # normal vector is always (0, -1) at center location (0, 0) in local coordinates
@@ -521,6 +716,11 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
       normal = QtCore.QLineF( scNormalLoc, scNormalDir )
       
       return normal
+   
+   def GetUnitLeaderPoint(self):
+      """ Unit leader point always returned in scene coordinates. """
+      pt = QtCore.QPointF(0, -self.rect().height()/2)
+      return self.mapToScene(pt)
    
    def HandleMovementEvent(self, event, evtSource):
       e = event
@@ -571,17 +771,37 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
       else:
          self.scene().mouseMode = MOUSE_ALIGN_TO
          self.scene().siStatusMessage.emit("Aligning %s." % self.name)
+         
+   def InitCheckDistance(self):
+      if self.scene().mouseMode == MOUSE_CHECK_DIST:
+         self.scene().mouseMode == MOUSE_DEFAULT
+         self.scene().ResetStatusMessage()
+
+      else:
+         self.scene().mouseMode = MOUSE_CHECK_DIST
+         self.scene().siStatusMessage.emit("Checking distance to %s's unit leader point." % self.name)
+         
+   def InitDetermineArc(self):
+      if self.scene().mouseMode == MOUSE_CHECK_ARC:
+         self.scene().mouseMode == MOUSE_DEFAULT
+         self.scene().ResetStatusMessage()
+
+      else:
+         self.scene().mouseMode = MOUSE_CHECK_ARC
+         self.scene().siStatusMessage.emit("Checking arcs for %s." % self.name)
       
    def InitRotation(self):
       if self.scene().mouseMode == MOUSE_ROTATE_UNIT:
          self.scene().mouseMode == MOUSE_DEFAULT
          self.scene().siStatusMessage.emit("%s selected." % self.name)
+         self.rotationInitiated = False
       
       else:
          self.scene().mouseMode = MOUSE_ROTATE_UNIT
          self.SpawnMovementTemplate()
+         self.rotationInitiated = True
          #self.SpawnRotator()
-         self.scene().siStatusMessage.emit("Rotating %s." % self.name)
+         self.scene().siStatusMessage.emit("Rotating %s. Left click to set rotation." % self.name)
       
    def RemoveMarker(self, name):
       if name in self.markers:
@@ -595,21 +815,24 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
       
       self.movementTemplate.setRotation(angle)
          
-   def SpawnFrontArcTemplate(self):
-      if self.frontArcTemplate is None:
-         topLeft = self.rect().topLeft()
-         topRight = self.rect().topRight()
+   def SpawnArcTemplates(self):
+      if len(self.arcTemplates)==0:
+         f = QtGui.QGraphicsPolygonItem(self.GetFrontArc())
+         l = QtGui.QGraphicsPolygonItem(self.GetLeftArc())
+         b = QtGui.QGraphicsPolygonItem(self.GetRearArc())
+         r = QtGui.QGraphicsPolygonItem(self.GetRightArc())
          
-         leftDir = self.rect().topLeft() + QtCore.QPointF(-10,-10)
-         rightDir = self.rect().topRight() + QtCore.QPointF(10, -10)
+         for fb in (f, b):
+            fb.setBrush(QtGui.QColor(255,255,255,80))
+         for lr in (l, r):
+            lr.setBrush(QtGui.QColor(255,255,255,15))
+            
+         for flbr in (f,l,b,r):
+            flbr.setPen(Qt.NoPen)
+            flbr.setParentItem(self)
+            flbr.setVisible(False)
          
-         arc = QtGui.QGraphicsPolygonItem( [topLeft, topRight, rightDir, leftDir] )
-         arc.setPen(Qt.NoPen)
-         arc.setBrush(QtGui.QColor(255,255,255,100))
-         arc.setParentItem(self)
-         arc.setVisible(False)
-         
-         self.frontArcTemplate = arc
+         self.arcTemplates = [f,l,b,r]
 
    def SpawnMovementTemplate(self):
       # make sure that a movement template for this unit has already been created
@@ -680,9 +903,23 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
       
       elif e.key() == Qt.Key_A: # toggle arc template
          e.accept()
-         self.SpawnFrontArcTemplate()
-         self.frontArcTemplate.setVisible(not self.frontArcTemplate.isVisible())
+         self.SpawnArcTemplates()
+         for t in self.arcTemplates:
+            t.setVisible(not t.isVisible())
+         
+      elif e.key() == Qt.Key_Return and (self.movementInitiated or self.rotationInitiated): # finalize movement
+         e.accept()
+         self.FinalizeMovement()
+         
+      elif e.key() == Qt.Key_Escape and (self.movementInitiated or self.rotationInitiated): # cancel movement
+         e.accept()
+         self.CancelMovement()
+         self.scene().AbortMouseAction()
       
+      # BUG: Restricted movement axis always related to parent unit, even if the movement template has already been rotated.
+      #  However, using the movement template's frontal normal vector, self.movementTemplate.GetNormalVectorFront(), is also
+      #  not working as intended, as the movement template might be already rotated AND translated.
+      #  Need to work this out.
       elif e.key() == Qt.Key_F and self.movementInitiated: # restrict to forward axis
          e.accept()
          self.SpawnMovementTemplate()
@@ -746,12 +983,19 @@ class UnitContextMenu(QtGui.QMenu):
       self.signalMapper.mapped[str].connect(self.parentUnit.AddMarker)
       
       # Rotate
-      rot = self.addAction("Rotate")
+      rot = self.addAction(QtGui.qApp.DataManager.IconByName("ICN_ROTATE_UNIT"), "Rotate")
       rot.triggered.connect(self.parentUnit.InitRotation)
+      
+      # Check menu
+      self.checkMenu = self.addMenu("Check...")
+      cdist = self.checkMenu.addAction("Distance to")
+      cdist.triggered.connect(self.parentUnit.InitCheckDistance)
+      carc = self.checkMenu.addAction("Arc/Facing")
+      carc.triggered.connect(self.parentUnit.InitDetermineArc)
       
       # Align to
       algn = self.addAction("Align to")
-      algn.triggered.connect(self.parentUnit.InitAlignTo)      
+      algn.triggered.connect(self.parentUnit.InitAlignTo)
          
 
 class MovementTemplateContextMenu(QtGui.QMenu):

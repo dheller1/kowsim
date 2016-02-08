@@ -27,6 +27,8 @@ class DataManager:
       self._unitTypesByName = None
       self._markers = None
       self._markersByName = None
+      self._icons = None
+      self._iconsByName = None
       
    def GetUnitTypes(self):
       if not self._unitTypes:
@@ -37,6 +39,9 @@ class DataManager:
    def GetMarkers(self):
       return self._markers
    
+   def GetIcons(self):
+      return self._icons
+   
    def MarkerByName(self, name):
       return self._markersByName[name]
    
@@ -45,6 +50,9 @@ class DataManager:
          self.LoadUnitTypes()
       
       return self._unitTypesByName[name]
+   
+   def IconByName(self, name):
+      return self._iconsByName[name]
    
    def LoadBaseSizes(self, filename = os.path.join("data", "base_sizes.csv")):
       if not self._unitTypes:
@@ -59,7 +67,27 @@ class DataManager:
          width = int(line[1])
          depth = int(line[2])
          
-         self._unitTypesByName[unitType].availableBaseSizes.append( (width, depth) )      
+         self._unitTypesByName[unitType].availableBaseSizes.append( (width, depth) )
+         
+   def LoadIcons(self, filename = os.path.join("data", "icons", "icons.csv")):
+      lines = ReadLinesFromCsv(filename)
+      
+      self._icons = []
+      self._iconsByName = {}
+       
+      for line in lines:
+         if line[0].startswith("#"): continue
+         
+         name = line[0]
+         imgFile = line[1]
+         
+         # check if file is existent
+         f = open(os.path.join("data","icons",imgFile))
+         f.close()
+         
+         icn = QtGui.QIcon(os.path.join("data","icons",imgFile))
+         self._icons.append(icn)
+         self._iconsByName[name] = icn
       
    def LoadMarkers(self, filename = os.path.join("data", "markers", "markers.csv")):
       lines = ReadLinesFromCsv(filename)

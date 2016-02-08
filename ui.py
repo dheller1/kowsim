@@ -1,5 +1,5 @@
-import sys, time
-from PySide import QtGui
+import sys, time, os
+from PySide import QtGui, QtCore
 from PySide.QtCore import Qt
 
 from dice import RollHandler
@@ -18,23 +18,38 @@ class MainWindow(QtGui.QMainWindow):
       QtGui.qApp.DataManager.LoadUnitTypes()
       QtGui.qApp.DataManager.LoadBaseSizes()
       QtGui.qApp.DataManager.LoadMarkers()
+      QtGui.qApp.DataManager.LoadIcons()
       
       #=========================================================================
       # Init main window
       #=========================================================================
-      self.resize(1280, 750)
+      self.resize(1280, 800)
       self.setWindowTitle("vbattle")
       
+      #=========================================================================
+      # Init child widgets and menus
+      #=========================================================================
       self.setCentralWidget(MainWindowCentralWidget())
       self.setStatusBar(QtGui.QStatusBar())
       self.statusBar().showMessage("Ready.")
       self.setMenuBar(MainMenu())
       
+      #self.dockWidget = ToolsDockWidget(self)
+      #self.addDockWidget(Qt.TopDockWidgetArea, self.dockWidget)
+      self.unitTb = UnitToolBar(self)
+      self.addToolBar(self.unitTb)
+      
       self.InitConnections()
       
    def InitConnections(self):
+      # connect battlefield scene to status bar and text logger
       self.centralWidget().battlefieldView.scene().siStatusMessage.connect(self.HandleStatusMessage)
       self.centralWidget().battlefieldView.scene().siLogEvent.connect(self.centralWidget().chatWidget.AddHistoryItem)
+      
+      
+      # connect battlefield scene to unit toolbar
+      self.centralWidget().battlefieldView.scene().siUnitSelected.connect(self.unitTb.rotateAct.setEnabled)
+      self.unitTb.rotateAct.triggered.connect(self.centralWidget().battlefieldView.scene().InitRotation)
       
    def HandleStatusMessage(self, msg):
       if len(msg)>0:
@@ -303,3 +318,23 @@ class ChatWidget(QtGui.QWidget):
             helpText = """ <u>Help</u><br> You can use this box to chat with other players or for some functionality in support of the game.<br>
              To send a chat message, simply type in any text.\n Supported commands:<br>   - /r Roll some (virtual) dice. """
             self.AddHistoryItem("<i>%s</i>" % helpText)
+
+#===============================================================================
+# UnitToolbar
+#   Customized QToolBar containing toolbuttons for the most basic program
+#   controls, such as moving/rotating units, declaring attacks, switching
+#   phases, etc.
+#===============================================================================
+class UnitToolBar(QtGui.QToolBar):
+   def __init__(self, parent=None):
+      super(UnitToolBar, self).__init__("Unit controls", parent)
+      
+      # add tool buttons
+      self.rotateAct = self.addAction(QtGui.qApp.DataManager.IconByName("ICN_ROTATE_UNIT"), "[R]otate unit")
+      self.rotateAct.setEnabled(False) # enable only when a unit is selected
+      
+      #self.rotateBtn = QtGui.QToolButton(self.widget)
+      #self.rotateBtn.setIcon(rotateIcn)
+      #self.rotateBtn.setIconSize(QtCore.QSize(48, 48))
+      
+      
