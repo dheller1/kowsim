@@ -538,38 +538,39 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
       
       # front projection: p to lf (line front)
       lf = TR - TL
-      print "P:", p
-      print "LF:", lf
       scale = dot2d(p, lf) / dot2d(lf, lf)
-      print "Scale F/R: %.2f" % scale
+      scaleP2 = dot2d(TL,lf) / dot2d(lf, lf)
       
       # projection of p is only in between tr.topRight and tr.topLeft if the scaling factor is between 0 and 1
       # in this case, the same is true for a rear arc projection, we just have to determine which one is closer
-      if (-1000. <= scale <= 10001.):
-         pprojF = scale * lf + TL
+      if (0. <= scale - scaleP2 <= 1.):
+         pprojF = (scale - scaleP2) * lf + TL
          distF = dist2d(p, pprojF)
          
          lr = BR - BL
          scale = dot2d(p, lr) / dot2d(lr, lr)
-         pprojR = scale * lr + BL
+         scaleP2 = dot2d(BL, lr) / dot2d(lr, lr)
+         pprojR = (scale - scaleP2) * lr + BL
          distR = dist2d(p, pprojR)
          
-         #if(distF < distR):
-         return (pprojF, distF)
-         #else: return (pprojR, distR)
+         if(distF < distR):
+            return (pprojF, distF)
+         else: return (pprojR, distR)
          
       else:
          # check left/right flanks
          ll = TL - BL
          scale = dot2d(p, ll) / dot2d(ll, ll)
+         scaleP2 = dot2d(BL, ll) / dot2d(ll, ll)
          print "Scale L/R: %.2f" % scale   
-         if (0. <= scale <= 1.):
-            pprojL = scale * ll + BL
+         if (0. <= scale - scaleP2 <= 1.):
+            pprojL = (scale - scaleP2) * ll + BL
             distL = dist2d(p, pprojL)
             
             lri = TR - BR
             scale = dot2d(p, lri) / dot2d(lri, lri)
-            pprojRi = scale * lri + BR
+            scaleP2 = dot2d(BR, lri) / dot2d(lri, lri)
+            pprojRi = (scale - scaleP2) * lri + BR
             distRi = dist2d(p, pprojRi)
             
             if(distL < distRi):
@@ -582,7 +583,7 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
             dMin = 1.e50
             pMin = None
             
-            for c in tr.topLeft(), tr.bottomLeft(), tr.bottomRight(), tr.topRight():
+            for c in (TL, BL, BR, TR):
                d = dist2d(p, c)
                if(d < dMin):
                   dMin = d
