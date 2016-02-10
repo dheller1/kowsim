@@ -1,9 +1,16 @@
 # -*- coding: utf-8 -*-
 
 
-### ARC TEMPLATES BESSER ALS DIREKT ZU DEN UNITS ZUGEHOERIG DEFINIEREN!!!
-### SO KOENNEN SIE FUER JEDE UNIT SEPARAT GETOGGLET WERDEN UND BEWEGEN SICH AUCH GLEICH MIT!
-
+#===============================================================================
+# TODO:
+#
+#  * Remove units when they die
+#  * 1-click nerve check?
+#  * automated movement to exact position after charge? 
+#  * exact moves by console (e.g. '/m b 1' could move the current unit back 1 inch)
+#  * set damage quantity when adding a damage marker 
+#
+#===============================================================================
 
 from PySide import QtGui, QtCore
 from PySide.QtCore import Qt
@@ -11,7 +18,7 @@ from PySide.QtCore import Qt
 from constants import *
 from util import dot2d, len2d, dist2d
 
-import math 
+import math, os
 
 #===============================================================================
 # MarkerContextMenu
@@ -157,8 +164,31 @@ class BattlefieldScene(QtGui.QGraphicsScene):
       
       self.setSceneRect(-margin, -margin, tableSize[0]+2*margin, tableSize[1]+2*margin)
       
-      # add background rect
-      self.addRect(0, 0, tableSize[0], tableSize[1], brush=QtGui.QColor(121,217,82))
+      # background texture
+      bgImg = QtGui.QPixmap(os.path.join("data", "mats", "mat01.jpg"))
+      aspectRatio = 1. * tableSize[0] / tableSize[1]
+      
+      if (1.*bgImg.width()/bgImg.height() > aspectRatio): # image file is too wide
+         cropRect = QtCore.QRect(0, 0, bgImg.height() * aspectRatio, bgImg.height())
+      else: # image file too high
+         cropRect = QtCore.QRect(0, 0, bgImg.width(), bgImg.width()/aspectRatio)
+      
+      croppedBg = bgImg.copy(cropRect)
+      self.backgroundItem = QtGui.QGraphicsPixmapItem(croppedBg)
+      scale = 1. * tableSize[0] / croppedBg.width()
+      self.backgroundItem.scale(scale, scale)
+      
+      self.addItem(self.backgroundItem)
+      
+      # draw table border
+      pen = QtGui.QPen()
+      pen.setWidthF(0.5)
+      pen.setColor(QtGui.QColor(52,24,7))
+      
+      self.addLine(QtCore.QLineF(0, 0, tableSize[0], 0), pen) # TL to TR
+      self.addLine(QtCore.QLineF(tableSize[0], 0, tableSize[0], tableSize[1]), pen) # TR to BR
+      self.addLine(QtCore.QLineF(tableSize[0], tableSize[1], 0, tableSize[1]), pen) # BR to BL
+      self.addLine(QtCore.QLineF(0, tableSize[1], 0, 0), pen) # BL to TL
       
       # draw "coordinate system"
       self.addLine(0,0,tableSize[0],0)
@@ -198,13 +228,14 @@ class BattlefieldScene(QtGui.QGraphicsScene):
       #testUnit = RectBaseItem(20. / 2.54, 8. / 2.54)
       testUnit = RectBaseUnit("Sea Guard Horde (40)", "SG", (200 * MM_TO_IN, 80 * MM_TO_IN), (10,4))
       testUnit.setPos(36, 38)
+      testUnit.SetOwner(QtGui.qApp.GameManager.GetPlayer(0))
       self.addItem(testUnit)
       
       testUnit2 = RectBaseUnit("Ax Horde (40)", "AX", (250 * MM_TO_IN, 100 * MM_TO_IN), (10,4))
       testUnit2.setPos(32, 7.5)
       testUnit2.setRotation(173)
       print testUnit2.rotation()
-      testUnit2.setBrush(QtGui.QColor(11,121,5))
+      testUnit2.SetOwner(QtGui.qApp.GameManager.GetPlayer(1))
       self.addItem(testUnit2)
       
       self.InitConnections()
@@ -500,6 +531,8 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
       self.formation = formation
       self.labelText = labelText
       
+      self.owner = None # player who controls this unit
+      
       # label
       self.label = QtGui.QGraphicsTextItem(labelText, self) # short label with 1-4 characters to easily identify the unit (e.g. "SG1" for the first Sea Guard unit)
       self.label.setDefaultTextColor(QtGui.QColor(255,255,255,200))
@@ -694,6 +727,8 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
                elif dist < 0:
                   moveType = "to the right"
                   dist = -dist
+                  
+            # BUG: moveType not working correctly, in some cases left and right are mistaken for each other.
                   
          moveType = moveType.lower()
          
@@ -890,6 +925,10 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
       angle = (180. / math.pi) * math.atan2(vecToPoint.x(), -vecToPoint.y())
       
       self.movementTemplate.setRotation(angle)
+      
+   def SetOwner(self, owner):
+      self.owner = owner
+      self.setBrush(owner.color)
          
    def SpawnArcTemplates(self):
       if len(self.arcTemplates)==0:
@@ -925,6 +964,7 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
       
    def UpdateLabel(self):
       self.label.setPlainText(self.labelText)
+      if len(self.labelText)==0: return
       
       # adjust label font size
       fm = QtGui.QFontMetricsF(self.label.font())
@@ -999,6 +1039,10 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
          self.SpawnArcTemplates()
          for t in self.arcTemplates:
             t.setVisible(not t.isVisible())
+            
+      elif e.key() == Qt.Key_D: # check distance
+         e.accept()
+         self.InitCheckDistance()
          
       elif e.key() == Qt.Key_Return and (self.movementInitiated or self.rotationInitiated): # finalize movement
          e.accept()

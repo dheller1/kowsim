@@ -88,7 +88,7 @@ class DataManager:
          icn = QtGui.QIcon(os.path.join("data","icons",imgFile))
          self._icons.append(icn)
          self._iconsByName[name] = icn
-      
+         
    def LoadMarkers(self, filename = os.path.join("data", "markers", "markers.csv")):
       lines = ReadLinesFromCsv(filename)
       
@@ -113,7 +113,6 @@ class DataManager:
          mrk = Marker(name, pixmap, bgColor, cumulative)
          self._markers.append(mrk)
          self._markersByName[name] = mrk
-         
    
    def LoadUnitTypes(self, filename = os.path.join("data", "unit_types.csv")):
       lines = ReadLinesFromCsv(filename)

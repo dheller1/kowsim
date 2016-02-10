@@ -6,6 +6,7 @@ from dice import RollHandler
 from battlefield import BattlefieldView, RectBaseUnit
 from constants import *
 from load_data import DataManager
+from game import GameManager
 
 class MainWindow(QtGui.QMainWindow):
    def __init__(self):
@@ -19,6 +20,11 @@ class MainWindow(QtGui.QMainWindow):
       QtGui.qApp.DataManager.LoadBaseSizes()
       QtGui.qApp.DataManager.LoadMarkers()
       QtGui.qApp.DataManager.LoadIcons()
+      
+      #=========================================================================
+      # Init game manager
+      #=========================================================================
+      QtGui.qApp.GameManager = GameManager()
       
       #=========================================================================
       # Init main window
@@ -119,6 +125,10 @@ class AddUnitDialog(QtGui.QDialog):
       self.unitSizeCb = QtGui.QComboBox()
       self.baseSizeCb = QtGui.QComboBox()
       
+      self.playerCb = QtGui.QComboBox()
+      for i in range(QtGui.qApp.GameManager.NumPlayers()):
+         self.playerCb.addItem(QtGui.qApp.GameManager.GetPlayer(i).name)
+      
       #=========================================================================
       # init self and children
       #=========================================================================
@@ -151,7 +161,7 @@ class AddUnitDialog(QtGui.QDialog):
       # Init layout
       #=========================================================================
       lay = QtGui.QVBoxLayout()
-      mainLay = QtGui.QHBoxLayout()
+      mainLay = QtGui.QGridLayout()
       btnLay = QtGui.QHBoxLayout()
       
       # general group box
@@ -184,13 +194,25 @@ class AddUnitDialog(QtGui.QDialog):
       genLay.addWidget(self.baseSizeCb, row, 1)
       row+=1
       
+      # control group box
+      conGrpBox = QtGui.QGroupBox("Control")
+      conLay = QtGui.QGridLayout()
+      
+      row = 0
+      # player
+      conLay.addWidget(QtGui.QLabel("Controlled by:"), row, 0)
+      conLay.addWidget(self.playerCb, row, 1)
+      row += 1
+      
       
       #=========================================================================
       # ASSEMBLE LAYOUTS
       #=========================================================================
       genGrpBox.setLayout(genLay)
-      mainLay.addWidget(genGrpBox)
-      mainLay.addWidget(self.previewGv, stretch=1)
+      conGrpBox.setLayout(conLay)
+      mainLay.addWidget(genGrpBox, 0, 0)
+      mainLay.addWidget(conGrpBox, 1, 0)
+      mainLay.addWidget(self.previewGv, 0, 1, 2, 1, stretch=1)
       
       btnLay.addWidget(self.cancelBtn)
       btnLay.addStretch(1)
@@ -207,6 +229,7 @@ class AddUnitDialog(QtGui.QDialog):
       self.unitTypeCb.currentIndexChanged.connect(self.UpdateSizeOptions)
       self.unitSizeCb.currentIndexChanged.connect(self.UnitSettingsChanged)
       self.baseSizeCb.currentIndexChanged.connect(self.UnitSettingsChanged)
+      self.playerCb.currentIndexChanged.connect(self.PlayerChanged)
       
       self.unitNameLe.textChanged.connect(self.UnitNameChanged)
       self.unitLabelLe.textChanged.connect(self.UnitLabelChanged)
@@ -219,6 +242,10 @@ class AddUnitDialog(QtGui.QDialog):
       #=========================================================================
       self.unitNameLe.selectAll()
       self.unitNameLe.setFocus()
+      
+   def PlayerChanged(self):
+      index = self.playerCb.currentIndex()
+      self.unit.SetOwner(QtGui.qApp.GameManager.GetPlayer(index))
 
    def UnitLabelChanged(self):
       label = self.unitLabelLe.text()
