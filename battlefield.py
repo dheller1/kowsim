@@ -263,6 +263,13 @@ class BattlefieldScene(QtGui.QGraphicsScene):
    def ClearDistCounter(self):
       self.distCounter.setPlainText("")
       self.distCounter.setVisible(False)
+      
+   def DestroyUnit(self, unit):
+      if unit in self.items():
+         if unit.movementTemplate: self.removeItem(unit.movementTemplate)
+         self.removeItem(unit)
+         self.siLogEvent.emit("%s was destroyed." % unit.name)
+         del unit
    
    def HandleSelectionChanged(self):
       self.ResetStatusMessage()
@@ -614,6 +621,11 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
          self.scene().removeItem(self.movementTemplate)
          del self.movementTemplate
          self.movementTemplate = None
+         
+   def DestroySelf(self):
+      if QtGui.QMessageBox.Yes == QtGui.QMessageBox.warning(None, "Destroy unit", "Really destroy %s?<br>This can not be undone." % self.name, \
+            QtGui.QMessageBox.Yes | QtGui.QMessageBox.Cancel):
+         self.scene().DestroyUnit(self)
                 
    def DetermineArc(self, unit):
       """ Determine in which arc (front/rear/left/right) of a target unit this unit (i.e. this unit's leader point) is. """
@@ -1052,6 +1064,10 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
          e.accept()
          self.CancelMovement()
          self.scene().AbortMouseAction()
+         
+      elif e.key() == Qt.Key_Delete: # destroy unit
+         e.accept()
+         self.DestroySelf()
       
       # BUG: Restricted movement axis always related to parent unit, even if the movement template has already been rotated.
       #  However, using the movement template's frontal normal vector, self.movementTemplate.GetNormalVectorFront(), is also
@@ -1133,6 +1149,12 @@ class UnitContextMenu(QtGui.QMenu):
          act.triggered.connect(self.signalMapper.map)
       # signal mapper propagates the signal to parent unit, along with the respective marker name
       self.signalMapper.mapped[str].connect(self.parentUnit.AddMarker)
+      
+      self.addSeparator()
+      
+      # destroy unit
+      dest = self.addAction("Destroy")
+      dest.triggered.connect(self.parentUnit.DestroySelf)
 
 class MovementTemplateContextMenu(QtGui.QMenu):
    def __init__(self):
