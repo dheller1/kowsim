@@ -90,12 +90,16 @@ class MainMenu(QtGui.QMenuBar):
       self.addUnitAct.triggered.connect(self.AddUnit)
       
    def AddUnit(self):
+      scene = self.parent().centralWidget().battlefieldView.scene()
       dlg = AddUnitDialog()
       dlg.exec_()
       if dlg.result()==QtGui.QDialog.Accepted:
-         self.parent().unitToPlace = dlg.unit
-         self.parent().mouseMode = MOUSE_PLACE_UNIT
-         
+         scene.unitToPlace = dlg.unit
+         scene.addItem(dlg.unit) # add instantly but hide it first
+         dlg.unit.hide()
+         dlg.unit.setOpacity(0.5)
+         scene.siStatusMessage.emit("Placing %s." % dlg.unit.name)
+         scene.mouseMode = MOUSE_PLACE_UNIT
 
 class AddUnitDialog(QtGui.QDialog):
    def __init__(self):
@@ -110,6 +114,7 @@ class AddUnitDialog(QtGui.QDialog):
       self.previewScene = QtGui.QGraphicsScene()
       
       self.unitNameLe = QtGui.QLineEdit("Unnamed unit")
+      self.unitLabelLe = QtGui.QLineEdit("?")
       self.unitTypeCb = QtGui.QComboBox()
       self.unitSizeCb = QtGui.QComboBox()
       self.baseSizeCb = QtGui.QComboBox()
@@ -137,8 +142,9 @@ class AddUnitDialog(QtGui.QDialog):
       self.previewGv.setScene(self.previewScene)
       self.previewGv.scale(20,20)
       
-      self.acceptBtn = QtGui.QPushButton("Add >>")
       self.cancelBtn = QtGui.QPushButton("Cancel")
+      self.acceptBtn = QtGui.QPushButton("Add >>")
+      self.acceptBtn.setDefault(True)
       
       
       #=========================================================================
@@ -152,21 +158,31 @@ class AddUnitDialog(QtGui.QDialog):
       genGrpBox = QtGui.QGroupBox("General")
       genLay = QtGui.QGridLayout()
       
+      row = 0
       # unit name
-      genLay.addWidget(QtGui.QLabel("Unit name:"), 0, 0)
-      genLay.addWidget(self.unitNameLe, 0, 1)
+      genLay.addWidget(QtGui.QLabel("Unit name:"), row, 0)
+      genLay.addWidget(self.unitNameLe, row, 1)
+      row+=1
+      
+      # label
+      genLay.addWidget(QtGui.QLabel("Unit label:"), row, 0)
+      genLay.addWidget(self.unitLabelLe, row, 1)
+      row+=1
       
       # unit type
-      genLay.addWidget(QtGui.QLabel("Unit type:"), 1, 0)
-      genLay.addWidget(self.unitTypeCb, 1, 1)
+      genLay.addWidget(QtGui.QLabel("Unit type:"), row, 0)
+      genLay.addWidget(self.unitTypeCb, row, 1)
+      row+=1
       
       # unit size
-      genLay.addWidget(QtGui.QLabel("Size:"), 2, 0)
-      genLay.addWidget(self.unitSizeCb, 2, 1)
+      genLay.addWidget(QtGui.QLabel("Size:"), row, 0)
+      genLay.addWidget(self.unitSizeCb, row, 1)
+      row+=1
       
       # base size
-      genLay.addWidget(QtGui.QLabel("Base size [mm]:"), 3, 0)
-      genLay.addWidget(self.baseSizeCb, 3, 1)
+      genLay.addWidget(QtGui.QLabel("Base size [mm]:"), row, 0)
+      genLay.addWidget(self.baseSizeCb, row, 1)
+      row+=1
       
       
       #=========================================================================
@@ -192,6 +208,9 @@ class AddUnitDialog(QtGui.QDialog):
       self.unitSizeCb.currentIndexChanged.connect(self.UnitSettingsChanged)
       self.baseSizeCb.currentIndexChanged.connect(self.UnitSettingsChanged)
       
+      self.unitNameLe.textChanged.connect(self.UnitNameChanged)
+      self.unitLabelLe.textChanged.connect(self.UnitLabelChanged)
+      
       self.cancelBtn.clicked.connect(self.reject)
       self.acceptBtn.clicked.connect(self.accept)
       
@@ -201,6 +220,31 @@ class AddUnitDialog(QtGui.QDialog):
       self.unitNameLe.selectAll()
       self.unitNameLe.setFocus()
 
+   def UnitLabelChanged(self):
+      label = self.unitLabelLe.text()
+      
+      if label != self.unit.labelText:
+         # only update unit if the label text actually changes
+         self.unitLabelLe.setText(label)
+         self.unit.labelText = label
+         self.unit.UpdateLabel()
+         self.unit.update()
+   
+   def UnitNameChanged(self):
+      name = self.unitNameLe.text()
+      words = name.split(" ")
+      
+      label = ""
+      for w in words:
+         if len(w)>0 and w[0].isalnum() and len(label)<=4: # max 4 chars
+            label += w[0].upper()
+            
+      if label != self.unit.labelText:
+         # only update unit if the label text actually changes
+         self.unitLabelLe.setText(label)
+         self.unit.labelText = label
+         self.unit.UpdateLabel()
+         self.unit.update()
       
    def UnitSettingsChanged(self):
       if self.baseSizeCb.currentText() == "" or self.unitSizeCb.currentText() == "":
@@ -223,7 +267,7 @@ class AddUnitDialog(QtGui.QDialog):
       
       self.previewScene.removeItem(self.unit)
       del self.unit      
-      self.unit = RectBaseUnit(name = self.unitNameLe.text(), baseSize = (unitWidth * MM_TO_IN, unitDepth * MM_TO_IN), formation=formation)
+      self.unit = RectBaseUnit(name = self.unitNameLe.text(), labelText = self.unitLabelLe.text(), baseSize = (unitWidth * MM_TO_IN, unitDepth * MM_TO_IN), formation=formation)
       
       if unitWidth >= 240 or unitDepth >= 120:
          self.previewGv.setTransform(QtGui.QTransform().scale(10,10))

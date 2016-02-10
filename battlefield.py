@@ -188,16 +188,19 @@ class BattlefieldScene(QtGui.QGraphicsScene):
       self.distCounter.setScale(0.15)
       self.distCounter.setVisible(False)
       
+      # current distance marker
+      self.distMarker = None
+      
       # add a placeable unit container
       self.unitToPlace = None
       
       # add test unit
       #testUnit = RectBaseItem(20. / 2.54, 8. / 2.54)
-      testUnit = RectBaseUnit("Sea Guard Horde (40)", (200 * MM_TO_IN, 80 * MM_TO_IN), (10,4))
+      testUnit = RectBaseUnit("Sea Guard Horde (40)", "SG", (200 * MM_TO_IN, 80 * MM_TO_IN), (10,4))
       testUnit.setPos(36, 38)
       self.addItem(testUnit)
       
-      testUnit2 = RectBaseUnit("Ax Horde (40)", (250 * MM_TO_IN, 100 * MM_TO_IN), (10,4))
+      testUnit2 = RectBaseUnit("Ax Horde (40)", "AX", (250 * MM_TO_IN, 100 * MM_TO_IN), (10,4))
       testUnit2.setPos(32, 7.5)
       testUnit2.setRotation(173)
       print testUnit2.rotation()
@@ -224,7 +227,12 @@ class BattlefieldScene(QtGui.QGraphicsScene):
       self.mouseMode = MOUSE_DEFAULT
       self.ClearDistCounter()
       self.ResetStatusMessage()
+      self.RemoveDistanceMarker()
           
+   def ClearDistCounter(self):
+      self.distCounter.setPlainText("")
+      self.distCounter.setVisible(False)
+   
    def HandleSelectionChanged(self):
       self.ResetStatusMessage()
       
@@ -247,10 +255,6 @@ class BattlefieldScene(QtGui.QGraphicsScene):
 #          self.arcTemplates.append(template)
 #          self.addItem(template)
    
-   def ClearDistCounter(self):
-      self.distCounter.setPlainText("")
-      self.distCounter.setVisible(False)
-   
    def SetDistCounter(self, text, pos):
       self.distCounter.setPlainText(text)
       self.distCounter.setPos(pos)
@@ -261,12 +265,25 @@ class BattlefieldScene(QtGui.QGraphicsScene):
          return self.selectedItems()[0]
       else:
          return None
-      
+   
+   def RemoveDistanceMarker(self):
+      if self.distMarker:
+         self.removeItem(self.distMarker)
+         del self.distMarker
+         self.distMarker = None
+         
    def ResetStatusMessage(self):
       if len(self.selectedItems())==1:
          self.siStatusMessage.emit("%s selected." % self.selectedItems()[0].name)
       else:
          self.siStatusMessage.emit("Ready.")
+         
+   def UnitAt(self, scenePos):
+      target = self.itemAt(scenePos)
+      if target and type(target)!=RectBaseUnit:
+         target = target.topLevelItem()
+         
+      return target
             
    def mouseMoveEvent(self, e):
       if self.mouseMode == MOUSE_ROTATE_UNIT:
@@ -285,6 +302,26 @@ class BattlefieldScene(QtGui.QGraphicsScene):
                angle = 360.-angle
             self.SetDistCounter(u"%.0f°" % (angle), self.selectedItems()[0].scenePos())
 
+      elif self.mouseMode == MOUSE_CHECK_DIST:
+         target = self.UnitAt(e.scenePos())
+         
+         # hovering unit? check distance, but only if no old distance marker is present
+         if not self.distMarker and (target is not None) and (type(target) is RectBaseUnit) and self.SelectedItem() and target!=self.SelectedItem():
+            p, d = self.SelectedItem().DistanceToUnit(target)
+            self.distMarker = DistanceMarker(self.SelectedItem().GetUnitLeaderPoint(), p)
+            self.addItem(self.distMarker)
+         
+         # no hover? remove dist marker, if present
+         elif (target is None or type(target)!=RectBaseUnit) and self.distMarker:
+            self.RemoveDistanceMarker()
+            
+         super(BattlefieldScene, self).mouseMoveEvent(e)
+         
+      elif self.mouseMode == MOUSE_PLACE_UNIT:
+         # item should already be in the scene, just make it visible
+         self.unitToPlace.show()
+         self.unitToPlace.setPos(e.scenePos())
+            
       else:
          super(BattlefieldScene, self).mouseMoveEvent(e)
       
@@ -302,7 +339,7 @@ class BattlefieldScene(QtGui.QGraphicsScene):
          self.AbortMouseAction()
          
       elif self.mouseMode == MOUSE_ALIGN_TO and e.button() == Qt.LeftButton and self.itemAt(e.scenePos()) is not None:
-         target = self.itemAt(e.scenePos())
+         target = self.UnitAt(e.scenePos())
          
          if type(target) == RectBaseUnit and target != self.selectedItems()[0]: # don't align to non-unit objects or to self
             self.selectedItems()[0].AlignToUnit(target) # unit decides to which exact facing it aligns based on its position
@@ -315,8 +352,8 @@ class BattlefieldScene(QtGui.QGraphicsScene):
          
       elif self.mouseMode == MOUSE_CHECK_ARC and e.button() == Qt.LeftButton:
          self.AbortMouseAction()
-         target = self.itemAt(e.scenePos())
-         if (target is not None) and (type(target) is RectBaseUnit) and self.SelectedItem():
+         target = self.UnitAt(e.scenePos())
+         if (target is not None) and (type(target) is RectBaseUnit) and self.SelectedItem() and target!=self.SelectedItem():
             arc = self.SelectedItem().DetermineArc(target)
             if arc == ARC_FRONT: text = "front arc"
             elif arc == ARC_REAR: text = "rear arc"
@@ -324,25 +361,56 @@ class BattlefieldScene(QtGui.QGraphicsScene):
             elif arc == ARC_RIGHT: text = "right flank"
             
             self.siLogEvent.emit("%s is currently in %s's %s." % (self.SelectedItem().name, target.name, text))
-            
          
       elif self.mouseMode == MOUSE_CHECK_ARC and (self.itemAt(e.scenePos()) is None or e.button() == Qt.RightButton):
          self.AbortMouseAction()
          super(BattlefieldScene, self).mousePressEvent(e)
          
+      #=========================================================================
+      # MOUSE_CHECK_DIST
+      #  Check closest distance from unit to unit. Left-click over target unit 
+      #  write the distance to the log, visible for all players. Right-click
+      #  to cancel. Hovering over a unit in this mode will show the distance
+      #  within the scene, see mouseMoveEvent.
+      #=========================================================================
       elif self.mouseMode == MOUSE_CHECK_DIST and e.button() == Qt.LeftButton:
          self.AbortMouseAction()
-         target = self.itemAt(e.scenePos())
-         if (target is not None) and (type(target) is RectBaseUnit) and self.SelectedItem():
+         target = self.UnitAt(e.scenePos())
+         if (target is not None) and (type(target) is RectBaseUnit) and self.SelectedItem() and target!=self.SelectedItem():
             
             p, d = self.SelectedItem().DistanceToUnit(target)
             self.siLogEvent.emit("Distance from %s's unit leader point to the closest point of %s is %.2f\"." % (self.SelectedItem().name, target.name, d))
-            self.addLine(QtCore.QLineF(self.SelectedItem().GetUnitLeaderPoint(), p))
+            
+            #self.AddTimedMarker("MRK_DIST01", TimedDistanceMarker(self.SelectedItem().GetUnitLeaderPoint(), p))
 
       elif self.mouseMode == MOUSE_CHECK_DIST and (self.itemAt(e.scenePos()) is None or e.button() == Qt.RightButton):
          self.AbortMouseAction()
          super(BattlefieldScene, self).mousePressEvent(e)
          
+      #=========================================================================
+      # MOUSE_PLACE_UNIT
+      #  Place a new unit in the scene. Click left to place at the mouse cursor
+      #  or click right to cancel.
+      #  TODO: Pressing ESCAPE should cancel as well.
+      #=========================================================================
+      elif self.mouseMode == MOUSE_PLACE_UNIT and e.button() == Qt.LeftButton:
+         # item should already be in the scene, just make it visible
+         self.unitToPlace.show()
+         self.unitToPlace.setPos(e.scenePos())
+         self.unitToPlace.setOpacity(1.0)
+         self.unitToPlace = None
+         self.AbortMouseAction()
+
+      elif self.mouseMode == MOUSE_PLACE_UNIT and e.button() == Qt.RightButton:
+         # item should already be in the scene, just make it visible
+         self.removeItem(self.unitToPlace)
+         del self.unitToPlace
+         self.unitToPlace = None
+         self.AbortMouseAction()
+      
+      #=========================================================================
+      # Anything else / mode not handled: Propagate to base class.
+      #=========================================================================
       else:
          super(BattlefieldScene, self).mousePressEvent(e)
       
@@ -411,7 +479,7 @@ class BattlefieldView(QtGui.QGraphicsView):
       ticks = e.delta() / 120
       
       if ticks > 0: self.ZoomIn(ticks)
-      else: self.ZoomOut(-ticks) # ticks must always be positive, else the scene would be flipped
+      else: self.ZoomOut(-ticks) # argument must always be positive, else the scene would be flipped
       
    def ZoomIn(self, ticks):
       assert(ticks>=0)
@@ -425,11 +493,16 @@ class BattlefieldView(QtGui.QGraphicsView):
 class RectBaseUnit(QtGui.QGraphicsRectItem):
    DefaultColor = QtGui.QColor(34,134,219)
    
-   def __init__(self, name="Unnamed unit", baseSize=(100*MM_TO_IN, 80*MM_TO_IN), formation=None, parent=None):
+   def __init__(self, name="Unnamed unit", labelText="?", baseSize=(100*MM_TO_IN, 80*MM_TO_IN), formation=None, parent=None):
       super(RectBaseUnit, self).__init__(parent)
       
       self.name = name
       self.formation = formation
+      self.labelText = labelText
+      
+      # label
+      self.label = QtGui.QGraphicsTextItem(labelText, self) # short label with 1-4 characters to easily identify the unit (e.g. "SG1" for the first Sea Guard unit)
+      self.label.setDefaultTextColor(QtGui.QColor(255,255,255,200))
       
       self.setFlags(QtGui.QGraphicsItem.ItemIsSelectable | QtGui.QGraphicsItem.ItemSendsGeometryChanges) # | QtGui.QGraphicsItem.ItemIsMovable 
       self.setToolTip(name)
@@ -458,6 +531,8 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
       
       # container for markers
       self.markers = {} # (markerName : quantity) tuples
+      
+      self.UpdateLabel()
       
    @QtCore.Slot(str)
    def AddMarker(self, markerName):
@@ -848,6 +923,15 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
       diag.dial.valueChanged.connect(self.movementTemplate.setRotation)
       diag.exec_()
       
+   def UpdateLabel(self):
+      self.label.setPlainText(self.labelText)
+      
+      # adjust label font size
+      fm = QtGui.QFontMetricsF(self.label.font())
+      scale = min( self.rect().width() / fm.width(self.labelText), 0.8 * self.rect().height() / fm.height() )
+      self.label.setScale(scale)
+      self.label.setPos(-0.5*self.label.boundingRect().width()*self.label.scale(), -0.5*self.label.boundingRect().height()*self.label.scale())
+      
    def contextMenuEvent(self, e):
       self.setSelected(True)
       self.contextMenu.exec_(e.screenPos())
@@ -864,7 +948,7 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
       super(RectBaseUnit, self).paint(painter, option, widget)
       
       # determine front facing triangle coordinates
-      triW, triH = 4, 0.8
+      triW, triH = 4, 0.7
       if triW > self.rect().width():
          triW = self.rect().width()
          
@@ -892,6 +976,14 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
          dy = 1.* self.rect().height() / self.formation[1]
          for i in range(self.formation[1]-1):
              painter.drawLine(QtCore.QLineF(self.rect().left(), self.rect().top()+(i+1)*dy, self.rect().right(), self.rect().top()+(i+1)*dy))
+             
+      # add label text
+#       if self.drawLabel:
+#          font = QtGui.QFont()
+#          font.setPointSizeF(self.labelSize)
+#          painter.setFont(font)
+#          painter.setPen(QtGui.QColor(255,255,255,180))
+#          painter.drawText(self.rect(), Qt.AlignCenter, self.label)
    
    def keyPressEvent(self, e):
       if e.key() == Qt.Key_R: # rotate
@@ -972,6 +1064,21 @@ class UnitContextMenu(QtGui.QMenu):
       super(UnitContextMenu, self).__init__()
       self.parentUnit = parentUnit
       
+      # Rotate
+      rot = self.addAction(QtGui.qApp.DataManager.IconByName("ICN_ROTATE_UNIT"), "Rotate")
+      rot.triggered.connect(self.parentUnit.InitRotation)
+      
+      # Align to
+      algn = self.addAction("Align to")
+      algn.triggered.connect(self.parentUnit.InitAlignTo)
+         
+      # Check menu
+      self.checkMenu = self.addMenu("Check...")
+      cdist = self.checkMenu.addAction("Distance to")
+      cdist.triggered.connect(self.parentUnit.InitCheckDistance)
+      carc = self.checkMenu.addAction("Arc/Facing")
+      carc.triggered.connect(self.parentUnit.InitDetermineArc)
+      
       # Add marker menu
       self.signalMapper = QtCore.QSignalMapper(self)
       self.addMarkerMenu = self.addMenu("Add marker...")
@@ -982,22 +1089,6 @@ class UnitContextMenu(QtGui.QMenu):
          act.triggered.connect(self.signalMapper.map)
       # signal mapper propagates the signal to parent unit, along with the respective marker name
       self.signalMapper.mapped[str].connect(self.parentUnit.AddMarker)
-      
-      # Rotate
-      rot = self.addAction(QtGui.qApp.DataManager.IconByName("ICN_ROTATE_UNIT"), "Rotate")
-      rot.triggered.connect(self.parentUnit.InitRotation)
-      
-      # Check menu
-      self.checkMenu = self.addMenu("Check...")
-      cdist = self.checkMenu.addAction("Distance to")
-      cdist.triggered.connect(self.parentUnit.InitCheckDistance)
-      carc = self.checkMenu.addAction("Arc/Facing")
-      carc.triggered.connect(self.parentUnit.InitDetermineArc)
-      
-      # Align to
-      algn = self.addAction("Align to")
-      algn.triggered.connect(self.parentUnit.InitAlignTo)
-         
 
 class MovementTemplateContextMenu(QtGui.QMenu):
    def __init__(self):
@@ -1017,6 +1108,7 @@ class RectBaseMovementTemplate(RectBaseUnit):
    
    def __init__(self, parentUnit):
       super(RectBaseMovementTemplate, self).__init__(name=parentUnit.name)
+      self.label.hide()
       
       self.parentUnit = parentUnit 
       self.setRect(parentUnit.rect())
@@ -1076,3 +1168,34 @@ class RectBaseMovementTemplate(RectBaseUnit):
       
       #if e.button() == Qt.LeftButton:
       #   self.restrictedMovementAxis = None
+
+
+class DistanceMarker(QtGui.QGraphicsLineItem):
+   def __init__(self, ptFrom, ptTo):
+      line = QtCore.QLineF(ptFrom, ptTo)
+      super(DistanceMarker, self).__init__(line)
+      #pen = self.pen()
+      #pen.setWidth(1.)
+      #self.setPen(pen)
+      
+      dist = line.length()
+      self.text = QtGui.QGraphicsTextItem("%.2f\"" % dist, self)
+      self.text.scale(0.15, 0.15)
+      self.text.setPos((ptFrom+ptTo)*0.5) # move to middle of line
+      
+      
+class TextLabel(QtGui.QGraphicsTextItem):
+   """ Custom implementation of QGraphicsTextItem which
+   propagates all mouse events to its parent, if present. """
+   def __init__(self, text, parent=None):
+      super(TextLabel, self).__init__(text, parent)
+#       
+#    def mouseMoveEvent(self, e):
+#       if self.parent() is not None:
+#          self.parent().mouseMoveEvent(e)
+#       else: super(TextLabel, self).mouseMoveEvent(e)
+#       
+#    def mousePressEvent(self, e):
+#       if self.parent() is not None:
+#          self.parent().mousePressEvent(e)
+#       else: super(TextLabel, self).mousePressEvent(e)
