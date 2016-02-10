@@ -113,7 +113,8 @@ class MarkerItem(QtGui.QGraphicsPixmapItem):
    
    def Remove(self):
       self.parentItem().RemoveMarker(self.name)
-      self.scene().siLogEvent.emit("Removed %s marker from %s." % (self.name, self.parentItem().name))
+      # BUGGED
+      #self.scene().siLogEvent.emit("Removed %s marker from %s." % (self.name, self.parentItem().name))
 
 #===============================================================================
 # DialDialog
@@ -165,20 +166,26 @@ class BattlefieldScene(QtGui.QGraphicsScene):
       self.setSceneRect(-margin, -margin, tableSize[0]+2*margin, tableSize[1]+2*margin)
       
       # background texture
-      bgImg = QtGui.QPixmap(os.path.join("data", "mats", "mat01.jpg"))
-      aspectRatio = 1. * tableSize[0] / tableSize[1]
+#       if not os.path.isfile(os.path.join("..", "data", "mats", "mat01.jpg")):
+#          print "Warning: Background image not found!"
+#       else:
+#          bgImg = QtGui.QPixmap(os.path.join("..", "data", "mats", "mat01.jpg"))
+#          print bgImg, bgImg.width(), bgImg.height()
+#          aspectRatio = 1. * tableSize[0] / tableSize[1]
+#          
+#          if (1.*bgImg.width()/bgImg.height() > aspectRatio): # image file is too wide
+#             cropRect = QtCore.QRect(0, 0, bgImg.height() * aspectRatio, bgImg.height())
+#          else: # image file too high
+#             cropRect = QtCore.QRect(0, 0, bgImg.width(), bgImg.width()/aspectRatio)
+#          
+#          croppedBg = bgImg.copy(cropRect)
+#          self.backgroundItem = QtGui.QGraphicsPixmapItem(croppedBg)
+#          scale = 1. * tableSize[0] / croppedBg.width()
+#          self.backgroundItem.scale(scale, scale)
+#          self.addItem(self.backgroundItem)
+#       
       
-      if (1.*bgImg.width()/bgImg.height() > aspectRatio): # image file is too wide
-         cropRect = QtCore.QRect(0, 0, bgImg.height() * aspectRatio, bgImg.height())
-      else: # image file too high
-         cropRect = QtCore.QRect(0, 0, bgImg.width(), bgImg.width()/aspectRatio)
-      
-      croppedBg = bgImg.copy(cropRect)
-      self.backgroundItem = QtGui.QGraphicsPixmapItem(croppedBg)
-      scale = 1. * tableSize[0] / croppedBg.width()
-      self.backgroundItem.scale(scale, scale)
-      
-      self.addItem(self.backgroundItem)
+      self.addRect(0, 0, tableSize[0], tableSize[1], brush=QtGui.QBrush(QtGui.QColor(87,192,52)))
       
       # draw table border
       pen = QtGui.QPen()
