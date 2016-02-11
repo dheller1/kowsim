@@ -55,6 +55,7 @@ class MarkerItem(QtGui.QGraphicsPixmapItem):
    
    def __init__(self, markerType, parent):
       super(MarkerItem, self).__init__(markerType.pixmap, parent)
+      self.setZValue(Z_UNIT_MARKER)
       
       self.name = markerType.name
       
@@ -166,26 +167,27 @@ class BattlefieldScene(QtGui.QGraphicsScene):
       self.setSceneRect(-margin, -margin, tableSize[0]+2*margin, tableSize[1]+2*margin)
       
       # background texture
-#       if not os.path.isfile(os.path.join("..", "data", "mats", "mat01.jpg")):
-#          print "Warning: Background image not found!"
-#       else:
-#          bgImg = QtGui.QPixmap(os.path.join("..", "data", "mats", "mat01.jpg"))
-#          print bgImg, bgImg.width(), bgImg.height()
-#          aspectRatio = 1. * tableSize[0] / tableSize[1]
-#          
-#          if (1.*bgImg.width()/bgImg.height() > aspectRatio): # image file is too wide
-#             cropRect = QtCore.QRect(0, 0, bgImg.height() * aspectRatio, bgImg.height())
-#          else: # image file too high
-#             cropRect = QtCore.QRect(0, 0, bgImg.width(), bgImg.width()/aspectRatio)
-#          
-#          croppedBg = bgImg.copy(cropRect)
-#          self.backgroundItem = QtGui.QGraphicsPixmapItem(croppedBg)
-#          scale = 1. * tableSize[0] / croppedBg.width()
-#          self.backgroundItem.scale(scale, scale)
-#          self.addItem(self.backgroundItem)
+      if not os.path.isfile(os.path.join("..", "data", "mats", "mat01.png")):
+         print "Warning: Background image not found!"
+      else:
+         bgImg = QtGui.QPixmap(os.path.join("..", "data", "mats", "mat01.png"))
+         print bgImg, bgImg.width(), bgImg.height()
+         aspectRatio = 1. * tableSize[0] / tableSize[1]
+          
+         if (1.*bgImg.width()/bgImg.height() > aspectRatio): # image file is too wide
+            cropRect = QtCore.QRect(0, 0, bgImg.height() * aspectRatio, bgImg.height())
+         else: # image file too high
+            cropRect = QtCore.QRect(0, 0, bgImg.width(), bgImg.width()/aspectRatio)
+          
+         croppedBg = bgImg.copy(cropRect)
+         self.backgroundItem = QtGui.QGraphicsPixmapItem(croppedBg)
+         scale = 1. * tableSize[0] / croppedBg.width()
+         self.backgroundItem.scale(scale, scale)
+         self.addItem(self.backgroundItem)
+         self.backgroundItem.setZValue(Z_BACKGROUND)
 #       
       
-      self.addRect(0, 0, tableSize[0], tableSize[1], brush=QtGui.QBrush(QtGui.QColor(87,192,52)))
+      #self.addRect(0, 0, tableSize[0], tableSize[1], brush=QtGui.QBrush(QtGui.QColor(87,192,52)))
       
       # draw table border
       pen = QtGui.QPen()
@@ -225,11 +227,11 @@ class BattlefieldScene(QtGui.QGraphicsScene):
       self.distCounter.setScale(0.15)
       self.distCounter.setVisible(False)
       
-      # current distance marker
-      self.distMarker = None
-      
-      # add a placeable unit container
-      self.unitToPlace = None
+      self.distMarker = None # current distance marker
+      self.unitToPlace = None # add a placeable unit container
+      self.terrainToPlace = None # placeable terrain container
+      self.rotatingItem = None # if any non-unit item is currently rotated, it is this one
+      self.movingItem = None # if any non-unit item is currently translated, it is this one
       
       # add test unit
       #testUnit = RectBaseItem(20. / 2.54, 8. / 2.54)
@@ -244,6 +246,8 @@ class BattlefieldScene(QtGui.QGraphicsScene):
       print testUnit2.rotation()
       testUnit2.SetOwner(QtGui.qApp.GameManager.GetPlayer(1))
       self.addItem(testUnit2)
+      
+      print "z1,z2:", testUnit.zValue(), testUnit2.zValue()
       
       self.InitConnections()
     
@@ -266,10 +270,20 @@ class BattlefieldScene(QtGui.QGraphicsScene):
       self.ClearDistCounter()
       self.ResetStatusMessage()
       self.RemoveDistanceMarker()
+      self.unitToPlace = None
+      self.terrainToPlace = None
+      self.rotatingItem = None
+      self.movingItem = None
           
    def ClearDistCounter(self):
       self.distCounter.setPlainText("")
       self.distCounter.setVisible(False)
+   
+   def DestroyTerrainPiece(self, trn):
+      if trn in self.items():
+         self.removeItem(trn)
+         self.siLogEvent.emit("%s was removed from play." % trn.name)
+         del trn
       
    def DestroyUnit(self, unit):
       if unit in self.items():
@@ -331,6 +345,9 @@ class BattlefieldScene(QtGui.QGraphicsScene):
       return target
             
    def mouseMoveEvent(self, e):
+      #=========================================================================
+      # MOUSE_ROTATE_UNIT
+      #=========================================================================
       if self.mouseMode == MOUSE_ROTATE_UNIT:
          e.accept()
          if len(self.selectedItems()) != 1: raise BaseException("Invalid number of selected units!")
@@ -346,6 +363,24 @@ class BattlefieldScene(QtGui.QGraphicsScene):
             if angle > 180.: # instead of "345° to the right", output "15° to the left"
                angle = 360.-angle
             self.SetDistCounter(u"%.0f°" % (angle), self.selectedItems()[0].scenePos())
+            
+      #=========================================================================
+      # MOUSE_ROTATE_TERRAIN
+      #=========================================================================
+      elif self.mouseMode == MOUSE_ROTATE_TERRAIN:
+         e.accept()
+         itm = self.rotatingItem
+         vecToPoint = e.scenePos() - itm.scenePos()
+         angle = (180. / math.pi) * math.atan2(vecToPoint.x(), -vecToPoint.y())
+         itm.setRotation(angle)
+         
+      #=========================================================================
+      # MOUSE_MOVE_TERRAIN
+      #=========================================================================
+      elif self.mouseMode == MOUSE_MOVE_TERRAIN:
+         e.accept()
+         itm = self.movingItem
+         itm.setPos(e.scenePos())
 
       elif self.mouseMode == MOUSE_CHECK_DIST:
          target = self.UnitAt(e.scenePos())
@@ -366,6 +401,11 @@ class BattlefieldScene(QtGui.QGraphicsScene):
          # item should already be in the scene, just make it visible
          self.unitToPlace.show()
          self.unitToPlace.setPos(e.scenePos())
+         
+      elif self.mouseMode == MOUSE_PLACE_TERRAIN:
+         # item should already be in the scene, just make it visible
+         self.terrainToPlace.show()
+         self.terrainToPlace.setPos(e.scenePos())
             
       else:
          super(BattlefieldScene, self).mouseMoveEvent(e)
@@ -381,6 +421,28 @@ class BattlefieldScene(QtGui.QGraphicsScene):
          
       elif self.mouseMode == MOUSE_ROTATE_UNIT and e.button() == Qt.RightButton:
          e.accept()
+         self.AbortMouseAction()
+         
+      #=========================================================================
+      # MOUSE_ROTATE_TERRAIN
+      #=========================================================================
+      elif self.mouseMode == MOUSE_ROTATE_TERRAIN:
+         e.accept()
+         itm = self.rotatingItem
+         vecToPoint = e.scenePos() - itm.scenePos()
+         angle = (180. / math.pi) * math.atan2(vecToPoint.x(), -vecToPoint.y())
+         itm.setRotation(angle)
+         self.siLogEvent.emit("%s rotated." % itm.name)
+         self.AbortMouseAction()
+         
+      #=========================================================================
+      # MOUSE_MOVE_TERRAIN
+      #=========================================================================
+      elif self.mouseMode == MOUSE_MOVE_TERRAIN:
+         e.accept()
+         itm = self.movingItem
+         itm.setPos(e.scenePos())
+         self.siLogEvent.emit("%s moved." % itm.name)
          self.AbortMouseAction()
          
       elif self.mouseMode == MOUSE_ALIGN_TO and e.button() == Qt.LeftButton and self.itemAt(e.scenePos()) is not None:
@@ -451,6 +513,27 @@ class BattlefieldScene(QtGui.QGraphicsScene):
          self.removeItem(self.unitToPlace)
          del self.unitToPlace
          self.unitToPlace = None
+         self.AbortMouseAction()
+         
+      #=========================================================================
+      # MOUSE_PLACE_UNIT
+      #  Place a new terrain piece in the scene. Click left to place at the mouse cursor
+      #  or click right to cancel.
+      #  TODO: Pressing ESCAPE should cancel as well.
+      #=========================================================================
+      elif self.mouseMode == MOUSE_PLACE_TERRAIN and e.button() == Qt.LeftButton:
+         # item should already be in the scene, just make it visible
+         self.terrainToPlace.show()
+         self.terrainToPlace.setPos(e.scenePos())
+         self.terrainToPlace.setOpacity(1.0)
+         self.terrainToPlace = None
+         self.AbortMouseAction()
+
+      elif self.mouseMode == MOUSE_PLACE_TERRAIN and e.button() == Qt.RightButton:
+         # item should already be in the scene, just make it visible
+         self.removeItem(self.terrainToPlace)
+         del self.terrainToPlace
+         self.terrainToPlace = None
          self.AbortMouseAction()
       
       #=========================================================================
@@ -546,6 +629,8 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
       self.labelText = labelText
       
       self.owner = None # player who controls this unit
+      
+      self.setZValue(Z_UNIT)
       
       # label
       self.label = QtGui.QGraphicsTextItem(labelText, self) # short label with 1-4 characters to easily identify the unit (e.g. "SG1" for the first Sea Guard unit)
@@ -965,6 +1050,7 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
             flbr.setPen(Qt.NoPen)
             flbr.setParentItem(self)
             flbr.setVisible(False)
+            flbr.setZValue(Z_ARC_TEMPLATE)
          
          self.arcTemplates = [f,l,b,r]
 
@@ -1181,6 +1267,7 @@ class RectBaseMovementTemplate(RectBaseUnit):
    
    def __init__(self, parentUnit):
       super(RectBaseMovementTemplate, self).__init__(name=parentUnit.name)
+      self.setZValue(Z_MOVEMENT_TEMPLATE)
       self.label.hide()
       
       self.parentUnit = parentUnit 
@@ -1250,6 +1337,7 @@ class DistanceMarker(QtGui.QGraphicsLineItem):
       #pen = self.pen()
       #pen.setWidth(1.)
       #self.setPen(pen)
+      self.setZValue(Z_DIST_MARKER)
       
       dist = line.length()
       self.text = QtGui.QGraphicsTextItem("%.2f\"" % dist, self)

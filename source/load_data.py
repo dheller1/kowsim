@@ -5,6 +5,7 @@ from PySide import QtGui
 from sets import Set
 from util import unicode_csv_reader, utf_8_encoder
 from kow_logic import KowUnitType, KowUnitSize
+from terrain import TerrainTemplate
 
 def ReadLinesFromCsv(filename, codepage='utf-8'):
       csvLines = []
@@ -29,6 +30,8 @@ class DataManager:
       self._markersByName = None
       self._icons = None
       self._iconsByName = None
+      self._terrain = None
+      self._terrainByName = None
       
    def GetUnitTypes(self):
       if not self._unitTypes:
@@ -42,8 +45,14 @@ class DataManager:
    def GetIcons(self):
       return self._icons
    
+   def GetTerrain(self):
+      return self._terrain
+   
    def MarkerByName(self, name):
       return self._markersByName[name]
+   
+   def TerrainByName(self, name):
+      return self._terrainByName[name]
    
    def UnitTypeByName(self, name):
       if not self._unitTypesByName:
@@ -53,6 +62,9 @@ class DataManager:
    
    def IconByName(self, name):
       return self._iconsByName[name]
+   
+   def ListTerrainResources(self):
+      return self._terrainByName.keys()
    
    def LoadBaseSizes(self, filename = os.path.join("..", "data", "base_sizes.csv")):
       if not self._unitTypes:
@@ -113,6 +125,32 @@ class DataManager:
          mrk = Marker(name, pixmap, bgColor, cumulative)
          self._markers.append(mrk)
          self._markersByName[name] = mrk
+         
+            
+   def LoadTerrain(self, filename = os.path.join("..", "data", "terrain", "terrain.csv")):
+      lines = ReadLinesFromCsv(filename)
+      
+      self._terrain = []
+      self._terrainByName = {}
+       
+      for line in lines:
+         if line[0].startswith("#"): continue
+         
+         name = line[0]
+         resourceId = line[1]
+         imgFile = line[2]
+         moveType = line[3]
+         defw = float(line[4])
+         defh = float(line[5])
+         
+         # check if file is existent
+         f = open(os.path.join("..", "data","terrain",imgFile))
+         f.close()
+         
+         pm = QtGui.QPixmap(os.path.join("..", "data","terrain",imgFile))
+         trn = TerrainTemplate(name, resourceId, moveType, pm, (defw,defh))
+         self._terrain.append(trn)
+         self._terrainByName[name] = trn
    
    def LoadUnitTypes(self, filename = os.path.join("..", "data", "unit_types.csv")):
       lines = ReadLinesFromCsv(filename)

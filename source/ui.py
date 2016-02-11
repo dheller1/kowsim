@@ -7,6 +7,7 @@ from battlefield import BattlefieldView, RectBaseUnit
 from constants import *
 from load_data import DataManager
 from game import GameManager
+from terrain import TerrainGraphicsItem, TerrainTemplate
 
 class MainWindow(QtGui.QMainWindow):
    def __init__(self):
@@ -20,6 +21,7 @@ class MainWindow(QtGui.QMainWindow):
       QtGui.qApp.DataManager.LoadBaseSizes()
       QtGui.qApp.DataManager.LoadMarkers()
       QtGui.qApp.DataManager.LoadIcons()
+      QtGui.qApp.DataManager.LoadTerrain()
       
       #=========================================================================
       # Init game manager
@@ -85,15 +87,24 @@ class MainMenu(QtGui.QMenuBar):
    def __init__(self):
       super(MainMenu, self).__init__()
       
+      # Forces
       self.forcesMenu = QtGui.QMenu("&Forces")
       self.addUnitAct = QtGui.QAction("Add &unit...", self.forcesMenu)
       self.forcesMenu.addAction(self.addUnitAct)
       
+      # Battlefield
+      self.bfMenu = QtGui.QMenu("&Battlefield")
+      self.addTerrainAct = QtGui.QAction("Add &terrain...", self.bfMenu)
+      self.bfMenu.addAction(self.addTerrainAct)
+      
+      
       self.addMenu(self.forcesMenu)
+      self.addMenu(self.bfMenu)
       
       
       # connections
       self.addUnitAct.triggered.connect(self.AddUnit)
+      self.addTerrainAct.triggered.connect(self.AddTerrain)
       
    def AddUnit(self):
       scene = self.parent().centralWidget().battlefieldView.scene()
@@ -106,6 +117,185 @@ class MainMenu(QtGui.QMenuBar):
          dlg.unit.setOpacity(0.5)
          scene.siStatusMessage.emit("Placing %s." % dlg.unit.name)
          scene.mouseMode = MOUSE_PLACE_UNIT
+         
+   def AddTerrain(self):
+      scene = self.parent().centralWidget().battlefieldView.scene()
+      dlg = AddTerrainDialog()
+      dlg.exec_()
+      if dlg.result()==QtGui.QDialog.Accepted:
+         scene.terrainToPlace = dlg.previewItem
+         scene.addItem(dlg.previewItem) # add instantly but hide it first
+         dlg.previewItem.hide()
+         dlg.previewItem.setOpacity(0.5)
+         scene.siStatusMessage.emit("Placing %s." % dlg.previewItem.name)
+         scene.mouseMode = MOUSE_PLACE_TERRAIN
+   
+class AddTerrainDialog(QtGui.QDialog):
+   def __init__(self):
+      super(AddTerrainDialog, self).__init__()
+      
+      #=========================================================================
+      # member children
+      #=========================================================================
+      self.previewGv = QtGui.QGraphicsView()
+      self.previewScene = QtGui.QGraphicsScene()
+      
+      self.resourceCb = QtGui.QComboBox()
+      self.movementTypeCb = QtGui.QComboBox()
+      self.widthLe = QtGui.QLineEdit()
+      self.heightLe = QtGui.QLineEdit()
+      for le in self.widthLe, self.heightLe:
+         le.setFixedWidth(28)
+         le.setValidator(QtGui.QRegExpValidator(QtCore.QRegExp("\d{0,}\.\d{0,}")))
+      self.lockRatioCb = QtGui.QCheckBox("lock ratio")
+      self.lockRatioCb.setChecked(True)
+      
+           
+      #=========================================================================
+      # init self and children
+      #=========================================================================
+      self.setWindowTitle("Add terrain...")
+      
+      trnResources = QtGui.qApp.DataManager.ListTerrainResources()
+      for t in trnResources:
+         self.resourceCb.addItem(t)
+         
+      for mtype in TerrainTemplate.MOVEMENT_TYPES:
+         self.movementTypeCb.addItem(mtype.text)
+      
+      self.previewGv.setMinimumSize(320,240)
+      self.previewGv.setEnabled(False)
+      self.previewGv.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+      self.previewGv.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+      #self.previewScene.addItem(self.unit)
+      self.previewScene.setBackgroundBrush(QtGui.QColor(121,217,82))
+      
+      self.previewGv.setScene(self.previewScene)
+      self.previewGv.scale(20,20)
+      
+      self.cancelBtn = QtGui.QPushButton("Cancel")
+      self.acceptBtn = QtGui.QPushButton("Add >>")
+      self.acceptBtn.setDefault(True)
+      
+      
+      #=========================================================================
+      # Init layout
+      #=========================================================================
+      lay = QtGui.QVBoxLayout()
+      mainLay = QtGui.QGridLayout()
+      btnLay = QtGui.QHBoxLayout()
+      
+      # dimensions sub laoyut
+      dimLay = QtGui.QHBoxLayout()
+      dimLay.addWidget(self.widthLe)
+      dimLay.addWidget(QtGui.QLabel("x"))
+      dimLay.addWidget(self.heightLe)
+      dimLay.addWidget(self.lockRatioCb)
+      
+      # general group box
+      genGrpBox = QtGui.QGroupBox("General")
+      genLay = QtGui.QGridLayout()
+      
+      row = 0
+      # template
+      genLay.addWidget(QtGui.QLabel("Template:"), row, 0)
+      genLay.addWidget(self.resourceCb, row, 1)
+      row+=1
+      
+      # movement
+      genLay.addWidget(QtGui.QLabel("Movement:"), row, 0)
+      genLay.addWidget(self.movementTypeCb, row, 1)
+      row+=1
+      
+      # size
+      genLay.addWidget(QtGui.QLabel("Size [in]:"), row, 0)
+      genLay.addLayout(dimLay, row, 1)
+      row+=1
+      
+      
+      #=========================================================================
+      # ASSEMBLE LAYOUTS
+      #=========================================================================
+      genGrpBox.setLayout(genLay)
+      mainLay.addWidget(genGrpBox, 0, 0)
+      mainLay.addWidget(self.previewGv, 0, 1, 2, 1, stretch=1)
+      
+      btnLay.addWidget(self.cancelBtn)
+      btnLay.addStretch(1)
+      btnLay.addWidget(self.acceptBtn)
+      
+      lay.addLayout(mainLay)
+      lay.addLayout(btnLay)
+      
+      self.setLayout(lay)
+      
+      #=========================================================================
+      # INIT CONNECTIONS
+      #=========================================================================
+      self.cancelBtn.clicked.connect(self.reject)
+      self.acceptBtn.clicked.connect(self.accept)
+      
+      self.widthLe.textEdited.connect(self.WidthChanged)
+      self.heightLe.textEdited.connect(self.HeightChanged)
+      self.lockRatioCb.toggled.connect(self.SetLock)
+      
+      #=========================================================================
+      # FINAL INITIALIZATION
+      #=========================================================================
+      self.TemplateChanged()
+      #self.unitNameLe.selectAll()
+      #self.unitNameLe.setFocus()
+      
+   def WidthChanged(self):
+      w = float(self.widthLe.text())
+      scaleW = w / self.lastW
+      self.lastW = w
+      
+      if self.lockRatioCb.isChecked():
+         self.heightLe.setText("%.2f" % (w/self.lastRatio))
+         scaleH = scaleW
+         self.lastH = w / self.lastRatio
+      else: scaleH = 1.
+         
+      self.previewItem.scale(scaleW, scaleH)
+      
+   def HeightChanged(self):
+      h = float(self.heightLe.text())
+      scaleH = h / self.lastH
+      self.lastH = h
+      
+      if self.lockRatioCb.isChecked():
+         self.widthLe.setText("%.2f" % (h*self.lastRatio))
+         scaleW = scaleH
+         self.lastW = h * self.lastRatio
+      else: scaleW = 1.
+      
+      self.previewItem.scale(scaleW, scaleH)
+         
+   def SetLock(self):
+      trn = self.previewItem
+      w, h = float(self.widthLe.text()), float(self.heightLe.text()) 
+      self.lastRatio = 1. * w / h
+      
+   def TemplateChanged(self):
+      # empty scene
+      self.previewScene.clear()
+      
+      name = self.resourceCb.currentText()
+      tmp = QtGui.qApp.DataManager.TerrainByName(name)
+      
+      trnItem = TerrainGraphicsItem(tmp)
+      self.previewItem = trnItem
+      self.previewScene.addItem(trnItem)
+      
+      w, h = trnItem.scale() * trnItem.pixmap().width(), trnItem.scale() * trnItem.pixmap().height() 
+      self.widthLe.setText("%.2f" % w)
+      self.heightLe.setText("%.2f" % h)
+      self.lastRatio = 1. * w / h
+      self.lastW = w
+      self.lastH = h
+      
+      self.movementTypeCb.setCurrentIndex(self.movementTypeCb.findText(tmp.movementType.text))
 
 class AddUnitDialog(QtGui.QDialog):
    def __init__(self):
@@ -340,10 +530,13 @@ class ChatWidget(QtGui.QWidget):
       
       self.InitConnections()
       
-   def AddHistoryItem(self, text):
+   def AddHistoryItem(self, text, mode="b"):
+      self.chatHistory.append("<%s>%s</%s>" % (mode, text, mode))
+      
+   def AddChatItem(self, text):
       # add timestamp
       timestamp = "<span style=\"%s\">" % ChatWidget._TimestampCss + time.strftime("%H:%M:%S" + "</span> ")
-      self.chatHistory.append( timestamp + str(text) )
+      self.chatHistory.append( timestamp + unicode(text) )
       
    def InitConnections(self):
       self.textField.returnPressed.connect(self.Submit)
@@ -359,7 +552,7 @@ class ChatWidget(QtGui.QWidget):
       
       elif not text.startswith("/"): # no command?
          # add to chat history
-         self.AddHistoryItem( text )
+         self.AddChatItem( text )
          # scroll to last item
          #self.chatHistory.scrollToItem( self.chatHistory.item(self.chatHistory.count()-1) ) 
          
@@ -374,7 +567,7 @@ class ChatWidget(QtGui.QWidget):
          elif command == "r": # Roll
             try:
                rollString = commandText[1:].strip()
-               self.AddHistoryItem("<i>%s</i>" % text)
+               self.AddChatItem("<i>%s</i>" % text)
                rollHndlr = RollHandler()
                rollHndlr.InterpretString(rollString)
       
