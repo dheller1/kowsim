@@ -108,15 +108,26 @@ class TerrainContextMenu(QtGui.QMenu):
       self.parentItem = parentItem
       
       # Move
-      mov = self.addAction("&Move")
-      mov.triggered.connect(self.parentItem.InitMovement)
+      self.mov = self.addAction("&Move")
+      self.mov.triggered.connect(self.parentItem.InitMovement)
             
       # Rotate
-      rot = self.addAction(QtGui.qApp.DataManager.IconByName("ICN_ROTATE_UNIT"), "&Rotate")
-      rot.triggered.connect(self.parentItem.InitRotation)
+      self.rot = self.addAction(QtGui.qApp.DataManager.IconByName("ICN_ROTATE_UNIT"), "&Rotate")
+      self.rot.triggered.connect(self.parentItem.InitRotation)
       
       self.addSeparator()
       
+      # Lock
+      self.lock = self.addAction("&Lock")
+      self.lock.setCheckable(True)
+      self.lock.toggled.connect(self.SetLock)
+      
       # destroy terrain piece
-      dest = self.addAction("Remove")
-      dest.triggered.connect(self.parentItem.DestroySelf)
+      self.dest = self.addAction("Remove")
+      self.dest.triggered.connect(self.parentItem.DestroySelf)
+      
+   def SetLock(self, lock):
+      for act in (self.mov, self.rot, self.dest):
+         act.setEnabled(not lock)
+      text = "locked" if lock else "unlocked"
+      self.parentItem.scene().siLogEvent.emit("%s has been %s." % (self.parentItem.name, text))
