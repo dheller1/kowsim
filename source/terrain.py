@@ -26,6 +26,13 @@ class TerrainTemplate:
       
    def AspectRatio(self):
       return 1. * self.originalPixmap.width() / self.originalPixmap.height()
+   
+   @staticmethod
+   def MovementTypeByText(text):
+      for mvt in TerrainTemplate.MOVEMENT_TYPES:
+         if mvt.text == str(text):
+            return mvt
+      return None
       
    def SetMovementType(self, mtype):
       if type(mtype) in (str, unicode):

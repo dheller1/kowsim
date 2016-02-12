@@ -134,6 +134,8 @@ class AddTerrainDialog(QtGui.QDialog):
    def __init__(self):
       super(AddTerrainDialog, self).__init__()
       
+      self.nameHasBeenChanged = False
+      
       #=========================================================================
       # member children
       #=========================================================================
@@ -149,6 +151,8 @@ class AddTerrainDialog(QtGui.QDialog):
          le.setValidator(QtGui.QRegExpValidator(QtCore.QRegExp("\d{0,}\.\d{0,}")))
       self.lockRatioCb = QtGui.QCheckBox("lock ratio")
       self.lockRatioCb.setChecked(True)
+      
+      self.nameLe = QtGui.QLineEdit()
       
            
       #=========================================================================
@@ -197,6 +201,11 @@ class AddTerrainDialog(QtGui.QDialog):
       genLay = QtGui.QGridLayout()
       
       row = 0
+      # name
+      genLay.addWidget(QtGui.QLabel("Name:"), row, 0)
+      genLay.addWidget(self.nameLe, row, 1)
+      row+=1
+      
       # template
       genLay.addWidget(QtGui.QLabel("Template:"), row, 0)
       genLay.addWidget(self.resourceCb, row, 1)
@@ -238,13 +247,25 @@ class AddTerrainDialog(QtGui.QDialog):
       self.widthLe.textEdited.connect(self.WidthChanged)
       self.heightLe.textEdited.connect(self.HeightChanged)
       self.lockRatioCb.toggled.connect(self.SetLock)
+      self.movementTypeCb.currentIndexChanged.connect(self.MovementTypeChanged)
+      self.nameLe.editingFinished.connect(self.NameChanged)
       
       #=========================================================================
       # FINAL INITIALIZATION
       #=========================================================================
       self.TemplateChanged()
-      #self.unitNameLe.selectAll()
-      #self.unitNameLe.setFocus()
+      self.nameLe.selectAll()
+      self.nameLe.setFocus()
+      
+   def MovementTypeChanged(self):
+      mvtText = self.movementTypeCb.currentText()
+      mvt = TerrainTemplate.MovementTypeByText(mvtText)
+      self.previewItem.movementType = mvt
+      self.previewItem.UpdateToolTip()
+      
+   def NameChanged(self):
+      self.previewItem.name = self.nameLe.text()
+      self.nameHasBeenChanged = True
       
    def WidthChanged(self):
       w = float(self.widthLe.text())
@@ -289,6 +310,8 @@ class AddTerrainDialog(QtGui.QDialog):
       
       name = self.resourceCb.currentText()
       tmp = QtGui.qApp.DataManager.TerrainByName(name)
+      
+      if not self.nameHasBeenChanged: self.nameLe.setText(name)
       
       trnItem = TerrainGraphicsItem(tmp)
       self.previewItem = trnItem
