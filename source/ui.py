@@ -248,6 +248,7 @@ class AddTerrainDialog(QtGui.QDialog):
       
    def WidthChanged(self):
       w = float(self.widthLe.text())
+      if not w>1.e-8: return # don't drop to zero
       scaleW = w / self.lastW
       self.lastW = w
       
@@ -258,9 +259,11 @@ class AddTerrainDialog(QtGui.QDialog):
       else: scaleH = 1.
          
       self.previewItem.scale(scaleW, scaleH)
+      self.previewGv.centerOn(self.previewItem)
       
    def HeightChanged(self):
       h = float(self.heightLe.text())
+      if not h>1.e-8: return # don't drop to zero
       scaleH = h / self.lastH
       self.lastH = h
       
@@ -271,10 +274,13 @@ class AddTerrainDialog(QtGui.QDialog):
       else: scaleW = 1.
       
       self.previewItem.scale(scaleW, scaleH)
+      self.previewGv.centerOn(self.previewItem)
          
    def SetLock(self):
       trn = self.previewItem
-      w, h = float(self.widthLe.text()), float(self.heightLe.text()) 
+      w, h = float(self.widthLe.text()), float(self.heightLe.text())
+      if not (w>1.e-8 and h>1.e-8):
+         self.lockRatioCb.setChecked(False) 
       self.lastRatio = 1. * w / h
       
    def TemplateChanged(self):
@@ -296,6 +302,7 @@ class AddTerrainDialog(QtGui.QDialog):
       self.lastH = h
       
       self.movementTypeCb.setCurrentIndex(self.movementTypeCb.findText(tmp.movementType.text))
+      self.previewGv.centerOn(self.previewItem)
 
 class AddUnitDialog(QtGui.QDialog):
    def __init__(self):
