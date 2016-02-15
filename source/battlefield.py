@@ -223,7 +223,7 @@ class BattlefieldScene(QtGui.QGraphicsScene):
       
       # add floatable distance counter
       self.distCounter = self.addText("")
-      self.distCounter.setZValue(+10)
+      self.distCounter.setZValue(Z_LABEL)
       self.distCounter.setScale(0.15)
       self.distCounter.setVisible(False)
       
@@ -1337,7 +1337,7 @@ class DistanceMarker(QtGui.QGraphicsLineItem):
       #pen = self.pen()
       #pen.setWidth(1.)
       #self.setPen(pen)
-      self.setZValue(Z_DIST_MARKER)
+      self.setZValue(Z_LABEL)
       
       dist = line.length()
       self.text = QtGui.QGraphicsTextItem("%.2f\"" % dist, self)
