@@ -1,4 +1,5 @@
-import os, codecs
+# -*- coding: utf-8 -*-
+import os
 
 from PySide import QtGui
 
@@ -6,14 +7,7 @@ from sets import Set
 from util import unicode_csv_reader, utf_8_encoder
 from kow_logic import KowUnitType, KowUnitSize
 from terrain import TerrainTemplate
-
-def ReadLinesFromCsv(filename, codepage='utf-8'):
-      csvLines = []
-      with codecs.open(filename, 'r', codepage) as f:
-         csvReader = unicode_csv_reader(f, delimiter=',')
-         csvLines = [line for line in csvReader]
-         
-      return csvLines
+from util.csv import ReadLinesFromCsv
    
 class Marker:
    def __init__(self, name, pixmap, bgcolor, cumulative=True):

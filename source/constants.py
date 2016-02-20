@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 MM_TO_IN = 1. / 25.4
 IN_TO_MM = 25.4
 

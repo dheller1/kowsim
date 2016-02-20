@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import sys, time, os
 from PySide import QtGui, QtCore
 from PySide.QtCore import Qt
@@ -627,7 +629,7 @@ class UnitToolBar(QtGui.QToolBar):
       super(UnitToolBar, self).__init__("Unit controls", parent)
       
       # add tool buttons
-      self.rotateAct = self.addAction(QtGui.qApp.DataManager.IconByName("ICN_ROTATE_UNIT"), "[R]otate unit")
+      self.rotateAct = self.addAction(QtGui.qApp.DataManager.IconByName("ICN_MOVE_BACK"), "[R]otate unit")
       self.rotateAct.setEnabled(False) # enable only when a unit is selected
       
       #self.rotateBtn = QtGui.QToolButton(self.widget)
