@@ -248,7 +248,8 @@ class AddTerrainDialog(QtGui.QDialog):
       self.heightLe.textEdited.connect(self.HeightChanged)
       self.lockRatioCb.toggled.connect(self.SetLock)
       self.movementTypeCb.currentIndexChanged.connect(self.MovementTypeChanged)
-      self.nameLe.editingFinished.connect(self.NameChanged)
+      self.nameLe.textEdited.connect(self.NameChanged)
+      self.resourceCb.currentIndexChanged.connect(self.TemplateChanged)
       
       #=========================================================================
       # FINAL INITIALIZATION
@@ -264,6 +265,7 @@ class AddTerrainDialog(QtGui.QDialog):
       self.previewItem.UpdateToolTip()
       
    def NameChanged(self):
+      print "Namechanged!"
       self.previewItem.name = self.nameLe.text()
       self.nameHasBeenChanged = True
       
@@ -310,6 +312,7 @@ class AddTerrainDialog(QtGui.QDialog):
       
       name = self.resourceCb.currentText()
       tmp = QtGui.qApp.DataManager.TerrainByName(name)
+      print "Switching to %s." % name
       
       if not self.nameHasBeenChanged: self.nameLe.setText(name)
       

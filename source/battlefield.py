@@ -16,9 +16,11 @@ from PySide import QtGui, QtCore
 from PySide.QtCore import Qt
 
 from constants import *
+from mousemodes import *
 from util import dot2d, len2d, dist2d
 
 import math, os
+
 
 #===============================================================================
 # MarkerContextMenu
@@ -250,9 +252,14 @@ class BattlefieldScene(QtGui.QGraphicsScene):
       print "z1,z2:", testUnit.zValue(), testUnit2.zValue()
       
       self.InitConnections()
+      self.InitMouseModes()
     
    def InitConnections(self):
       self.selectionChanged.connect(self.HandleSelectionChanged)
+      
+   def InitMouseModes(self):
+      self.MM_CHECK_DIST = CheckDistanceMouseMode()
+      self.MM_CHECK_DIST.LoadCursor()
       
    def InitRotation(self):
       """ Initialize rotation on a selected unit (invoked from outside such as a pressed toolbutton). """
@@ -269,11 +276,13 @@ class BattlefieldScene(QtGui.QGraphicsScene):
       self.mouseMode = MOUSE_DEFAULT
       self.ClearDistCounter()
       self.ResetStatusMessage()
-      self.RemoveDistanceMarker()
+      self.RemoveDistMarker()
       self.unitToPlace = None
       self.terrainToPlace = None
       self.rotatingItem = None
       self.movingItem = None
+      
+      self.View().viewport().setCursor(QtGui.QCursor())
           
    def ClearDistCounter(self):
       self.distCounter.setPlainText("")
@@ -325,7 +334,7 @@ class BattlefieldScene(QtGui.QGraphicsScene):
       else:
          return None
    
-   def RemoveDistanceMarker(self):
+   def RemoveDistMarker(self):
       if self.distMarker:
          self.removeItem(self.distMarker)
          del self.distMarker
@@ -337,12 +346,38 @@ class BattlefieldScene(QtGui.QGraphicsScene):
       else:
          self.siStatusMessage.emit("Ready.")
          
+   def SetDistMarker(self, p1, p2):
+      self.RemoveDistMarker()
+      self.distMarker = DistanceMarker(p1, p2)
+      self.addItem(self.distMarker)
+         
+   def StartMouseMode(self, mode, *args):
+      self.mouseMode = mode
+      mode.SetArgs(*args)
+      self.View().viewport().setCursor(mode.cursor)
+      if mode == self.MM_CHECK_DIST:
+         unit = args[0]
+         self.siStatusMessage.emit("Checking distance to %s's unit leader point." % unit.name)
+               
    def UnitAt(self, scenePos):
-      target = self.itemAt(scenePos)
+      target = self.itemAt(scenePos) 
       if target and type(target)!=RectBaseUnit:
          target = target.topLevelItem()
          
-      return target
+      if type(target)==RectBaseUnit:
+         return target
+      return None
+   
+   def View(self): # there's only one view, return it
+      return self.views()[0]
+         
+   def keyPressEvent(self, e):
+      if e.key() == Qt.Key_Escape:
+         e.accept()
+         self.AbortMouseAction()
+      
+      else:
+         super(BattlefieldScene, self).keyPressEvent(e)
             
    def mouseMoveEvent(self, e):
       #=========================================================================
@@ -382,19 +417,11 @@ class BattlefieldScene(QtGui.QGraphicsScene):
          itm = self.movingItem
          itm.setPos(e.scenePos())
 
-      elif self.mouseMode == MOUSE_CHECK_DIST:
-         target = self.UnitAt(e.scenePos())
-         
-         # hovering unit? check distance, but only if no old distance marker is present
-         if not self.distMarker and (target is not None) and (type(target) is RectBaseUnit) and self.SelectedItem() and target!=self.SelectedItem():
-            p, d = self.SelectedItem().DistanceToUnit(target)
-            self.distMarker = DistanceMarker(self.SelectedItem().GetUnitLeaderPoint(), p)
-            self.addItem(self.distMarker)
-         
-         # no hover? remove dist marker, if present
-         elif (target is None or type(target)!=RectBaseUnit) and self.distMarker:
-            self.RemoveDistanceMarker()
-            
+      #=========================================================================
+      # MOUSE_CHECK_DIST
+      #=========================================================================
+      elif self.mouseMode in ( MOUSE_CHECK_DIST, self.MM_CHECK_DIST ):
+         self.MM_CHECK_DIST.mouseMoveEvent(e, self)
          super(BattlefieldScene, self).mouseMoveEvent(e)
          
       elif self.mouseMode == MOUSE_PLACE_UNIT:
@@ -480,18 +507,11 @@ class BattlefieldScene(QtGui.QGraphicsScene):
       #  to cancel. Hovering over a unit in this mode will show the distance
       #  within the scene, see mouseMoveEvent.
       #=========================================================================
-      elif self.mouseMode == MOUSE_CHECK_DIST and e.button() == Qt.LeftButton:
+      elif self.mouseMode in ( MOUSE_CHECK_DIST, self.MM_CHECK_DIST ):
          self.AbortMouseAction()
-         target = self.UnitAt(e.scenePos())
-         if (target is not None) and (type(target) is RectBaseUnit) and self.SelectedItem() and target!=self.SelectedItem():
-            
-            p, d = self.SelectedItem().DistanceToUnit(target)
-            self.siLogEvent.emit("Distance from %s's unit leader point to the closest point of %s is %.2f\"." % (self.SelectedItem().name, target.name, d))
-            
-            #self.AddTimedMarker("MRK_DIST01", TimedDistanceMarker(self.SelectedItem().GetUnitLeaderPoint(), p))
+         if e.button() == Qt.LeftButton:
+            self.MM_CHECK_DIST.mousePressEvent(e, self)
 
-      elif self.mouseMode == MOUSE_CHECK_DIST and (self.itemAt(e.scenePos()) is None or e.button() == Qt.RightButton):
-         self.AbortMouseAction()
          super(BattlefieldScene, self).mousePressEvent(e)
          
       #=========================================================================
@@ -988,13 +1008,14 @@ class RectBaseUnit(QtGui.QGraphicsRectItem):
          self.scene().siStatusMessage.emit("Aligning %s." % self.name)
          
    def InitCheckDistance(self):
-      if self.scene().mouseMode == MOUSE_CHECK_DIST:
+      if self.scene().mouseMode in (MOUSE_CHECK_DIST, self.scene().MM_CHECK_DIST):
          self.scene().mouseMode == MOUSE_DEFAULT
+         self.scene().AbortMouseAction()
          self.scene().ResetStatusMessage()
 
       else:
-         self.scene().mouseMode = MOUSE_CHECK_DIST
-         self.scene().siStatusMessage.emit("Checking distance to %s's unit leader point." % self.name)
+         #print "Initinit"
+         self.scene().StartMouseMode(self.scene().MM_CHECK_DIST, self)
          
    def InitDetermineArc(self):
       if self.scene().mouseMode == MOUSE_CHECK_ARC:

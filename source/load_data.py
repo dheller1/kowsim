@@ -151,6 +151,8 @@ class DataManager:
          trn = TerrainTemplate(name, resourceId, moveType, pm, (defw,defh))
          self._terrain.append(trn)
          self._terrainByName[name] = trn
+         
+      print "Loaded %i terrain templates." % len(self._terrain)
    
    def LoadUnitTypes(self, filename = os.path.join("..", "data", "unit_types.csv")):
       lines = ReadLinesFromCsv(filename)

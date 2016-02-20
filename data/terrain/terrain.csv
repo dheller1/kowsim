@@ -1,2 +1,5 @@
 # name, resource id, file,movement,line of sight, def w, def h
-Forest 1,TRN_FOREST01,forest03.png,MOV_DIFFICULT,7.792208,4.
+Forest 1,TRN_FOREST01,forest01.png,MOV_DIFFICULT,7.792208,4.
+Forest 2,TRN_FOREST02,forest02.png,MOV_DIFFICULT,7.792208,4.
+Forest 3,TRN_FOREST03,forest03.png,MOV_DIFFICULT,7.792208,4.
+Forest 4,TRN_FOREST04,forest04.png,MOV_DIFFICULT,7.792208,4.
