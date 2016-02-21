@@ -27,6 +27,9 @@ class KowUnitProfile(object):
       self._sizeType = args[10] if len(args)>10 else st.ST_REG
       self._baseSize = args[11] if len(args)>11 else Size(20, 20) # base size in mm
       self._specialRules = args[12] if len(args)>12 else []
+      
+   def __repr__(self):
+      return "KowUnitProfile(%s)" % self._name
 
    # Getters
    def At(self): return self._attacks

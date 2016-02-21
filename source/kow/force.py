@@ -104,13 +104,16 @@ class KowForce(object):
       self._units.append(unit)
       return len(self._units)-1 # return index of new unit
    def Choices(self): return self._choices
-   def ListUnits(self): return self._units   
+   def ListUnits(self): return self._units
    def Name(self): return self._name
    def NumUnits(self): return len(self._units)
    def PointsTotal(self):
       sum = 0
       for u in self._units: sum += u.PointsCost()
       return sum
+   
+   def RemoveUnit(self, index):
+      self._units.pop(index)
 
    def ReplaceUnit(self, index, newUnit):
       if index>=len(self._units): raise IndexError("Can't replace unit %d, only have %d units!" % (index, len(self._units)))

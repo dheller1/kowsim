@@ -140,8 +140,13 @@ class ArmyMainWidget(QtGui.QWidget):
       colWidths = [170, 90, 80, 30, 30, 30, 30, 30, 45, 45, 350, 150]
       for i in range(len(colWidths)):
          self.unitTable.setColumnWidth(i, colWidths[i])
+      self.unitTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
             
-      self.addUnitPb = QtGui.QPushButton("&Add")
+      self.addUnitPb = QtGui.QPushButton(QtGui.QIcon(os.path.join("data","icons","plus.png")), "&Add")
+      self.duplicateUnitPb = QtGui.QPushButton(QtGui.QIcon(os.path.join("data","icons","copy.png")), "Dupli&cate")
+      self.duplicateUnitPb.setEnabled(False)
+      self.deleteUnitPb = QtGui.QPushButton(QtGui.QIcon(os.path.join("data","icons","delete.png")), "&Delete")
+      self.deleteUnitPb.setEnabled(False)
       
       self.validationWdg = ValidationWidget(parent=self)
       
@@ -173,6 +178,9 @@ class ArmyMainWidget(QtGui.QWidget):
       self.unitGb.layout().addWidget(self.unitTable)
       unitButtonsLay = QtGui.QHBoxLayout()
       unitButtonsLay.addWidget(self.addUnitPb)
+      unitButtonsLay.addWidget(self.duplicateUnitPb)
+      unitButtonsLay.addWidget(self.deleteUnitPb)
+      unitButtonsLay.addStretch(1)
       self.unitGb.layout().addLayout(unitButtonsLay)
       
       vallay = QtGui.QVBoxLayout()
@@ -190,7 +198,10 @@ class ArmyMainWidget(QtGui.QWidget):
       #=========================================================================
       self.armyNameLe.textChanged.connect(self.DataChanged)
       self.addUnitPb.clicked.connect(self.AddUnit)
+      self.deleteUnitPb.clicked.connect(self.DeleteUnit)
       self.primaryForceCb.currentIndexChanged.connect(self.PrimaryForceChanged)
+      
+      self.unitTable.itemSelectionChanged.connect(self.UpdateButtons)
       
       self.siPointsChanged.connect(self.validationWdg.UpdateTotalPoints)
       
@@ -235,6 +246,9 @@ class ArmyMainWidget(QtGui.QWidget):
       self._MapRowToUnitId[rowNum] = index
       self._MapUnitIdToRow[index] = rowNum
       
+      self.unitTable.selectRow(rowNum)
+      self.unitTable.setFocus()
+      
       # update everything
       self.UnitGroupChanged(rowNum)
       
@@ -244,6 +258,51 @@ class ArmyMainWidget(QtGui.QWidget):
       name = self.armyNameLe.text()
       self.armyList.SetName(name)
       self.setWindowTitle("*%s" % name)
+      
+   def DeleteUnit(self):
+      if QtGui.QMessageBox.Yes != QtGui.QMessageBox.warning(self, "Delete unit", "This will delete the current unit(s).<br />Are you sure?", QtGui.QMessageBox.Yes | QtGui.QMessageBox.Cancel):
+         return
+      
+      rowsToDelete = []
+      for itm in self.unitTable.selectedItems():
+         if itm.row() not in rowsToDelete:
+            rowsToDelete.append(itm.row())
+            
+      # sort in descending order to not interfere with higher row IDs
+      rowsToDelete.sort(reverse=True)
+      print "Deleting rows: ", rowsToDelete      
+
+      for row in rowsToDelete:
+         # remove unit from armylist
+         unitIdx = self._MapRowToUnitId[row]
+         print "Deleting unit %d (%s)" % (unitIdx, self.armyList.PrimaryForce().ListUnits()[unitIdx].Name())
+         self.armyList.PrimaryForce().RemoveUnit(unitIdx)
+         
+         # delete row
+         self.unitTable.removeRow(row)
+         
+         # assemble new mapping dict
+         # all IDs > unitIdx decrease by 1
+         # all row numbers > row decrease by 1
+         newUnitIdToRow = {}
+         for myId, myRow in self._MapUnitIdToRow.iteritems():
+            if myId == unitIdx or myRow == row: continue # skip the deleted unit and row
+            
+            if myId > unitIdx: myId -= 1
+            if myRow > row: myRow -= 1
+            
+            newUnitIdToRow[myId] = myRow 
+         
+         # replace mapping dicts
+         self._MapUnitIdToRow = newUnitIdToRow
+         self._MapRowToUnitId = {v:k for k, v in self._MapUnitIdToRow.iteritems()}
+         
+      print "Done."
+      print "Units in army list:", self.armyList.PrimaryForce().ListUnits()
+      print "Mappings: _UnitIdToRow", self._MapUnitIdToRow
+      print "Mappings: _RowToUnitId", self._MapRowToUnitId
+      
+      self.siPointsChanged.emit(self.armyList.PrimaryForce().PointsTotal(), self.armyList.PointsLimit())
    
    def PrimaryForceChanged(self):
       #if (self.unitTable.rowCount()>0):
@@ -309,6 +368,14 @@ class ArmyMainWidget(QtGui.QWidget):
       # replace unit in armylist
       self.armyList.PrimaryForce().ReplaceUnit(self._MapRowToUnitId[row], option)
       self.siPointsChanged.emit(self.armyList.PrimaryForce().PointsTotal(), self.armyList.PointsLimit())
+      
+   def UpdateButtons(self):
+      if len(self.unitTable.selectedItems())>0:
+         self.duplicateUnitPb.setEnabled(True)
+         self.deleteUnitPb.setEnabled(True)
+      else:
+         self.duplicateUnitPb.setEnabled(False)
+         self.deleteUnitPb.setEnabled(False)
       
 #===============================================================================
 # main - entry point
