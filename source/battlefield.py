@@ -17,7 +17,7 @@ from PySide.QtCore import Qt
 
 from constants import *
 from mousemodes import *
-from util import dot2d, len2d, dist2d
+from util.core import dot2d, len2d, dist2d
 
 import math, os
 

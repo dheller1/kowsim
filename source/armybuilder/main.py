@@ -2,12 +2,13 @@
 
 # armybuilder/main.py
 #===============================================================================
-import sys
+import os, sys
 from PySide import QtGui, QtCore
 from PySide.QtCore import Qt
 
-from ..kow.force import KowArmyList
-from load_data import DataManager 
+from ..kow.force import KowArmyList, KowForce
+from ..kow.unit import KowUnitProfile
+from load_data import DataManager
 
 
 #===============================================================================
@@ -21,7 +22,7 @@ class MainWindow(QtGui.QMainWindow):
       # Load data
       #=========================================================================
       QtGui.qApp.DataManager = DataManager()
-      QtGui.qApp.DataManager.LoadForces()
+      QtGui.qApp.DataManager.LoadForceChoices()
       
       #=========================================================================
       # Init main window
@@ -78,24 +79,52 @@ class MdiArea(QtGui.QMdiArea):
       sub.showMaximized()
       
 #===============================================================================
+# ValidationWidget
+#===============================================================================
+class ValidationWidget(QtGui.QWidget):
+   def __init__(self, parent=None):
+      super(ValidationWidget, self).__init__(parent)
+      
+      self.setMinimumWidth(300)
+      
+      # child widgets
+      self.pointsTotalLbl = QtGui.QLabel("Total points: <b>0</b>/2000")
+      
+      # layout
+      lay = QtGui.QGridLayout()
+      lay.addWidget(self.pointsTotalLbl)
+      self.setLayout(lay)
+      
+   def UpdateTotalPoints(self, points, pointsLimit):
+      if points <= pointsLimit:
+         self.pointsTotalLbl.setText("Total points: <b>%d</b>/%d" % (points, pointsLimit))
+      else:
+         self.pointsTotalLbl.setText("Total points: <b><span style='color:#ff0000;'>%d</span></b>/%d" % (points, pointsLimit))
+            
+#===============================================================================
 # ArmyMainWidget
 #===============================================================================
 class ArmyMainWidget(QtGui.QWidget):
+   siPointsChanged = QtCore.Signal(int, int)
+   
    def __init__(self, name="Unnamed army"):
       super(ArmyMainWidget, self).__init__()
       
       self.changedSinceSave = True
       
       self.setMinimumSize(400,300)
-      self.setWindowTitle((name + "*"))
+      self.setWindowTitle(("*" + name))
       self.armyList = KowArmyList(name, points=2000)
+      
+      self._MapRowToUnitId = {}
+      self._MapUnitIdToRow = {}
       
       #=========================================================================
       # child widgets
       #=========================================================================
       self.armyNameLe = QtGui.QLineEdit(name)
       self.primaryForceCb = QtGui.QComboBox()
-      for f in QtGui.qApp.DataManager.ListForces():
+      for f in QtGui.qApp.DataManager.ListForceChoices():
          self.primaryForceCb.addItem(f.Name())
          
       self.pointsLimitSb = QtGui.QSpinBox()
@@ -106,15 +135,22 @@ class ArmyMainWidget(QtGui.QWidget):
       self.armyNameLe.selectAll()
       self.unitTable = QtGui.QTableWidget()
       self.unitTable.setColumnCount(12)
-      self.unitTable.setHorizontalHeaderLabels(("Unit", "Type", "Size", "Sp", "Me", "Ra", "De", "At", "Ne", "Points"))
-      
+      self.unitTable.verticalHeader().hide()
+      self.unitTable.setHorizontalHeaderLabels(("Unit", "Type", "Size", "Sp", "Me", "Ra", "De", "At", "Ne", "Points", "Special", "Options"))
+      colWidths = [170, 90, 80, 30, 30, 30, 30, 30, 45, 45, 350, 150]
+      for i in range(len(colWidths)):
+         self.unitTable.setColumnWidth(i, colWidths[i])
+            
       self.addUnitPb = QtGui.QPushButton("&Add")
+      
+      self.validationWdg = ValidationWidget(parent=self)
       
       #=========================================================================
       # group boxes
       #=========================================================================
       self.generalGb = QtGui.QGroupBox("General")
       self.unitGb = QtGui.QGroupBox("Units")
+      self.valGb = QtGui.QGroupBox("Validation")
       
       #=========================================================================
       # layout
@@ -139,9 +175,14 @@ class ArmyMainWidget(QtGui.QWidget):
       unitButtonsLay.addWidget(self.addUnitPb)
       self.unitGb.layout().addLayout(unitButtonsLay)
       
-      mainlay = QtGui.QVBoxLayout()
-      mainlay.addWidget(self.generalGb)
-      mainlay.addWidget(self.unitGb)
+      vallay = QtGui.QVBoxLayout()
+      vallay.addWidget(self.validationWdg)
+      self.valGb.setLayout(vallay)
+      
+      mainlay = QtGui.QGridLayout()
+      mainlay.addWidget(self.generalGb, 0, 0)
+      mainlay.addWidget(self.valGb, 0, 1)
+      mainlay.addWidget(self.unitGb, 1, 0, 1, 2)
       self.setLayout(mainlay)
       
       #=========================================================================
@@ -151,28 +192,31 @@ class ArmyMainWidget(QtGui.QWidget):
       self.addUnitPb.clicked.connect(self.AddUnit)
       self.primaryForceCb.currentIndexChanged.connect(self.PrimaryForceChanged)
       
+      self.siPointsChanged.connect(self.validationWdg.UpdateTotalPoints)
+      
       #=========================================================================
       # Final init, full update
       #=========================================================================
-      self.selectedForce = QtGui.qApp.DataManager.ForceByName(self.primaryForceCb.currentText())
       self.PrimaryForceChanged()
       
    def AddUnit(self):
       rowNum = self.unitTable.rowCount()
-      self.unitTable.insertRow(rowNum)
+      self.unitTable.insertRow(rowNum) 
+      self.unitTable.setRowHeight(rowNum, 22)
       
       # cell items
       cb = QtGui.QComboBox()
-      for unit in self.selectedForce.ListGroups():
+      for unit in self.armyList.PrimaryForce().Choices().ListGroups():
          cb.addItem(unit.Name())
       self.unitTable.setCellWidget(rowNum, 0, cb)
       
-      self.unitTable.setItem(rowNum, 1, QtGui.QTableWidgetItem("")) # unit type
       cbOpt = QtGui.QComboBox()
       self.unitTable.setCellWidget(rowNum, 2, cbOpt) # size type
       
-      for col in range(3, 12+1): # profile stats
+      for col in (1, 3, 4, 5, 6, 7, 8, 9, 10, 11): # profile stats
          self.unitTable.setItem(rowNum, col, QtGui.QTableWidgetItem(""))
+         self.unitTable.item(rowNum, col).setFlags(self.unitTable.item(rowNum, col).flags() ^ Qt.ItemIsEditable) # remove editable flag
+         if col not in (10, 11): self.unitTable.item(rowNum, col).setTextAlignment(Qt.AlignCenter)
       
       # connections
       mapper = QtCore.QSignalMapper(self) # set mapping to identify combobox by its row
@@ -185,6 +229,13 @@ class ArmyMainWidget(QtGui.QWidget):
       
       mapper.mapped[int].connect(self.UnitGroupChanged)
       mapperOpt.mapped[int].connect(self.UnitOptionChanged)
+      
+      # register a default unit in armyList and store its index in the armyList._units array
+      index = self.armyList.PrimaryForce().AddUnit(KowUnitProfile())
+      self._MapRowToUnitId[rowNum] = index
+      self._MapUnitIdToRow[index] = rowNum
+      
+      # update everything
       self.UnitGroupChanged(rowNum)
       
    def DataChanged(self):
@@ -192,18 +243,24 @@ class ArmyMainWidget(QtGui.QWidget):
       
       name = self.armyNameLe.text()
       self.armyList.SetName(name)
-      self.setWindowTitle("%s*" % name)
+      self.setWindowTitle("*%s" % name)
    
    def PrimaryForceChanged(self):
+      #if (self.unitTable.rowCount()>0):
+      #   if QtGui.QMessageBox.Yes != QtGui.QMessageBox.warning(self, "Switch primary force", "This will delete all current units.<br />Are you sure?", QtGui.QMessageBox.Yes | QtGui.QMessageBox.Cancel):
+      #      self.primaryForceCb.setCurrentIndex(self.primaryForceCb.findText(self.armyList.PrimaryForce().Choices().Name()))
+      #      return
+      
+      #self.unitTable.setRowCount(0)
       pfn = self.primaryForceCb.currentText()
-      pf = QtGui.qApp.DataManager.ForceByName(pfn)
-      self.armyList.SetPrimaryForce(pf)
+      pfc = QtGui.qApp.DataManager.ForceChoicesByName(pfn)
+      self.armyList.SetPrimaryForce(KowForce(pfc))
    
    @QtCore.Slot(int)
    def UnitGroupChanged(self, row):
       # update this row
       grpname = unicode( self.unitTable.cellWidget(row, 0).currentText() )
-      grp = self.armyList.PrimaryForce().GroupByName(grpname)
+      grp = self.armyList.PrimaryForce().Choices().GroupByName(grpname)
       
       option = grp.Default()
       self.unitTable.item(row, 1).setText(option.UnitType().Name()) # unit type
@@ -214,25 +271,23 @@ class ArmyMainWidget(QtGui.QWidget):
          self.unitTable.cellWidget(row, 2).addItem(o.SizeType().Name())
          
       self.unitTable.item(row, 3).setText("%d" % option.Sp())
-      self.unitTable.item(row, 3).setTextAlignment(Qt.AlignCenter)
       self.unitTable.item(row, 4).setText(option.MeStr())
-      self.unitTable.item(row, 4).setTextAlignment(Qt.AlignCenter)
       self.unitTable.item(row, 5).setText(option.RaStr())
-      self.unitTable.item(row, 5).setTextAlignment(Qt.AlignCenter)
       self.unitTable.item(row, 6).setText(option.DeStr())
-      self.unitTable.item(row, 6).setTextAlignment(Qt.AlignCenter)
       self.unitTable.item(row, 7).setText(option.AtStr())
-      self.unitTable.item(row, 7).setTextAlignment(Qt.AlignCenter)
       self.unitTable.item(row, 8).setText(option.NeStr())
-      self.unitTable.item(row, 8).setTextAlignment(Qt.AlignCenter)
       self.unitTable.item(row, 9).setText("%d" % option.PointsCost())
-      self.unitTable.item(row, 9).setTextAlignment(Qt.AlignCenter)
-   
+      self.unitTable.item(row, 10).setText(", ".join(option.SpecialRules()))
+      
+      # replace unit in armylist
+      self.armyList.PrimaryForce().ReplaceUnit(self._MapRowToUnitId[row], option)
+      self.siPointsChanged.emit(self.armyList.PrimaryForce().PointsTotal(), self.armyList.PointsLimit())
+      
    @QtCore.Slot(int)
    def UnitOptionChanged(self, row):
       # update this row
       grpname = unicode( self.unitTable.cellWidget(row, 0).currentText() )
-      grp = self.armyList.PrimaryForce().GroupByName(grpname)
+      grp = self.armyList.PrimaryForce().Choices().GroupByName(grpname)
       
       optTxt = self.unitTable.cellWidget(row, 2).currentText()
       if optTxt == "": return # this can occur when the unit group has been changed but the option combo box has not been updated yet. do nothing
@@ -243,20 +298,18 @@ class ArmyMainWidget(QtGui.QWidget):
       
       # size options left untouched, do nothing
       self.unitTable.item(row, 3).setText("%d" % option.Sp())
-      self.unitTable.item(row, 3).setTextAlignment(Qt.AlignCenter)
       self.unitTable.item(row, 4).setText(option.MeStr())
-      self.unitTable.item(row, 4).setTextAlignment(Qt.AlignCenter)
       self.unitTable.item(row, 5).setText(option.RaStr())
-      self.unitTable.item(row, 5).setTextAlignment(Qt.AlignCenter)
       self.unitTable.item(row, 6).setText(option.DeStr())
-      self.unitTable.item(row, 6).setTextAlignment(Qt.AlignCenter)
       self.unitTable.item(row, 7).setText(option.AtStr())
-      self.unitTable.item(row, 7).setTextAlignment(Qt.AlignCenter)
       self.unitTable.item(row, 8).setText(option.NeStr())
-      self.unitTable.item(row, 8).setTextAlignment(Qt.AlignCenter)
       self.unitTable.item(row, 9).setText("%d" % option.PointsCost())
-      self.unitTable.item(row, 9).setTextAlignment(Qt.AlignCenter)
-
+      self.unitTable.item(row, 10).setText(", ".join(option.SpecialRules()))
+      
+      # replace unit in armylist
+      self.armyList.PrimaryForce().ReplaceUnit(self._MapRowToUnitId[row], option)
+      self.siPointsChanged.emit(self.armyList.PrimaryForce().PointsTotal(), self.armyList.PointsLimit())
+      
 #===============================================================================
 # main - entry point
 #===============================================================================

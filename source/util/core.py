@@ -3,6 +3,10 @@
 # util/core.py
 #===============================================================================
 
+# reverse dictionary by swapping keys and values.
+# !make sure only to use in bijective mapping!
+def reverseDict(d):
+   return {v:k for k, v in d.iteritems()}
 
 #===============================================================================
 # Size:

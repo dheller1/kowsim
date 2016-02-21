@@ -26,6 +26,7 @@ class KowUnitProfile(object):
       self._unitType = args[9] if len(args)>9 else ut.UT_INF
       self._sizeType = args[10] if len(args)>10 else st.ST_REG
       self._baseSize = args[11] if len(args)>11 else Size(20, 20) # base size in mm
+      self._specialRules = args[12] if len(args)>12 else []
 
    # Getters
    def At(self): return self._attacks
@@ -42,6 +43,7 @@ class KowUnitProfile(object):
    def RaStr(self): return "%d+" % self._ranged if self._ranged>0 else "-"
    def SizeType(self): return self._sizeType
    def Sp(self): return self._speed
+   def SpecialRules(self): return self._specialRules
    def UnitType(self): return self._unitType
    
    # Setters
@@ -118,11 +120,14 @@ class KowUnitProfile(object):
       if nv[0]=="-": nv = (0, int(nv[1]))
       else: nv = int(nv[0]), int(nv[1])
       
-      special = cols[9] # Special
+      # special rules
+      special = cols[9]
+      specRules = [word.strip() for word in special.split(',')]
+      
       options = cols[10] # Options
       points = int(cols[11]) # Points
       baseW, baseH = cols[12].split('x') # Base Size
       base = Size(int(baseW), int(baseH))
       
-      p = KowUnitProfile(name, sp, me, ra, de, at, nv[0], nv[1], points, utype, stype, base)
+      p = KowUnitProfile(name, sp, me, ra, de, at, nv[0], nv[1], points, utype, stype, base, specRules)
       return p

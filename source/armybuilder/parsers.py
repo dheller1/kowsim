@@ -5,7 +5,7 @@
 from ..util.csv_util import CsvParser
 from ..kow.unit import KowUnitProfile
 from ..kow.alignment import KowAlignment, Find
-from ..kow.force import KowForce
+from ..kow.force import KowForceChoices
 
 
 class ForceListCsvParser(CsvParser):
@@ -33,5 +33,5 @@ class ForceListCsvParser(CsvParser):
             profile = KowUnitProfile.FromCsv(row)
             unitChoices.append(profile)
 
-      force = KowForce(name, alignment, unitChoices)
+      force = KowForceChoices(name, alignment, unitChoices)
       return force

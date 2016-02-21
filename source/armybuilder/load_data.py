@@ -10,12 +10,12 @@ from parsers import ForceListCsvParser as Flcp
 #===============================================================================
 class DataManager(object):
    def __init__(self):
-      self._forces = []
-      self._forcesByName = {}
+      self._forceChoices = []
+      self._forceChoicesByName = {}
       
-   def LoadForces(self):
-      self._forces = []
-      self._forcesByName = {}
+   def LoadForceChoices(self):
+      self.LoadForceChoices = []
+      self._forceChoicesByName = {}
       
       pars = Flcp()
       
@@ -26,8 +26,8 @@ class DataManager(object):
          force = pars.Parse()
          print "Parsed %s (%d units)." % (force.Name(), force.NumUnits())
          
-         self._forces.append(force)
-         self._forcesByName[force.Name()] = force
+         self._forceChoices.append(force)
+         self._forceChoicesByName[force.Name()] = force
 
-   def ForceByName(self, name): return self._forcesByName[name]
-   def ListForces(self): return self._forces
+   def ForceChoicesByName(self, name): return self._forceChoicesByName[name]
+   def ListForceChoices(self): return self._forceChoices
