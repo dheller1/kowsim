@@ -142,10 +142,10 @@ class ArmyMainWidget(QtGui.QWidget):
          self.unitTable.setColumnWidth(i, colWidths[i])
       self.unitTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
             
-      self.addUnitPb = QtGui.QPushButton(QtGui.QIcon(os.path.join("data","icons","plus.png")), "&Add")
-      self.duplicateUnitPb = QtGui.QPushButton(QtGui.QIcon(os.path.join("data","icons","copy.png")), "Dupli&cate")
+      self.addUnitPb = QtGui.QPushButton(QtGui.QIcon(os.path.join("..", "data","icons","plus.png")), "&Add")
+      self.duplicateUnitPb = QtGui.QPushButton(QtGui.QIcon(os.path.join("..", "data","icons","copy.png")), "Dupli&cate")
       self.duplicateUnitPb.setEnabled(False)
-      self.deleteUnitPb = QtGui.QPushButton(QtGui.QIcon(os.path.join("data","icons","delete.png")), "&Delete")
+      self.deleteUnitPb = QtGui.QPushButton(QtGui.QIcon(os.path.join("..", "data","icons","delete.png")), "&Delete")
       self.deleteUnitPb.setEnabled(False)
       
       self.validationWdg = ValidationWidget(parent=self)

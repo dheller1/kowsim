@@ -19,10 +19,10 @@ class DataManager(object):
       
       pars = Flcp()
       
-      for fn in os.listdir(os.path.join("data", "kow", "forces")):
+      for fn in os.listdir(os.path.join("..", "data", "kow", "forces")):
          if fn.startswith(".") or fn.endswith("#"): # skip temporary lock files
             continue
-         pars.ReadLinesFromFile(os.path.join("data", "kow", "forces", fn))
+         pars.ReadLinesFromFile(os.path.join("..", "data", "kow", "forces", fn))
          force = pars.Parse()
          print "Parsed %s (%d units)." % (force.Name(), force.NumUnits())
          
