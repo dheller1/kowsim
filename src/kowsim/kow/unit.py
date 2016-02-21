@@ -27,6 +27,7 @@ class KowUnitProfile(object):
       self._sizeType = args[10] if len(args)>10 else st.ST_REG
       self._baseSize = args[11] if len(args)>11 else Size(20, 20) # base size in mm
       self._specialRules = args[12] if len(args)>12 else []
+      self._item = args[13] if len(args)>13 else None
       
    def __repr__(self):
       return "KowUnitProfile(%s)" % self._name
@@ -36,12 +37,16 @@ class KowUnitProfile(object):
    def AtStr(self): return "%d" % self._attacks if self._attacks>0 else "-"
    def De(self): return self._defense
    def DeStr(self): return "%d+" % self._defense
+   def Item(self): return self._item
+   def ItemCost(self):
+      if self._item: return self._item.PointsCost()
+      else: return 0
    def Me(self): return self._melee
    def MeStr(self): return "%d+" % self._melee if self._melee>0 else "-"
    def Ne(self): return (self._nerveWaver, self._nerveBreak)
-   def NeStr(self): return "%d/%d" % (self._nerveWaver, self._nerveBreak)
+   def NeStr(self): return "%s/%d" % (str(self._nerveWaver) if self._nerveWaver != 0 else "-", self._nerveBreak)
    def Name(self): return self._name
-   def PointsCost(self): return self._pointsCost
+   def PointsCost(self): return self._pointsCost + self._item.PointsCost() if self._item else self._pointsCost
    def Ra(self): return self._ranged
    def RaStr(self): return "%d+" % self._ranged if self._ranged>0 else "-"
    def SizeType(self): return self._sizeType
@@ -50,6 +55,7 @@ class KowUnitProfile(object):
    def UnitType(self): return self._unitType
    
    # Setters
+   def SetItem(self, item): self._item = item
    def SetName(self, name): self._name = name
    
    # property decorators

@@ -8,6 +8,7 @@ from PySide.QtCore import Qt
 
 from ..kow.force import KowArmyList, KowForce
 from ..kow.unit import KowUnitProfile
+from ..kow import unittype as KUT
 from load_data import DataManager
 
 
@@ -23,6 +24,7 @@ class MainWindow(QtGui.QMainWindow):
       #=========================================================================
       QtGui.qApp.DataManager = DataManager()
       QtGui.qApp.DataManager.LoadForceChoices()
+      QtGui.qApp.DataManager.LoadItems()
       
       #=========================================================================
       # Init main window
@@ -136,8 +138,8 @@ class ArmyMainWidget(QtGui.QWidget):
       self.unitTable = QtGui.QTableWidget()
       self.unitTable.setColumnCount(12)
       self.unitTable.verticalHeader().hide()
-      self.unitTable.setHorizontalHeaderLabels(("Unit", "Type", "Size", "Sp", "Me", "Ra", "De", "At", "Ne", "Points", "Special", "Options"))
-      colWidths = [170, 90, 80, 30, 30, 30, 30, 30, 45, 45, 350, 150]
+      self.unitTable.setHorizontalHeaderLabels(("Unit", "Type", "Size", "Sp", "Me", "Ra", "De", "At", "Ne", "Points", "Special", "Options", "Item"))
+      colWidths = [170, 90, 80, 30, 30, 30, 30, 30, 45, 45, 350, 200]
       for i in range(len(colWidths)):
          self.unitTable.setColumnWidth(i, colWidths[i])
       self.unitTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
@@ -199,6 +201,7 @@ class ArmyMainWidget(QtGui.QWidget):
       self.armyNameLe.textChanged.connect(self.DataChanged)
       self.addUnitPb.clicked.connect(self.AddUnit)
       self.deleteUnitPb.clicked.connect(self.DeleteUnit)
+      self.duplicateUnitPb.clicked.connect(self.DuplicateUnit)
       self.primaryForceCb.currentIndexChanged.connect(self.PrimaryForceChanged)
       
       self.unitTable.itemSelectionChanged.connect(self.UpdateButtons)
@@ -224,10 +227,15 @@ class ArmyMainWidget(QtGui.QWidget):
       cbOpt = QtGui.QComboBox()
       self.unitTable.setCellWidget(rowNum, 2, cbOpt) # size type
       
-      for col in (1, 3, 4, 5, 6, 7, 8, 9, 10, 11): # profile stats
+      for col in (1, 3, 4, 5, 6, 7, 8, 9, 10): # profile stats
          self.unitTable.setItem(rowNum, col, QtGui.QTableWidgetItem(""))
          self.unitTable.item(rowNum, col).setFlags(self.unitTable.item(rowNum, col).flags() ^ Qt.ItemIsEditable) # remove editable flag
-         if col not in (10, 11): self.unitTable.item(rowNum, col).setTextAlignment(Qt.AlignCenter)
+         if col != 10: self.unitTable.item(rowNum, col).setTextAlignment(Qt.AlignCenter)
+         
+      cbItem = QtGui.QComboBox()
+      self.unitTable.setCellWidget(rowNum, 11, cbItem) # magic item
+      cbItem.addItem("-")
+      cbItem.addItems(["%s (%dp)" % (itm.Name(), itm.PointsCost()) for itm in QtGui.qApp.DataManager.ListItems()])
       
       # connections
       mapper = QtCore.QSignalMapper(self) # set mapping to identify combobox by its row
@@ -238,8 +246,13 @@ class ArmyMainWidget(QtGui.QWidget):
       mapperOpt.setMapping(cbOpt, rowNum)
       cbOpt.currentIndexChanged.connect(mapperOpt.map)
       
+      mapperItm = QtCore.QSignalMapper(self)
+      mapperItm.setMapping(cbItem, rowNum)
+      cbItem.currentIndexChanged.connect(mapperItm.map)
+      
       mapper.mapped[int].connect(self.UnitGroupChanged)
       mapperOpt.mapped[int].connect(self.UnitOptionChanged)
+      mapperItm.mapped[int].connect(self.UnitItemChanged)
       
       # register a default unit in armyList and store its index in the armyList._units array
       index = self.armyList.PrimaryForce().AddUnit(KowUnitProfile())
@@ -270,12 +283,12 @@ class ArmyMainWidget(QtGui.QWidget):
             
       # sort in descending order to not interfere with higher row IDs
       rowsToDelete.sort(reverse=True)
-      print "Deleting rows: ", rowsToDelete      
+      #print "Deleting rows: ", rowsToDelete      
 
       for row in rowsToDelete:
          # remove unit from armylist
          unitIdx = self._MapRowToUnitId[row]
-         print "Deleting unit %d (%s)" % (unitIdx, self.armyList.PrimaryForce().ListUnits()[unitIdx].Name())
+         #print "Deleting unit %d (%s)" % (unitIdx, self.armyList.PrimaryForce().ListUnits()[unitIdx].Name())
          self.armyList.PrimaryForce().RemoveUnit(unitIdx)
          
          # delete row
@@ -297,12 +310,37 @@ class ArmyMainWidget(QtGui.QWidget):
          self._MapUnitIdToRow = newUnitIdToRow
          self._MapRowToUnitId = {v:k for k, v in self._MapUnitIdToRow.iteritems()}
          
-      print "Done."
-      print "Units in army list:", self.armyList.PrimaryForce().ListUnits()
-      print "Mappings: _UnitIdToRow", self._MapUnitIdToRow
-      print "Mappings: _RowToUnitId", self._MapRowToUnitId
+      #print "Done."
+      #print "Units in army list:", self.armyList.PrimaryForce().ListUnits()
+      #print "Mappings: _UnitIdToRow", self._MapUnitIdToRow
+      #print "Mappings: _RowToUnitId", self._MapRowToUnitId
       
       self.siPointsChanged.emit(self.armyList.PrimaryForce().PointsTotal(), self.armyList.PointsLimit())
+      
+   def DuplicateUnit(self):
+      selRow = self.unitTable.selectedItems()[0].row()
+      unitName, unitSize = self.unitTable.cellWidget(selRow, 0).currentText(), self.unitTable.cellWidget(selRow, 2).currentText()
+       
+      self.AddUnit()
+      row = self.unitTable.rowCount()-1
+      # temporarily block signals from QComboBoxes for unit type and size
+      #self.unitTable.cellWidget(row, 0).blockSignals(True) # unit choice
+      #self.unitTable.cellWidget(row, 2).blockSignals(True) # size type
+      
+      # set correct choices
+      unitCb = self.unitTable.cellWidget(row, 0)
+      idx = unitCb.findText(unitName)
+      if idx < 0:
+         QtGui.QMessageBox.warning(self, "Duplicate unit", "Warning: Can't duplicate unit,<br>please switch back to the correct primary force.<br>Adding default unit for current force.")
+         return
+      unitCb.setCurrentIndex(idx)
+      
+      sizeCb = self.unitTable.cellWidget(row, 2)
+      idx = sizeCb.findText(unitSize)
+      if idx < 0:
+         QtGui.QMessageBox.warning(self, "Duplicate unit", "Warning: Can't duplicate unit,<br>please switch back to the correct primary force.<br>Adding default unit for current force.")
+         return
+      sizeCb.setCurrentIndex(idx)
    
    def PrimaryForceChanged(self):
       #if (self.unitTable.rowCount()>0):
@@ -338,6 +376,12 @@ class ArmyMainWidget(QtGui.QWidget):
       self.unitTable.item(row, 9).setText("%d" % option.PointsCost())
       self.unitTable.item(row, 10).setText(", ".join(option.SpecialRules()))
       
+      # can it have a magical item?
+      if option.UnitType() in (KUT.UT_MON, KUT.UT_WENG):
+         self.unitTable.cellWidget(row, 11).setEnabled(False)
+         self.unitTable.cellWidget(row, 11).setCurrentIndex(0)
+      else: self.unitTable.cellWidget(row, 11).setEnabled(True)
+      
       # replace unit in armylist
       self.armyList.PrimaryForce().ReplaceUnit(self._MapRowToUnitId[row], option)
       self.siPointsChanged.emit(self.armyList.PrimaryForce().PointsTotal(), self.armyList.PointsLimit())
@@ -365,8 +409,30 @@ class ArmyMainWidget(QtGui.QWidget):
       self.unitTable.item(row, 9).setText("%d" % option.PointsCost())
       self.unitTable.item(row, 10).setText(", ".join(option.SpecialRules()))
       
+      # can it have a magical item?
+      if option.UnitType() in (KUT.UT_MON, KUT.UT_WENG):
+         self.unitTable.cellWidget(row, 11).setEnabled(False)
+         self.unitTable.cellWidget(row, 11).setCurrentIndex(0)
+      else: self.unitTable.cellWidget(row, 11).setEnabled(True)
+      
       # replace unit in armylist
       self.armyList.PrimaryForce().ReplaceUnit(self._MapRowToUnitId[row], option)
+      self.siPointsChanged.emit(self.armyList.PrimaryForce().PointsTotal(), self.armyList.PointsLimit())
+      
+   @QtCore.Slot(int)
+   def UnitItemChanged(self, row):
+      # update this unit
+      uid = self._MapRowToUnitId[row]
+      itmName = self.unitTable.cellWidget(row, 11).currentText()
+      
+      if itmName == "-":
+         self.armyList.PrimaryForce()._units[uid].SetItem(None)
+      else:
+         # extract item name by stripping the points cost (e.g. 'Brew of Strength (30p)')
+         leftBracket = itmName.index('(')
+         itmName = itmName[:leftBracket-1]
+         self.armyList.PrimaryForce()._units[uid].SetItem(QtGui.qApp.DataManager.ItemByName(itmName))
+      
       self.siPointsChanged.emit(self.armyList.PrimaryForce().PointsTotal(), self.armyList.PointsLimit())
       
    def UpdateButtons(self):

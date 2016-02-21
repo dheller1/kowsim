@@ -4,6 +4,7 @@
 #===============================================================================
 import os
 from parsers import ForceListCsvParser as Flcp
+from parsers import ItemCsvParser as Icp
 
 #===============================================================================
 # DataManager
@@ -14,7 +15,7 @@ class DataManager(object):
       self._forceChoicesByName = {}
       
    def LoadForceChoices(self):
-      self.LoadForceChoices = []
+      self._forceChoices = []
       self._forceChoicesByName = {}
       
       pars = Flcp()
@@ -28,6 +29,19 @@ class DataManager(object):
          
          self._forceChoices.append(force)
          self._forceChoicesByName[force.Name()] = force
+         
+   def LoadItems(self):
+      self._items = []
+      self._itemsByName = {}
+      
+      pars = Icp()
+      pars.ReadLinesFromFile(os.path.join("..", "data", "kow", "items", "items.csv"))
+      
+      self._items = pars.Parse()
+      self._itemsByName = { i.Name():i for i in self._items }
+      print "Parsed %d magical items." % len(self._items)
 
    def ForceChoicesByName(self, name): return self._forceChoicesByName[name]
+   def ItemByName(self, name): return self._itemsByName[name]
    def ListForceChoices(self): return self._forceChoices
+   def ListItems(self): return self._items
