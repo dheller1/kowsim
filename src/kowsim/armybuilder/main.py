@@ -6,7 +6,7 @@ import os, sys
 from PySide import QtGui, QtCore
 from PySide.QtCore import Qt
 
-from ..kow.force import KowArmyList, KowForce
+from ..kow.force import KowArmyList, KowDetachment
 from ..kow.unit import KowUnitProfile
 from ..kow import unittype as KUT
 from load_data import DataManager
@@ -351,7 +351,7 @@ class ArmyMainWidget(QtGui.QWidget):
       #self.unitTable.setRowCount(0)
       pfn = self.primaryForceCb.currentText()
       pfc = QtGui.qApp.DataManager.ForceChoicesByName(pfn)
-      self.armyList.SetPrimaryForce(KowForce(pfc))
+      self.armyList.SetPrimaryForce(KowDetachment(pfc))
    
    @QtCore.Slot(int)
    def UnitGroupChanged(self, row):
@@ -383,7 +383,8 @@ class ArmyMainWidget(QtGui.QWidget):
       else: self.unitTable.cellWidget(row, 11).setEnabled(True)
       
       # replace unit in armylist
-      self.armyList.PrimaryForce().ReplaceUnit(self._MapRowToUnitId[row], option)
+      newUnit = option.Clone()
+      self.armyList.PrimaryForce().ReplaceUnit(self._MapRowToUnitId[row], newUnit)
       self.siPointsChanged.emit(self.armyList.PrimaryForce().PointsTotal(), self.armyList.PointsLimit())
       
    @QtCore.Slot(int)
@@ -416,7 +417,8 @@ class ArmyMainWidget(QtGui.QWidget):
       else: self.unitTable.cellWidget(row, 11).setEnabled(True)
       
       # replace unit in armylist
-      self.armyList.PrimaryForce().ReplaceUnit(self._MapRowToUnitId[row], option)
+      newUnit = option.Clone()
+      self.armyList.PrimaryForce().ReplaceUnit(self._MapRowToUnitId[row], newUnit)
       self.siPointsChanged.emit(self.armyList.PrimaryForce().PointsTotal(), self.armyList.PointsLimit())
       
    @QtCore.Slot(int)
@@ -424,14 +426,20 @@ class ArmyMainWidget(QtGui.QWidget):
       # update this unit
       uid = self._MapRowToUnitId[row]
       itmName = self.unitTable.cellWidget(row, 11).currentText()
-      
+      unit = self.armyList.PrimaryForce()._units[uid] 
       if itmName == "-":
-         self.armyList.PrimaryForce()._units[uid].SetItem(None)
+         unit.SetItem(None)
       else:
          # extract item name by stripping the points cost (e.g. 'Brew of Strength (30p)')
          leftBracket = itmName.index('(')
          itmName = itmName[:leftBracket-1]
-         self.armyList.PrimaryForce()._units[uid].SetItem(QtGui.qApp.DataManager.ItemByName(itmName))
+         unit.SetItem(QtGui.qApp.DataManager.ItemByName(itmName))
+         
+      # update unit points cost
+      self.unitTable.item(row, 9).setText("%d" % unit.PointsCost())
+      font = self.unitTable.item(row, 9).font()
+      font.setBold( True if unit.ItemCost()>0 else False )
+      self.unitTable.item(row, 9).setFont(font)
       
       self.siPointsChanged.emit(self.armyList.PrimaryForce().PointsTotal(), self.armyList.PointsLimit())
       

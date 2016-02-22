@@ -61,6 +61,11 @@ class KowUnitProfile(object):
    # property decorators
    name = property(Name, SetName)
    
+   # generate a fresh copy of this unit
+   def Clone(self):
+      return KowUnitProfile(self._name, self._speed, self._melee, self._ranged, self._defense, self._attacks, self._nerveWaver, self._nerveBreak, self._pointsCost,
+                            self._unitType, self._sizeType, self._baseSize, self._specialRules, self._item)
+   
    # derived properties
    def Footprint(self):
       """ Return the footprint (Size) of a unit, given by its individual base size, model count

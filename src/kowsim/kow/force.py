@@ -13,7 +13,7 @@ class KowArmyList(object):
    def __init__(self, name, points=2000):
       self._name = name
 
-      self._primaryForce = KowForce(KowForceChoices("Elves", al.AL_GOOD), "Elf detachment")
+      self._primaryForce = KowDetachment(KowForceChoices("Elves", al.AL_GOOD), "Elf detachment")
       self._alliedForces = []
       self._pointsLimit = points
       
@@ -89,12 +89,12 @@ class KowForceChoices(object):
 
 
 #===============================================================================
-# KowForce
-#   A specific single KoW force such as an Elf detachment in a KowArmyList.
+# KowDetachment
+#   A specific single KoW detachment such as an Elf detachment in a KowArmyList.
 #   May contain anything from 0 to 100 units chosen from the associated
 #   KowForceChoices representing the army (e.g. Elves).
 #===============================================================================
-class KowForce(object):
+class KowDetachment(object):
    def __init__(self, choices, name="Unnamed detachment", units=[]):
       self._name = name
       self._units = units
