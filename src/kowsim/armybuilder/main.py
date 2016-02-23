@@ -42,11 +42,39 @@ class MainWindow(QtGui.QMainWindow):
       #self.statusBar().showMessage("Ready.")
       self.setMenuBar(MainMenu())
       
+      
+      self.toolBar = QtGui.QToolBar(self)
+      self.toolBar.addAction(QtGui.QIcon(os.path.join("..","data","icons","new.png")), "New army list", self.NewArmyList)
+      self.saveAction = self.toolBar.addAction(QtGui.QIcon(os.path.join("..","data","icons","save.png")), "Save", self.SaveArmyList)
+      
+      self.addToolBar(self.toolBar)
+      
       self.InitConnections()
       
    def InitConnections(self):
-      self.menuBar().newArmyAct.triggered.connect(self.mdiArea.AddArmySubWindow)
+      self.menuBar().newArmyAct.triggered.connect(self.NewArmyList)
+      self.menuBar().saveAct.triggered.connect(self.SaveArmyList)
+      self.menuBar().saveAsAct.triggered.connect(self.SaveArmyListAs)
       self.menuBar().exitAct.triggered.connect(self.close)
+      self.mdiArea.subWindowActivated.connect(self.CurrentWindowChanged)
+      
+   def CurrentWindowChanged(self, wnd):
+      if wnd: self.saveAction.setEnabled(True)
+      else: self.saveAction.setEnabled(False)
+   
+   def NewArmyList(self):
+      self.mdiArea.AddArmySubWindow()
+      
+   def SaveArmyList(self, saveAs=False):
+      l = len(self.mdiArea.subWindowList())
+      # somehow if there's only one subwindow it is not registered as active,
+      # so do this as a workaround.
+      if l == 0: return
+      elif l == 1: self.mdiArea.subWindowList()[0].widget().SaveArmyList(saveAs)
+      else: self.mdiArea.activeSubWindow().widget().SaveArmyList(saveAs)
+      
+   def SaveArmyListAs(self):
+      self.SaveArmyList(saveAs=True)
    
 #===============================================================================
 # MainMenu
@@ -57,8 +85,14 @@ class MainMenu(QtGui.QMenuBar):
       
       self.fileMenu = self.addMenu("&File")
       self.newArmyAct = self.fileMenu.addAction("&New army")
+      self.newArmyAct.setShortcut("Ctrl+N")
+      self.saveAct = self.fileMenu.addAction("&Save")
+      self.saveAct.setShortcut("Ctrl+S")
+      self.saveAsAct = self.fileMenu.addAction("Save &as")
+      self.saveAsAct.setShortcut("Ctrl+Shift+S")
       self.fileMenu.addSeparator()
       self.exitAct = self.fileMenu.addAction("&Exit")
+      
       
 #===============================================================================
 # MdiArea
@@ -113,6 +147,7 @@ class ArmyMainWidget(QtGui.QWidget):
       super(ArmyMainWidget, self).__init__()
       
       self.changedSinceSave = True
+      self.lastFilename = None
       
       self.setMinimumSize(400,300)
       self.setWindowTitle(("*" + name))
@@ -138,7 +173,7 @@ class ArmyMainWidget(QtGui.QWidget):
       self.unitTable = QtGui.QTableWidget()
       self.unitTable.setColumnCount(12)
       self.unitTable.verticalHeader().hide()
-      self.unitTable.setHorizontalHeaderLabels(("Unit", "Type", "Size", "Sp", "Me", "Ra", "De", "At", "Ne", "Points", "Special", "Options", "Item"))
+      self.unitTable.setHorizontalHeaderLabels(("Unit", "Type", "Size", "Sp", "Me", "Ra", "De", "At", "Ne", "Points", "Special", "Magic item"))
       colWidths = [170, 90, 80, 30, 30, 30, 30, 30, 45, 45, 350, 200]
       for i in range(len(colWidths)):
          self.unitTable.setColumnWidth(i, colWidths[i])
@@ -205,6 +240,7 @@ class ArmyMainWidget(QtGui.QWidget):
       self.primaryForceCb.currentIndexChanged.connect(self.PrimaryForceChanged)
       
       self.unitTable.itemSelectionChanged.connect(self.UpdateButtons)
+      self.pointsLimitSb.valueChanged.connect(self.PointsLimitChanged)
       
       self.siPointsChanged.connect(self.validationWdg.UpdateTotalPoints)
       
@@ -341,6 +377,10 @@ class ArmyMainWidget(QtGui.QWidget):
          QtGui.QMessageBox.warning(self, "Duplicate unit", "Warning: Can't duplicate unit,<br>please switch back to the correct primary force.<br>Adding default unit for current force.")
          return
       sizeCb.setCurrentIndex(idx)
+      
+   def PointsLimitChanged(self):
+      self.armyList.SetPointsLimit(self.pointsLimitSb.value())
+      self.siPointsChanged.emit(self.armyList._primaryForce.PointsTotal(), self.pointsLimitSb.value())
    
    def PrimaryForceChanged(self):
       #if (self.unitTable.rowCount()>0):
@@ -352,6 +392,18 @@ class ArmyMainWidget(QtGui.QWidget):
       pfn = self.primaryForceCb.currentText()
       pfc = QtGui.qApp.DataManager.ForceChoicesByName(pfn)
       self.armyList.SetPrimaryForce(KowDetachment(pfc))
+   
+   def SaveArmyList(self, saveAs=False):
+      if (not self.lastFilename) or saveAs:
+         filename, filter = QtGui.QFileDialog.getSaveFileName(self, "Save army list as", "../%s.lst" % self.armyList.Name(), "Army lists (*.lst);;All files (*.*)")
+         print filename
+         if filename == "": return
+         else: self.lastFilename = filename
+      else:
+         filename = self.lastFilename
+      
+      self.armyList.SaveToFile(filename)
+      self.setWindowTitle(self.armyNameLe.text()) # remove * to mark a changed file
    
    @QtCore.Slot(int)
    def UnitGroupChanged(self, row):

@@ -169,10 +169,10 @@ class BattlefieldScene(QtGui.QGraphicsScene):
       self.setSceneRect(-margin, -margin, tableSize[0]+2*margin, tableSize[1]+2*margin)
       
       # background texture
-      if not os.path.isfile(os.path.join("..", "data", "mats", "mat01.png")):
+      if not os.path.isfile(os.path.join("..", "..", "data", "mats", "mat01.png")):
          print "Warning: Background image not found!"
       else:
-         bgImg = QtGui.QPixmap(os.path.join("..", "data", "mats", "mat01.png"))
+         bgImg = QtGui.QPixmap(os.path.join("..", "..", "data", "mats", "mat01.png"))
          print bgImg, bgImg.width(), bgImg.height()
          aspectRatio = 1. * tableSize[0] / tableSize[1]
           

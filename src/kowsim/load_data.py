@@ -4,10 +4,10 @@ import os
 from PySide import QtGui
 
 from sets import Set
-from util import unicode_csv_reader, utf_8_encoder
+from util.csv_util import unicode_csv_reader, utf_8_encoder
 from kow_logic import KowUnitType, KowUnitSize
 from terrain import TerrainTemplate
-from util.csv import ReadLinesFromCsv
+from util.csv_util import ReadLinesFromCsv
    
 class Marker:
    def __init__(self, name, pixmap, bgcolor, cumulative=True):
@@ -60,7 +60,7 @@ class DataManager:
    def ListTerrainResources(self):
       return self._terrainByName.keys()
    
-   def LoadBaseSizes(self, filename = os.path.join("..", "data", "base_sizes.csv")):
+   def LoadBaseSizes(self, filename = os.path.join("..", "..", "data", "base_sizes.csv")):
       if not self._unitTypes:
          self.LoadUnitTypes()
       
@@ -75,7 +75,7 @@ class DataManager:
          
          self._unitTypesByName[unitType].availableBaseSizes.append( (width, depth) )
          
-   def LoadIcons(self, filename = os.path.join("..", "data", "icons", "icons.csv")):
+   def LoadIcons(self, filename = os.path.join("..", "..", "data", "icons", "icons.csv")):
       lines = ReadLinesFromCsv(filename)
       
       self._icons = []
@@ -88,14 +88,14 @@ class DataManager:
          imgFile = line[1]
          
          # check if file is existent
-         f = open(os.path.join("..", "data","icons",imgFile))
+         f = open(os.path.join("..", "..", "data","icons",imgFile))
          f.close()
          
-         icn = QtGui.QIcon(os.path.join("..", "data","icons",imgFile))
+         icn = QtGui.QIcon(os.path.join("..", "..", "data","icons",imgFile))
          self._icons.append(icn)
          self._iconsByName[name] = icn
          
-   def LoadMarkers(self, filename = os.path.join("..", "data", "markers", "markers.csv")):
+   def LoadMarkers(self, filename = os.path.join("..", "..", "data", "markers", "markers.csv")):
       lines = ReadLinesFromCsv(filename)
       
       self._markers = []
@@ -110,7 +110,7 @@ class DataManager:
          cumulative = (line[6]=="yes")
          
          # check if file is existent
-         f = open(os.path.join("..", "data","markers",imgFile))
+         f = open(os.path.join("..", "..", "data","markers",imgFile))
          f.close()
          
          bgColor = QtGui.QColor(bgColor[0],bgColor[1],bgColor[2],bgColor[3])
@@ -121,7 +121,7 @@ class DataManager:
          self._markersByName[name] = mrk
          
             
-   def LoadTerrain(self, filename = os.path.join("..", "data", "terrain", "terrain.csv")):
+   def LoadTerrain(self, filename = os.path.join("..", "..", "data", "terrain", "terrain.csv")):
       lines = ReadLinesFromCsv(filename)
       
       self._terrain = []
@@ -138,7 +138,7 @@ class DataManager:
          defh = float(line[5])
          
          # check if file is existent
-         f = open(os.path.join("..", "data","terrain",imgFile))
+         f = open(os.path.join("..", "..", "data","terrain",imgFile))
          f.close()
          
          pm = QtGui.QPixmap(os.path.join("..", "data","terrain",imgFile))
@@ -148,7 +148,7 @@ class DataManager:
          
       print "Loaded %i terrain templates." % len(self._terrain)
    
-   def LoadUnitTypes(self, filename = os.path.join("..", "data", "unit_types.csv")):
+   def LoadUnitTypes(self, filename = os.path.join("..", "..", "data", "unit_types.csv")):
       lines = ReadLinesFromCsv(filename)
       
       unitTypes = []

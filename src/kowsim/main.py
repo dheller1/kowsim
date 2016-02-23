@@ -3,7 +3,6 @@ import sys
 
 from ui import MainWindow
 from PySide import QtGui
-from battlefield import BattlefieldScene
 
 def main():
    app = QtGui.QApplication(sys.argv)

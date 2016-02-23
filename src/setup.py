@@ -1,4 +1,4 @@
 from distutils.core import setup
 import py2exe
 
-setup(console=['source/main.py'])
+setup(console=['src/kowsim/main.py'])

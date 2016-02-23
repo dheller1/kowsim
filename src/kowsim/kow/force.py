@@ -3,6 +3,7 @@
 # kow/force.py
 #===============================================================================
 import alignment as al
+import codecs
 
 #===============================================================================
 # KowArmyList
@@ -16,13 +17,26 @@ class KowArmyList(object):
       self._primaryForce = KowDetachment(KowForceChoices("Elves", al.AL_GOOD), "Elf detachment")
       self._alliedForces = []
       self._pointsLimit = points
-      
+   
+   # getters/setters
    def Name(self): return self._name
    def PointsLimit(self): return self._pointsLimit
    def PrimaryForce(self): return self._primaryForce
    def SetName(self, name): self._name = name
+   def SetPointsLimit(self, pts): self._pointsLimit = pts
    def SetPrimaryForce(self, force): self._primaryForce = force
-
+   
+   # routines
+   def SaveToFile(self, filename):
+      with codecs.open(filename, 'w', encoding='UTF-8') as f:
+         f.write(self._name + "\n")
+         f.write(str(self._pointsLimit) + "\n")
+         f.write(self._primaryForce.Name() + "\n")
+         
+         f.write(str(self._primaryForce.NumUnits()) + "\n")
+         
+         for u in self._primaryForce.ListUnits():
+            f.write(",".join([u.Name(), u.SizeType().Name(), u.ItemName(), str(u.PointsCost())]) + "\n")
 
 #===============================================================================
 # KowUnitGroup

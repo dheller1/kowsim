@@ -41,6 +41,9 @@ class KowUnitProfile(object):
    def ItemCost(self):
       if self._item: return self._item.PointsCost()
       else: return 0
+   def ItemName(self):
+      if self._item: return self._item.Name()
+      else: return ""
    def Me(self): return self._melee
    def MeStr(self): return "%d+" % self._melee if self._melee>0 else "-"
    def Ne(self): return (self._nerveWaver, self._nerveBreak)
