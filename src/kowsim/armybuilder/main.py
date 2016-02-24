@@ -45,7 +45,9 @@ class MainWindow(QtGui.QMainWindow):
       
       self.toolBar = QtGui.QToolBar(self)
       self.toolBar.addAction(QtGui.QIcon(os.path.join("..","data","icons","new.png")), "New army list", self.NewArmyList)
+      self.openAciton = self.toolBar.addAction(QtGui.QIcon(os.path.join("..","data","icons","open.png")), "Open", self.OpenArmyList)
       self.saveAction = self.toolBar.addAction(QtGui.QIcon(os.path.join("..","data","icons","save.png")), "Save", self.SaveArmyList)
+      self.saveAction.setEnabled(False)
       
       self.addToolBar(self.toolBar)
       
@@ -64,6 +66,13 @@ class MainWindow(QtGui.QMainWindow):
    
    def NewArmyList(self):
       self.mdiArea.AddArmySubWindow()
+      
+   def OpenArmyList(self):
+      filenames, filter = QtGui.QFileDialog.getOpenFileNames(self, "Open army list(s)", "..", "Army lists (*.lst);;All files (*.*)")
+      
+      for f in filenames:
+         sub = self.mdiArea.AddArmySubWindow()
+         sub.OpenFromFile(f)
       
    def SaveArmyList(self, saveAs=False):
       l = len(self.mdiArea.subWindowList())
@@ -103,16 +112,19 @@ class MdiArea(QtGui.QMdiArea):
       self.setViewMode(QtGui.QMdiArea.TabbedView)
       self.setTabsClosable(True)
       self.setTabsMovable(True)
-      self.AddArmySubWindow()
+      #self.AddArmySubWindow()
       
    def AddArmySubWindow(self):
       num = len(self.subWindowList())
       if num==0: name = "Unnamed army"
       else: name = "Unnamed army (%d)" % (num+1)
       sub = ArmyMainWidget(name)
+      print "Previously:", len(self.subWindowList()), "subwindows."
       self.addSubWindow(sub)
       sub.show() # important!
       sub.showMaximized()
+      print sub.armyList.PrimaryForce().ListUnits()
+      return sub
       
 #===============================================================================
 # ValidationWidget
@@ -146,7 +158,6 @@ class ArmyMainWidget(QtGui.QWidget):
    def __init__(self, name="Unnamed army"):
       super(ArmyMainWidget, self).__init__()
       
-      self.changedSinceSave = True
       self.lastFilename = None
       
       self.setMinimumSize(400,300)
@@ -301,8 +312,10 @@ class ArmyMainWidget(QtGui.QWidget):
       # update everything
       self.UnitGroupChanged(rowNum)
       
+      self.SetModified(True)
+            
    def DataChanged(self):
-      self.changedSinceSave = True
+      self.SetModified(True)
       
       name = self.armyNameLe.text()
       self.armyList.SetName(name)
@@ -352,6 +365,7 @@ class ArmyMainWidget(QtGui.QWidget):
       #print "Mappings: _RowToUnitId", self._MapRowToUnitId
       
       self.siPointsChanged.emit(self.armyList.PrimaryForce().PointsTotal(), self.armyList.PointsLimit())
+      self.SetModified(True)
       
    def DuplicateUnit(self):
       selRow = self.unitTable.selectedItems()[0].row()
@@ -377,10 +391,12 @@ class ArmyMainWidget(QtGui.QWidget):
          QtGui.QMessageBox.warning(self, "Duplicate unit", "Warning: Can't duplicate unit,<br>please switch back to the correct primary force.<br>Adding default unit for current force.")
          return
       sizeCb.setCurrentIndex(idx)
+      self.SetModified(True)
       
    def PointsLimitChanged(self):
       self.armyList.SetPointsLimit(self.pointsLimitSb.value())
       self.siPointsChanged.emit(self.armyList._primaryForce.PointsTotal(), self.pointsLimitSb.value())
+      self.SetModified(True)
    
    def PrimaryForceChanged(self):
       #if (self.unitTable.rowCount()>0):
@@ -392,6 +408,19 @@ class ArmyMainWidget(QtGui.QWidget):
       pfn = self.primaryForceCb.currentText()
       pfc = QtGui.qApp.DataManager.ForceChoicesByName(pfn)
       self.armyList.SetPrimaryForce(KowDetachment(pfc))
+      
+      self.SetModified(True)
+      
+   def OpenFromFile(self, filename):
+      self.armyList = KowArmyList("blank")
+      self.armyList.LoadFromFile(filename, QtGui.qApp.DataManager)
+      print self.armyList
+      print self.armyList.PrimaryForce()
+      self.UpdateUi()
+      self.lastFilename = filename
+      self.SetModified(False)
+      
+      print self.armyList.PrimaryForce().ListUnits()
    
    def SaveArmyList(self, saveAs=False):
       if (not self.lastFilename) or saveAs:
@@ -403,7 +432,81 @@ class ArmyMainWidget(QtGui.QWidget):
          filename = self.lastFilename
       
       self.armyList.SaveToFile(filename)
-      self.setWindowTitle(self.armyNameLe.text()) # remove * to mark a changed file
+      self.SetModified(False)
+      
+   def SetModified(self, modified=True):
+      self.wasModified = modified
+      
+      if self.lastFilename:
+         showName = " (%s)" % os.path.basename(self.lastFilename)
+      else: showName = ""
+      modified = "*" if self.wasModified else ""
+      
+      self.setWindowTitle("%s%s%s" % (modified, self.armyList.Name(), showName))
+      
+   def SetRowToUnit(self, row, unit, unitid):
+      """ Set row to reflect an already existing unit. """
+      if row >= self.unitTable.rowCount():
+         self.unitTable.setRowCount(row+1)
+      self.unitTable.setRowHeight(row, 22)
+      
+      # cell items
+      cb = QtGui.QComboBox()
+      for choice in self.armyList.PrimaryForce().Choices().ListGroups():
+         cb.addItem(choice.Name())
+      self.unitTable.setCellWidget(row, 0, cb)
+      
+      cbOpt = QtGui.QComboBox()
+      self.unitTable.setCellWidget(row, 2, cbOpt) # size type
+      
+      for col in (1, 3, 4, 5, 6, 7, 8, 9, 10): # profile stats
+         self.unitTable.setItem(row, col, QtGui.QTableWidgetItem(""))
+         self.unitTable.item(row, col).setFlags(self.unitTable.item(row, col).flags() ^ Qt.ItemIsEditable) # remove editable flag
+         if col != 10: self.unitTable.item(row, col).setTextAlignment(Qt.AlignCenter)
+         
+      cbItem = QtGui.QComboBox()
+      self.unitTable.setCellWidget(row, 11, cbItem) # magic item
+      cbItem.addItem("-")
+      cbItem.addItems(["%s (%dp)" % (itm.Name(), itm.PointsCost()) for itm in QtGui.qApp.DataManager.ListItems()])
+      
+      # set cell items to correct contents
+      cb.setCurrentIndex(cb.findText(unit.Name()))
+      
+      # add and set size option(s)
+      for so in self.armyList.PrimaryForce().Choices().GroupByName(unit.Name()).ListOptions():
+         cbOpt.addItem(so.SizeType().Name())
+      cbOpt.setCurrentIndex(cbOpt.findText(unit.SizeType().Name()))
+      
+      # set item
+      if unit.Item():
+         itemString = "%s (%dp)" % (unit.Item().Name(), unit.Item().PointsCost())
+         cbItem.setCurrentIndex(cbItem.findText(itemString)) 
+      
+      # afterwards, do connections
+      mapper = QtCore.QSignalMapper(self) # set mapping to identify combobox by its row
+      mapper.setMapping(cb, row)
+      cb.currentIndexChanged.connect(mapper.map)
+      
+      mapperOpt = QtCore.QSignalMapper(self)
+      mapperOpt.setMapping(cbOpt, row)
+      cbOpt.currentIndexChanged.connect(mapperOpt.map)
+      
+      mapperItm = QtCore.QSignalMapper(self)
+      mapperItm.setMapping(cbItem, row)
+      cbItem.currentIndexChanged.connect(mapperItm.map)
+      
+      mapper.mapped[int].connect(self.UnitGroupChanged)
+      mapperOpt.mapped[int].connect(self.UnitOptionChanged)
+      mapperItm.mapped[int].connect(self.UnitItemChanged)
+      
+      # update mappings
+      self._MapRowToUnitId[row] = unitid
+      self._MapUnitIdToRow[unitid] = row
+      
+      # update everything
+      self.UnitOptionChanged(row)
+      self.UnitItemChanged(row)
+      self.siPointsChanged.emit(self.armyList.PrimaryForce().PointsTotal(), self.armyList.PointsLimit())
    
    @QtCore.Slot(int)
    def UnitGroupChanged(self, row):
@@ -438,6 +541,7 @@ class ArmyMainWidget(QtGui.QWidget):
       newUnit = option.Clone()
       self.armyList.PrimaryForce().ReplaceUnit(self._MapRowToUnitId[row], newUnit)
       self.siPointsChanged.emit(self.armyList.PrimaryForce().PointsTotal(), self.armyList.PointsLimit())
+      self.SetModified()
       
    @QtCore.Slot(int)
    def UnitOptionChanged(self, row):
@@ -472,6 +576,7 @@ class ArmyMainWidget(QtGui.QWidget):
       newUnit = option.Clone()
       self.armyList.PrimaryForce().ReplaceUnit(self._MapRowToUnitId[row], newUnit)
       self.siPointsChanged.emit(self.armyList.PrimaryForce().PointsTotal(), self.armyList.PointsLimit())
+      self.SetModified()
       
    @QtCore.Slot(int)
    def UnitItemChanged(self, row):
@@ -494,6 +599,7 @@ class ArmyMainWidget(QtGui.QWidget):
       self.unitTable.item(row, 9).setFont(font)
       
       self.siPointsChanged.emit(self.armyList.PrimaryForce().PointsTotal(), self.armyList.PointsLimit())
+      self.SetModified()
       
    def UpdateButtons(self):
       if len(self.unitTable.selectedItems())>0:
@@ -502,7 +608,24 @@ class ArmyMainWidget(QtGui.QWidget):
       else:
          self.duplicateUnitPb.setEnabled(False)
          self.deleteUnitPb.setEnabled(False)
+         
+   def UpdateUi(self):
+      """ This is called when an army list has been set (e.g. by loading a file) and the UI elements must be updated
+         to reflect its state. """
+      self.armyNameLe.setText(self.armyList.Name())
+      self.primaryForceCb.setCurrentIndex(self.primaryForceCb.findText(self.armyList._primaryForce.Choices().Name()))
+      self.pointsLimitSb.setValue(self.armyList.PointsLimit())
       
+      units = self.armyList._primaryForce.ListUnits()
+      self.unitTable.setRowCount(0)
+      self.unitTable.clear()
+      self.unitTable.setRowCount(len(units))
+      
+      for unitId in range(len(units)):
+         row = unitId
+         unit = units[unitId]
+         self.SetRowToUnit(row, unit, unitId)
+         
 #===============================================================================
 # main - entry point
 #===============================================================================
