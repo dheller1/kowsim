@@ -38,9 +38,10 @@ class KowArmyList(object):
          
          pfName = f.readline().strip() # e.g. 'My Elf detachment'
          pfArmy = f.readline().strip() # e.g. 'Elves'
-         self._primaryForce = KowDetachment(dataMgr.ForceChoicesByName(pfArmy), pfName)
-         print "Instantiated", self._primaryForce
-         print "Has", self._primaryForce.NumUnits(), "units."
+         del self._primaryForce
+         # somehow, if you don't explicitly set units=[] here, it causes a giant bug where units is a non-empty
+         # list of units in the previous army list. should now be fixed.
+         self._primaryForce = KowDetachment(dataMgr.ForceChoicesByName(pfArmy), pfName, units=[])
          
          try: numUnits = int(f.readline().strip())
          except ValueError:
@@ -169,9 +170,9 @@ class KowForceChoices(object):
 #===============================================================================
 class KowDetachment(object):
    def __init__(self, choices, name="Unnamed detachment", units=[]):
+      self._choices = choices
       self._name = name
       self._units = units
-      self._choices = choices
       
    def AddUnit(self, unit):
       self._units.append(unit)

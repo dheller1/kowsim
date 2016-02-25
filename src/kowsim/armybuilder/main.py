@@ -154,6 +154,7 @@ class ValidationWidget(QtGui.QWidget):
 #===============================================================================
 class ArmyMainWidget(QtGui.QWidget):
    siPointsChanged = QtCore.Signal(int, int)
+   siModified = QtCore.Signal(bool)
    
    def __init__(self, name="Unnamed army"):
       super(ArmyMainWidget, self).__init__()
@@ -414,13 +415,9 @@ class ArmyMainWidget(QtGui.QWidget):
    def OpenFromFile(self, filename):
       self.armyList = KowArmyList("blank")
       self.armyList.LoadFromFile(filename, QtGui.qApp.DataManager)
-      print self.armyList
-      print self.armyList.PrimaryForce()
       self.UpdateUi()
       self.lastFilename = filename
-      self.SetModified(False)
-      
-      print self.armyList.PrimaryForce().ListUnits()
+      self.SetModified(False)      
    
    def SaveArmyList(self, saveAs=False):
       if (not self.lastFilename) or saveAs:
@@ -443,6 +440,7 @@ class ArmyMainWidget(QtGui.QWidget):
       modified = "*" if self.wasModified else ""
       
       self.setWindowTitle("%s%s%s" % (modified, self.armyList.Name(), showName))
+      self.siModified.emit(modified)
       
    def SetRowToUnit(self, row, unit, unitid):
       """ Set row to reflect an already existing unit. """
@@ -613,7 +611,11 @@ class ArmyMainWidget(QtGui.QWidget):
       """ This is called when an army list has been set (e.g. by loading a file) and the UI elements must be updated
          to reflect its state. """
       self.armyNameLe.setText(self.armyList.Name())
+      # temporarily disconnect
+      self.primaryForceCb.currentIndexChanged.disconnect(self.PrimaryForceChanged)
       self.primaryForceCb.setCurrentIndex(self.primaryForceCb.findText(self.armyList._primaryForce.Choices().Name()))
+      #self.primaryForceCb.currentIndexChanged.connect(self.PrimaryForceChanged)
+      
       self.pointsLimitSb.setValue(self.armyList.PointsLimit())
       
       units = self.armyList._primaryForce.ListUnits()
@@ -625,6 +627,8 @@ class ArmyMainWidget(QtGui.QWidget):
          row = unitId
          unit = units[unitId]
          self.SetRowToUnit(row, unit, unitId)
+         
+      self.unitTable.setHorizontalHeaderLabels(("Unit", "Type", "Size", "Sp", "Me", "Ra", "De", "At", "Ne", "Points", "Special", "Magic item"))
          
 #===============================================================================
 # main - entry point
