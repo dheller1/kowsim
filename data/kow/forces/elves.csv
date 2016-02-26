@@ -34,7 +34,7 @@ Hero,Lord on Battle Dragon,Individual,10,3,-,5,10,17/19,"Elite, CS(3), Fly, Insp
 Hero,Elven Prince,Individual,6,3,-,5,3,11/13,"Elite, CS(1), Individual",(Sabre-Toothed Pussycat (+10)),60,20x20
 Hero,Mounted Elven Prince,Individual,9,3,-,5,3,11/13,"Elite, CS(1), Individual",,75,25x50
 Hero,Prince on War Chariot,Individual,8,3,4,4,4,11/13,"Elite, TC(2), Bow",,90,50x100
-Hero,Elven Mage,Individual,6,5,-,4,1,10/12,"Elite, Individual, Heal(3)",(+45 LightningBolt(5))(+10 Breath(10))(+30 WindBlast(5))(+15 BaneChant(2)) (Sabre-Toothed Pussycat (+10)),75,20x20
+Hero,Elven Mage,Individual,6,5,-,4,1,10/12,"Elite, Individual, Heal(3)","Lightning Bolt(5)|+45,Fireball (10)|+10,Wind Blast (5)|+30,Bane Chant(2)|+15,Sabre-toothed Pussycat|+10",75,20x20
 Hero,Mounted Elven Mage,Individual,9,5,-,4,1,10/12,"Elite, Individual, Heal(3)",(+45 LightningBolt(5))(+10 Breath(10))(+30 WindBlast(5))(+15 BaneChant(2)) (Sabre-Toothed Pussycat (+10)),90,25x50
 Hero,Forest Warden,Individual,6,4,-,5,3,11/13,"CS(2), Vanguard, Nimble, Pathfinder",,75,40x40
 Hero,Elf Army Standard Bearer,Individual,6,5,-,4,1,10/12,"Elite, Individual, Inspiring",,50,20x20

@@ -7,6 +7,19 @@ import sizetype as st
 
 from ..util.core import Size
 
+
+#===============================================================================
+# KowUnitOption
+#   Option for a specific unit, e.g. to take two-handed weapons instead of
+#   weapon and shield. May be associated with a points cost as well as a list
+#   of effects (e.g. increasing one profile value but lowering another one in turn).
+#===============================================================================
+class KowUnitOption(object):
+   def __init__(self, name, pointsCost=0, effects=[]):
+      self._name = name
+      self._pointsCost = pointsCost
+      self._effects = effects
+
 #===============================================================================
 # KowUnitProfile
 #   Unit profile as given in an army list entry, e.g. Sea Guarde Horde, along
@@ -28,6 +41,7 @@ class KowUnitProfile(object):
       self._baseSize = args[11] if len(args)>11 else Size(20, 20) # base size in mm
       self._specialRules = args[12] if len(args)>12 else []
       self._item = args[13] if len(args)>13 else None
+      self._options = args[14] if len(args)>14 else []
       
    def __repr__(self):
       return "KowUnitProfile(%s)" % self._name
@@ -49,6 +63,7 @@ class KowUnitProfile(object):
    def Ne(self): return (self._nerveWaver, self._nerveBreak)
    def NeStr(self): return "%s/%d" % (str(self._nerveWaver) if self._nerveWaver != 0 else "-", self._nerveBreak)
    def Name(self): return self._name
+   def Options(self): return self._options
    def PointsCost(self): return self._pointsCost + self._item.PointsCost() if self._item else self._pointsCost
    def Ra(self): return self._ranged
    def RaStr(self): return "%d+" % self._ranged if self._ranged>0 else "-"
@@ -67,7 +82,7 @@ class KowUnitProfile(object):
    # generate a fresh copy of this unit
    def Clone(self):
       return KowUnitProfile(self._name, self._speed, self._melee, self._ranged, self._defense, self._attacks, self._nerveWaver, self._nerveBreak, self._pointsCost,
-                            self._unitType, self._sizeType, self._baseSize, self._specialRules, self._item)
+                            self._unitType, self._sizeType, self._baseSize, self._specialRules, self._item, self._options)
    
    # derived properties
    def Footprint(self):
@@ -141,10 +156,37 @@ class KowUnitProfile(object):
       special = cols[9]
       specRules = [word.strip() for word in special.split(',')]
       
+      # parse options
       options = cols[10] # Options
+      opts = KowUnitProfile.ParseOptionsString(options)
+      print "%d options for unit %s." % (len(opts), name)
+      
       points = int(cols[11]) # Points
       baseW, baseH = cols[12].split('x') # Base Size
       base = Size(int(baseW), int(baseH))
       
-      p = KowUnitProfile(name, sp, me, ra, de, at, nv[0], nv[1], points, utype, stype, base, specRules)
+      p = KowUnitProfile(name, sp, me, ra, de, at, nv[0], nv[1], points, utype, stype, base, specRules, None, opts)
       return p
+   
+   @staticmethod
+   def ParseOptionsString(s):
+      """ Parse options string as read from CSV and generate unit options from it. """
+      if len(s)==0: return []
+      
+      options = s.split(',')
+      optList = []
+      for o in options:
+         params = o.split('|')
+         optName = params[0]
+         if len(params)>1:
+            try: optPointsCost = int(params[1])
+            except ValueError:
+               print "Warning: Invalid points cost '%s' for option %s! Skipping option!" % (params[1], optName)
+               continue
+         else: optPointsCost = 0
+         if len(params)>2: optEffects = params[2:]
+         else: optEffects = []
+         
+         optObject = KowUnitOption(optName, optPointsCost, optEffects)
+         optList.append(optObject)
+      return optList

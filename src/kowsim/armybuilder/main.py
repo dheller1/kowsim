@@ -475,6 +475,8 @@ class ArmyMainWidget(QtGui.QWidget):
          cbOpt.addItem(so.SizeType().Name())
       cbOpt.setCurrentIndex(cbOpt.findText(unit.SizeType().Name()))
       
+      cbOpt.setEnabled( len(self.armyList.PrimaryForce().Choices().GroupByName(unit.Name()).ListOptions()) > 1 )
+      
       # set item
       if unit.Item():
          itemString = "%s (%dp)" % (unit.Item().Name(), unit.Item().PointsCost())
@@ -516,9 +518,12 @@ class ArmyMainWidget(QtGui.QWidget):
       self.unitTable.item(row, 1).setText(option.UnitType().Name()) # unit type
       
       # size options
-      self.unitTable.cellWidget(row, 2).clear()
+      sizeOptWdg = self.unitTable.cellWidget(row, 2)
+      sizeOptWdg.clear()
       for o in grp.ListOptions():
-         self.unitTable.cellWidget(row, 2).addItem(o.SizeType().Name())
+         sizeOptWdg.addItem(o.SizeType().Name())
+      
+      sizeOptWdg.setEnabled( (len(grp.ListOptions())>1) )
          
       self.unitTable.item(row, 3).setText("%d" % option.Sp())
       self.unitTable.item(row, 4).setText(option.MeStr())
@@ -614,7 +619,7 @@ class ArmyMainWidget(QtGui.QWidget):
       # temporarily disconnect
       self.primaryForceCb.currentIndexChanged.disconnect(self.PrimaryForceChanged)
       self.primaryForceCb.setCurrentIndex(self.primaryForceCb.findText(self.armyList._primaryForce.Choices().Name()))
-      #self.primaryForceCb.currentIndexChanged.connect(self.PrimaryForceChanged)
+      self.primaryForceCb.currentIndexChanged.connect(self.PrimaryForceChanged)
       
       self.pointsLimitSb.setValue(self.armyList.PointsLimit())
       
