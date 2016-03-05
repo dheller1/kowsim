@@ -1,4 +1,4 @@
-rm armybuilder.zip
+del armybuilder.zip
 cd src
 python setup_ab.py py2exe
 cd ..
