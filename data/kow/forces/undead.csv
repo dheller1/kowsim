@@ -1,0 +1,57 @@
+# name,alignment,,,,,,,,,,,
+Undead,Evil,,,,,,,,,,,
+# type,unit,size,Sp,Me,Ra,De,At,Ne,Special,Options,Points,Base
+Infantry,Skeleton Warriors,Troop (10),5,5,-,4,10,-/12,"Shambling, Lifeleech",Undead Giant Rats,65,20x20
+Infantry,Skeleton Warriors,Regiment(20),5,5,-,4,12,-/16,"Shambling, Lifeleech",Undead Giant Rats,90,20x20
+Infantry,Skeleton Warriors,Horde(40),5,5,-,4,25,-/23,"Shambling, Lifeleech",Undead Giant Rats,150,20x20
+Infantry,Skeleton Spearmen,Troop (10),5,5,-,4,10,-/12,"Shambling, Lifeleech",Undead Giant Rats,75,20x20
+Infantry,Skeleton Spearmen,Regiment(20),5,5,-,4,15,-/16,"Shambling, Lifeleech",Undead Giant Rats,105,20x20
+Infantry,Skeleton Spearmen,Horde(40),5,5,-,4,30,-/23,"Shambling, Lifeleech",Undead Giant Rats,175,20x20
+Infantry,Skeleton Archers,Troop (10),5,6,5,3,8,-/12,"Shambling, Lifeleech",Undead Giant Rats,75,20x20
+Infantry,Skeleton Archers,Regiment(20),5,6,5,3,10,-/16,"Shambling, Lifeleech",Undead Giant Rats,100,20x20
+Infantry,Skeleton Archers,Horde(40),5,6,5,3,20,-/23,"Shambling, Lifeleech",Undead Giant Rats,165,20x20
+Infantry,Ghouls,Troop (10),6,4,-,3,10,8/10,"Shambling, Lifeleech",Undead Giant Rats,65,20x20
+Infantry,Ghouls,Regiment(20),6,4,-,3,12,12/14,"Shambling, Lifeleech",Undead Giant Rats,90,20x20
+Infantry,Ghouls,Horde(40),6,4,-,3,25,19/21,"Shambling, Lifeleech",Undead Giant Rats,150,20x20
+Infantry,Zombies,Regiment(20),5,5,-,3,15,-/15,"Shambling, Lifeleech",Undead Giant Rats,80,20x20
+Infantry,Zombies,Horde(40),5,5,-,3,30,-/22,"Shambling, Lifeleech",Undead Giant Rats,130,20x20
+Infantry,Zombies,Legion(60),5,5,-,3,40,-/28,"Shambling, Lifeleech",Undead Giant Rats,190,20x20
+Infantry,Revenants,Troop (10),5,4,-,5,10,-/13,"Shambling, Lifeleech","Undead Giant Rats, two-handed weapons",85,20x20
+Infantry,Revenants,Regiment(20),5,4,-,5,12,-/17,"Shambling, Lifeleech","Undead Giant Rats, two-handed weapons",120,20x20
+Infantry,Revenants,Horde(40),5,4,-,5,25,-/25,"Shambling, Lifeleech","Undead Giant Rats, two-handed weapons",200,20x20
+Infantry,Soul Reaver,Troop (10),6,3,-,5,20,11/13,"Crushing Strength (2), Lifeleech (2)",,180,20x20
+Infantry,Soul Reaver,Regiment(20),6,3,-,5,25,15/17,"Crushing Strength (2), Lifeleech (2)",,260,20x20
+Cavalry,Revenant Cavalry,Troop(5),8,4,-,5,8,-/14,"Shambling, Lifeleech",,110,50x100
+Cavalry,Revenant Cavalry,Regiment(10),8,4,-,5,16,-/17,"Shambling, Lifeleech",,170,50x100
+Cavalry,Soul Reaver Cavalry,Troop(5),8,3,-,6,10,12/14,"Crushing Strength (1), Lifeleech (2), Thunderous Charge (2)",,195,50x100
+Cavalry,Soul Reaver Cavalry,Regiment(10),8,3,-,6,20,15/17,"Crushing Strength (1), Lifeleech (2), Thunderous Charge (2)",,300,50x100
+Infantry,Wraiths,Troop (10),10,4,-,6,10,-/12,"Crushing Strength (1), Fly, Shambling, Lifeleech",,140,20x20
+Infantry,Wraiths,Regiment(20),10,4,-,6,12,-/16,"Crushing Strength (1), Fly, Shambling, Lifeleech",,200,20x20
+Infantry,Mummies,Troop (10),5,4,-,5,10,-/14,"Crushing Strength (2), Regeneration (5+), Shambling, Lifeleech",,120,20x20
+Infantry,Mummies,Regiment(20),5,4,-,5,10,-/18,"Crushing Strength (2), Regeneration (5+), Shambling, Lifeleech",,170,20x20
+Large Infantry,Zombie Trolls,Regiment(3),6,4,-,4,9,-/15,"Crushing Strength (2), Shambling,  Lifeleech",,115,40x40
+Large Infantry,Zombie Trolls,Horde(6),6,4,-,4,18,-/18,"Crushing Strength (2), Shambling,  Lifeleech",,175,40x40
+Large Infantry,Werewolves,Regiment(3),9,3,-,5,9,12/14,"Crushing Strength (1), Nimble, Lifeleech",,160,40x40
+Large Infantry,Werewolves,Horde(6),9,3,-,5,18,15/17,"Crushing Strength (1), Nimble, Lifeleech",,245,40x40
+Large Infantry,Wights,Regiment(3),6,4,-,5,9,-/14,"Brutal, Crushing Strength (3), Shambling, Lifeleech",,155,40x40
+Large Infantry,Wights,Horde(6),6,4,-,5,9,-/17,"Brutal, Crushing Strength (3), Shambling, Lifeleech",,235,40x40
+War Engine,Balefire Catapult,Individual,5,-,5,4,1,-/11,"Blast (D6+2), Indirect Fire, Piercing (2), Reload!, Shambling, Vicious,  Lifeleech",,100,50x50
+Hero,Revenant King,Individual,5,4,-,5,5,14/16,"Crushing Strength (1), Individual, Inspiring, Surge (6), Lifeleech",,120,20x20
+Hero,Revenant King on mount,Individual,8,4,-,5,5,14/16,"Crushing Strength (1), Individual, Inspiring, Surge (6), Lifeleech",undead Horse,140,25x50
+Hero,Revenant King on Wyrm,Individual,7,4,-,5,9,18/20,"Crushing Strength (3), Surge (6), Inspiring, Lifeleech",,190,50x50
+Hero,Revenant King on Wyrm,Individual,10,4,-,5,9,18/20,"Crushing Strength (3), Surge (6), Inspiring, Fly,  Lifeleech",Winged Wyrm,235,50x50
+Hero,Undead Army Standard Bearer,Individual,5,5,-,4,1,-/13,"Individual, Inspiring, Shambling, Lifeleech",,50,20x20
+Hero,Undead Army Standard Bearer,Individual,8,5,-,4,1,-/13,"Individual, Inspiring, Shambling, Lifeleech",,65,25x50
+Hero,Cursed Pharaoh,Individual,5,3,-,6,5,15/17,"Crushing Strength (2), Individual, Inspiring, Regeneration (5+), Surge (6), Lifeleech",,145,20x20
+Hero,Vampire Lord,Individual,7,3,-,6,8,14/16,"Crushing Strength (2), Individual, Inspiring, Lifeleech (2), Surge (3)","Heal (2), Lightning Bolt (3)",220,20x20
+Hero,Vampire Lord on mount,Individual,9,3,-,6,8,14/16,"Crushing Strength (2), Fly, Inspiring, Lifeleech (2), Surge (3)","Heal (2), Lightning Bolt (3)",235,25x50
+Hero,Vampire on Undead Pegasus,Individual,10,3,-,5,8,14/16,"Crushing Strength (2), Individual, Inspiring, Lifeleech (2), Surge (3)","Heal (2), Lightning Bolt (3)",245,50x50
+Hero,Vampire on Dragon,Individual,10,3,-,5,10,17/19,"Breath Attack (10), Crushing Strength (3), Fly, Inspiring, Lifeleech (2), Surge (3)","Heal (2), Lightning Bolt (3)",330,50x50
+Hero,Liche King,Individual,5,5,-,4,1,14/16,"Individual, Inspiring, Regeneration (5+), Surge (12), Lifeleech","Heal (6), Lightning Bolt (5), Bane-chant (3), ",145,20x20
+Hero,Liche King on mount,Individual,8,5,-,4,1,14/16,"Individual, Inspiring, Regeneration (5+), Surge (12), Lifeleech","Heal (3), Lightning Bolt (3), Bane-chant (2), ",165,25x50
+Hero,Necromancer,Individual,5,5,-,4,1,10/12,"Individual, Surge (8), Lifeleech","Heal (6), Lightning Bolt (5), Bane-chant (3), ",85,20x20
+Hero,Necromancer,Individual,8,5,-,4,1,10/12,"Individual, Surge (8), Lifeleech","Heal (6), Lightning Bolt (5), Bane-chant (3), ",100,25x50
+Hero,Lykanis,Individual,9,3,-,5,5,13/15,"Crushing Strength (2), Inspiring (Werewolves only), Nimble,  Lifeleech",,145,40x40
+Hero,Lady Ilona[1],Individual,8,3,-,6,8,14/16,"Crushing Strength (3), Heal (3), Individual, Inspiring, Lifeleech (2), Lightning Bolt (3), Surge (3), The Promise of Love Eternal",,280,20x20
+Hero,Mhorgoth the Faceless [1],Individual,10,4,-,6,1,17/19,"Bane-chant (4), Fireball15, Fly, Heal (6), Individual, Lightning Bolt (6), Regeneration (5+), Surge (12), Very Inspiring, Lifeleech",,270,20x20
+Hero,Mhorgoth the Faceless [1] with Touch of Darkness,Individual,10,4,-,6,1,17/20,"Bane-chant (4), Fireball15, Fly, Heal (6), Individual, Lightning Bolt (6), Regeneration (5+), Surge (12), Very Inspiring, Lifeleech,",,295,20x20

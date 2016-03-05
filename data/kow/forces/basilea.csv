@@ -1,0 +1,50 @@
+# name,alignment,,,,,,,,,,,
+Basilea,Neutral,,,,,,,,,,,
+# type,unit,size,Sp,Me,Ra,De,At,Ne,Special,Options,Points,Base
+Infantry,Men-at-Arms (sword & shield),Troop (10),5,4,-,4,10,10/12,Iron Resolve,,80,20x20
+Infantry,Men-at-Arms (sword & shield),Regiment(20),5,4,-,4,12,14/16,Iron Resolve,,115,20x20
+Infantry,Men-at-Arms (sword & shield),Horde(40),5,4,-,4,25,21/23,Iron Resolve,,190,20x20
+Infantry,Men-at-Arms (spear & shield),Troop (10),5,4,-,4,10,10/12,"Phalanx, Iron Resolve",,95,20x20
+Infantry,Men-at-Arms (spear & shield),Regiment(20),5,4,-,4,15,14/16,"Phalanx, Iron Resolve",,135,20x20
+Infantry,Men-at-Arms (spear & shield),Horde(40),5,4,-,4,30,21/23,"Phalanx, Iron Resolve",,225,20x20
+Infantry,Crossbowmen,Troop (10),5,5,5,4,8,10/12,"Crossbows, Piercing (1), Reload!, Iron Resolve",,100,20x20
+Infantry,Crossbowmen,Regiment(20),5,5,5,4,10,14/16,"Crossbows, Piercing (1), Reload!, Iron Resolve",,130,20x20
+Infantry,Crossbowmen,Horde(40),5,5,5,4,20,21/23,"Crossbows, Piercing (1), Reload!, Iron Resolve",,215,20x20
+Infantry,Penitents Mob,Troop (10),5,5,-,3,10,8/10,"Crushing Strength (1), Headstrong, Iron Resolve",,70,20x20
+Infantry,Penitents Mob,Regiment(20),5,5,-,3,10,12/14,"Crushing Strength (1), Headstrong, Iron Resolve",,100,20x20
+Infantry,Penitents Mob,Horde(40),5,5,-,3,10,19/21,"Crushing Strength (1), Headstrong, Iron Resolve",,165,20x20
+Infantry,Paladin Foot Guard,Troop (10),5,3,-,5,10,11/13,"Headstrong, Iron Resolve",two-handed weapons,105,20x20
+Infantry,Paladin Foot Guard,Regiment(20),5,3,-,5,12,15/17,"Headstrong, Iron Resolve",two-handed weapons,150,20x20
+Cavalry,Paladin Knights,Troop(5),8,3,-,5,8,12/14,"Headstrong, Thunderous Charge (2), Iron Resolve",,135,25x50
+Cavalry,Paladin Knights,Regiment(10),8,3,-,5,16,15/17,"Headstrong, Thunderous Charge (2), Iron Resolve",,210,25x50
+Cavalry,Paladin Knights,Horde(20),8,3,-,5,32,22/24,"Headstrong, Thunderous Charge (2), Iron Resolve",,350,25x50
+Infantry,Sisterhood Infantry,Troop (10),5,4,-,3,10,10/12,"Crushing Strength (1), Headstrong, Vicious, Iron Resolve",,90,20x20
+Infantry,Sisterhood Infantry,Regiment(20),5,4,-,3,15,14/16,"Crushing Strength (1), Headstrong, Vicious, Iron Resolve",,130,20x20
+Infantry,Sisterhood Infantry,Horde(40),5,4,-,3,30,21/23,"Crushing Strength (1), Headstrong, Vicious, Iron Resolve",,215,20x20
+Cavalry,Sisterhood Panther Lancers,Troop(5),10,4,-,3,8,11/13,"Nimble, Crushing Strength (1), Vicious, Iron Resolve",,115,25x50
+Cavalry,Sisterhood Panther Lancers,Regiment(10),10,4,-,3,16,14/16,"Nimble, Crushing Strength (1), Vicious, Iron Resolve",,175,25x50
+Large Cavalry,Sisterhood Panther Chariot,Regiment(3),9,4,-,4,15,12/14,"Thunderous Charge (2), Vicious, Iron Resolve",,180,50x100
+Large Cavalry,Sisterhood Panther Chariot,Horde(6),9,4,-,4,30,15/17,"Thunderous Charge (2), Vicious, Iron Resolve",,280,50x100
+Large Infantry,Elohi,Regiment(3),10,3,-,5,9,-/14,"Crushing Strength (1), Fly, Inspiring, Thunderous Charge (1), Iron Resolve",,195,40x40
+Large Infantry,Elohi,Horde(6),10,3,-,5,18,-/17,"Crushing Strength (1), Fly, Inspiring, Thunderous Charge (1), Iron Resolve",,300,40x40
+War Engine,Heavy Arbalest,Individual,5,-,5,4,1,10/12,"Blast (D3+2), Reload!, Piercing (3), Iron Resolve",,65,50x50
+Monster,Phoenix,Individual,10,3,-,3,3,14/16,"Breath Attack (10), Crushing Strength (1), Fly, Heal (6), Inspiring, Regeneration (4+), Iron Resolve",,165,50x50
+Hero,Dictator,Individual,5,3,-,5,3,13/15,"Crushing Strength (1), Individual, Inspiring, Iron Resolve",,90,20x20
+Hero,Dictator on Basiliean warhorse,Individual,8,3,-,5,3,13/15,"Crushing Strength (1), Thunderous Charge (1), Individual, Inspiring, Iron Resolve",,120,25x50
+Hero,Bearer of the Holy Icon,Individual,5,5,-,4,1,10/12,"Individual, Inspiring, Iron Resolve",,55,20x20
+Hero,Bearer of the Holy Icon on barded horse,Individual,8,5,-,5,1,10/12,"Individual, Inspiring, Iron Resolve",,75,25x50
+Hero,Priest,Individual,5,4,-,4,1,11/13,"Crushing Strength (1), Headstrong, Heal (3), Individual, Very Inspiring (Penitents only), Iron Resolve",Bane-chant (2),75,20x20
+Hero,Priest on horse,Individual,8,4,-,4,1,11/13,"Crushing Strength (1), Headstrong, Heal (3), Individual, Very Inspiring (Penitents only), Iron Resolve",Bane-chant (2),90,25x50
+Hero,High Paladin,Individual,5,3,-,5,5,13/15,"Crushing Strength (1), Headstrong, Heal (2), Individual, Inspiring, Iron Resolve",,130,20x20
+Hero,High Paladin on Basiliean warhorse,Individual,8,3,-,5,5,13/15,"Crushing Strength (1), Thunderous Charge (1), Headstrong, Heal (2), Individual, Inspiring, Iron Resolve",,160,25x50
+Hero,High Paladin on Griffin,Individual,10,3,-,5,7,15/17,"Crushing Strength (2), Fly, Headstrong, Heal (2), Inspiring, Iron Resolve",,210,50x50
+Hero,High Paladin on Dragon,Individual,10,3,-,5,9,17/19,"Breath Attack (10), Crushing Strength (3), Fly, Headstrong, Heal (2), Inspiring, Iron Resolve",,310,75x75
+Hero,Abbess,Individual,5,3,-,4,4,12/14,"Crushing Strength (1), Headstrong, Individual, Very Inspiring (Sisterhood only), Vicious, Iron Resolve",,90,20x20
+Hero,Abbess on Panther,Individual,10,3,-,4,4,12/14,"Crushing Strength (1), Thunderous Charge (1), Headstrong, Individual, Very Inspiring (Sisterhood only), Vicious, Iron Resolve",,110,25x50
+Hero,Abbess on Panther Chariot,Individual,9,3,-,5,8,14/16,"Crushing Strength (1), Thunderous Charge (1), Headstrong, Very Inspiring (Sisterhood only), Vicious, Iron Resolve",,170,50x100
+Hero,Ur-Elohi,Individual,10,3,-,5,6,-/15,"Crushing Strength (2), Fly, Heal (3), Inspiring, Thunderous Charge (1), Iron Resolve",,180,40x40
+Hero,War-Wizard,Individual,5,4,-,4,1,11/13,"Fireball (8), Individual, Iron Resolve","Lightning Bolt (3), Wind Blast (5)",60,20x20
+Hero,War-Wizard on horse,Individual,9,4,-,4,1,11/13,"Fireball (8), Individual, Iron Resolve","Lightning Bolt (3), Wind Blast (5)",75,25x50
+Hero,Gnaeus Sallustis [1],Individual,9,3,-,5,7,15/17,"Crushing Strength (2), Headstrong, Heal (3), Inspiring, Nimble, Iron Resolve",,190,50x50
+Hero,"Jullius, Dragon of Heaven [1]",Individual,10,3,-,6,8,-/16,"Crushing Strength (2), Fly, Heal (3), Thunderous Charge (1), Very Inspiring, Twin Souls, Iron Resolve",,275,40x40
+Hero,"Samacris, Mother of Phoenixes [1]",Individual,10,3,-,5,3,-/15,"Fireball (10), Crushing Strength (1), Fly, Heal (7), Inspiring, Lightning Bolt (5), Regeneration (5+), Twin Souls, Iron Resolve",,230,40x40

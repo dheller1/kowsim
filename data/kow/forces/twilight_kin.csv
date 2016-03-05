@@ -1,0 +1,44 @@
+# name,alignment,,,,,,,,,,,
+Twilight Kin,Evil,,,,,,,,,,,
+# type,unit,size,Sp,Me,Ra,De,At,Ne,Special,Options,Points,Base
+Infantry,Spearmen,Troop (10),6,4,-,4,10,10/12,"Phalanx, Vicious",,100,20x20
+Infantry,Spearmen,Regiment(20),6,4,-,4,15,14/16,"Phalanx, Vicious",,140,20x20
+Infantry,Spearmen,Horde(40),6,4,-,4,30,21/23,"Phalanx, Vicious",,230,20x20
+Infantry,Crossbowmen,Troop (10),6,5,4,4,8,10/12,"Light Crossbows, Vicious",,115,20x20
+Infantry,Crossbowmen,Regiment(20),6,5,4,4,10,14/16,"Light Crossbows, Vicious",,150,20x20
+Infantry,Crossbowmen,Horde(40),6,5,4,4,20,21/23,"Light Crossbows, Vicious",,250,20x20
+Infantry,Buccaneers,Troop (10),6,4,4,4,10,10/12,"Throwing Weapons, Vicious",,120,20x20
+Infantry,Buccaneers,Regiment(20),6,4,4,4,12,14/16,"Throwing Weapons, Vicious",,160,20x20
+Infantry,Shadows,Troop (10),6,4,4,3,8,10/12,"Bows, Pathfinder, Vanguard, Vicious",,130,20x20
+Infantry,Shadows,Regiment(20),6,4,4,3,10,14/16,"Bows, Pathfinder, Vanguard, Vicious",,175,20x20
+Infantry,Reaper Guard,Troop (10),6,3,-,4,10,11/13,"Crushing Strength (1), Vicious",,105,20x20
+Infantry,Reaper Guard,Regiment(20),6,3,-,4,12,15/17,"Crushing Strength (1), Vicious",,150,20x20
+Infantry,Blade Dancers,Troop (10),7,3,-,3,20,11/13,"Brutal, Headstrong, Vicious",,140,20x20
+Infantry,Blade Dancers,Regiment(20),7,3,-,3,25,15/17,"Brutal, Headstrong, Vicious",,200,20x20
+Infantry,Lower Abyssals*,Troop (10),5,4,-,4,10,10/12,"Fury, Regeneration (5+)",two-handed weapons,85,20x20
+Infantry,Lower Abyssals*,Regiment(20),5,4,-,4,12,14/16,"Fury, Regeneration (5+)",two-handed weapons,120,20x20
+Infantry,Lower Abyssals*,Horde(40),5,4,-,4,25,21/23,"Fury, Regeneration (5+)",two-handed weapons,200,20x20
+Infantry,Gargoyles,Troop (10),10,4,-,3,8,9/11,"Fly, Regeneration (3+), Vicious",,80,25x25
+Cavalry,Dark Knights,Troop (10),8,3,-,5,9,11/13,"Thunderous Charge (2), Vicious",,135,25x50
+Cavalry,Dark Knights,Regiment(20),8,3,-,5,18,14/16,"Thunderous Charge (2), Vicious",,210,25x50
+Cavalry,Heralds of Woe,Troop (10),10,5,4,4,7,11/13,"Bows, Nimble, Vicious",,145,25x50
+Large Cavalry,Darkscythe Chariots,Regiment(3),7,4,4,4,9,12/14,"Light Crossbows, Thunderous Charge (2)",,135,50x100
+Large Cavalry,Darkscythe Chariots,Horde(6),7,4,4,4,18,15/17,"Light Crossbows, Thunderous Charge (2)",,210,50x100
+Large Cavalry,Abyssal Riders,Regiment(3),7,4,-,5,12,12/14,"Crushing Strength (1), Regeneration (5+), Thunderous Chrage, Vicious",,170,50x50
+Large Cavalry,Abyssal Riders,Horde(6),7,4,-,5,24,15/17,"Crushing Strength (1), Regeneration (5+), Thunderous Chrage, Vicious",,260,50x50
+War Engine,Twilight Bolt Thrower,Individual,6,-,4,4,2,10/12,"Blast (D3), Piercing (2), Reload!, Vicious",,90,50x50
+War Engine,Twilight Dragon Breath,Individual,6,-,4,4,15,10/12,"Breath Attack (Att), Vicious",,90,50x50
+Monster,Hydra,Individual,6,4,-,5,5,15/17,"Crushing Strength (2), Regeneration (5+), Vicious, Multiple Heads",,140,50x50
+Hero,Dark Lord,Individual,6,3,-,5,5,13/15,"Crushing Strength (1), Individual, Inspiring, Vicious",,120,25x50
+Hero,Dark Lord on Horse,Individual,9,3,-,5,5,13/15,"Crushing Strength (1), Individual, Inspiring, Vicious",,140,25x50
+Hero,Dark Lord on Black Pegasus,Individual,10,3,-,5,5,13/15,"Crushing Strength (1), Fly, Inspiring, Thunderous Charge (1), Vicious",,160,25x50
+Hero,Dark Lord on Black Dragon,Individual,10,3,-,5,10,17/19,"Crushing Strength (3), Fly, Inspiring, Lightning Bolt (5), Vicious",,310,50x50
+Hero,Dark Avenger,Individual,6,3,-,5,3,11/13,"Crushing Strength (1), Individual, Vicious",,60,20x20
+Hero,Dark Avenger  on Horse,Individual,9,3,-,5,3,11/13,"Crushing Strength (1), Individual, Vicious",,75,25x50
+Hero,Dark Avenger on Pegasus,Individual,10,3,-,5,3,11/13,"Crushing Strength (1), Fly, Vicious",,100,50x50
+Hero,Dark Avenger on Abyssal Mount,Individual,7,3,-,5,5,11/13,"Crushing Strength (2), Regeneration (5+), Vicious",,95,50x50
+Hero,High Priestess of the Abyss,Individual,6,5,-,4,1,10/12,"Fireball (10), Individual, Vicious","Lightning Bolt (5), Windblast (5), Bane-chant (2)",70,20x20
+Hero,High Priestess of the Abyss  on Horse,Individual,9,5,-,4,1,10/13,"Fireball (10), Individual, Vicious","Lightning Bolt (5), Windblast (5), Bane-chant (2)",85,25x50
+Hero,Army Standard Bearer,Individual,6,5,-,4,1,10/12,"Individual, Inspiring, Vicious",,50,20x20
+Hero,Army Standard Bearer on Horse,Individual,9,5,-,4,1,10/12,"Individual, Inspiring, Vicious",,65,25x50
+Hero,Twilight Assassin,Individual,7,3,3,4,4,11/13,"Crushing Strength (1), Individual, Piercing (1), Stealthy, Throwing Weapons, Vanguard, Vicious",,110,20x20
