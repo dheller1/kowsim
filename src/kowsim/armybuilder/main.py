@@ -10,6 +10,7 @@ from ..kow.force import KowArmyList, KowDetachment
 from ..kow.unit import KowUnitProfile
 from ..kow import unittype as KUT
 from load_data import DataManager
+from ui import UnitOptionsDialog
 
 
 #===============================================================================
@@ -45,7 +46,7 @@ class MainWindow(QtGui.QMainWindow):
       
       self.toolBar = QtGui.QToolBar(self)
       self.toolBar.addAction(QtGui.QIcon(os.path.join("..","data","icons","new.png")), "New army list", self.NewArmyList)
-      self.openAciton = self.toolBar.addAction(QtGui.QIcon(os.path.join("..","data","icons","open.png")), "Open", self.OpenArmyList)
+      self.openAction = self.toolBar.addAction(QtGui.QIcon(os.path.join("..","data","icons","open.png")), "Open", self.OpenArmyList)
       self.saveAction = self.toolBar.addAction(QtGui.QIcon(os.path.join("..","data","icons","save.png")), "Save", self.SaveArmyList)
       self.saveAction.setEnabled(False)
       
@@ -55,6 +56,7 @@ class MainWindow(QtGui.QMainWindow):
       
    def InitConnections(self):
       self.menuBar().newArmyAct.triggered.connect(self.NewArmyList)
+      self.menuBar().openAct.triggered.connect(self.OpenArmyList)
       self.menuBar().saveAct.triggered.connect(self.SaveArmyList)
       self.menuBar().saveAsAct.triggered.connect(self.SaveArmyListAs)
       self.menuBar().exitAct.triggered.connect(self.close)
@@ -95,6 +97,9 @@ class MainMenu(QtGui.QMenuBar):
       self.fileMenu = self.addMenu("&File")
       self.newArmyAct = self.fileMenu.addAction("&New army")
       self.newArmyAct.setShortcut("Ctrl+N")
+      self.openAct = self.fileMenu.addAction("&Open file")
+      self.fileMenu.addSeparator()
+      self.openAct.setShortcut("Ctrl+O")
       self.saveAct = self.fileMenu.addAction("&Save")
       self.saveAct.setShortcut("Ctrl+S")
       self.saveAsAct = self.fileMenu.addAction("Save &as")
@@ -183,10 +188,10 @@ class ArmyMainWidget(QtGui.QWidget):
       
       self.armyNameLe.selectAll()
       self.unitTable = QtGui.QTableWidget()
-      self.unitTable.setColumnCount(12)
+      self.unitTable.setColumnCount(13)
       self.unitTable.verticalHeader().hide()
-      self.unitTable.setHorizontalHeaderLabels(("Unit", "Type", "Size", "Sp", "Me", "Ra", "De", "At", "Ne", "Points", "Special", "Magic item"))
-      colWidths = [170, 90, 80, 30, 30, 30, 30, 30, 45, 45, 350, 200]
+      self.unitTable.setHorizontalHeaderLabels(("Unit", "Type", "Size", "Sp", "Me", "Ra", "De", "At", "Ne", "Points", "Special", "Magic item", "Options"))
+      colWidths = [170, 90, 80, 30, 30, 30, 30, 30, 45, 45, 350, 200, 50]
       for i in range(len(colWidths)):
          self.unitTable.setColumnWidth(i, colWidths[i])
       self.unitTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
@@ -196,6 +201,8 @@ class ArmyMainWidget(QtGui.QWidget):
       self.duplicateUnitPb.setEnabled(False)
       self.deleteUnitPb = QtGui.QPushButton(QtGui.QIcon(os.path.join("..", "data","icons","delete.png")), "&Delete")
       self.deleteUnitPb.setEnabled(False)
+      self.optionsPb = QtGui.QPushButton(QtGui.QIcon(os.path.join("..", "data","icons","options.png")), "&Options")
+      self.optionsPb.setEnabled(False)
       
       self.validationWdg = ValidationWidget(parent=self)
       
@@ -224,13 +231,14 @@ class ArmyMainWidget(QtGui.QWidget):
       self.generalGb.setLayout(genlay)
       
       self.unitGb.setLayout(QtGui.QVBoxLayout())
-      self.unitGb.layout().addWidget(self.unitTable)
       unitButtonsLay = QtGui.QHBoxLayout()
       unitButtonsLay.addWidget(self.addUnitPb)
       unitButtonsLay.addWidget(self.duplicateUnitPb)
       unitButtonsLay.addWidget(self.deleteUnitPb)
+      unitButtonsLay.addWidget(self.optionsPb)
       unitButtonsLay.addStretch(1)
       self.unitGb.layout().addLayout(unitButtonsLay)
+      self.unitGb.layout().addWidget(self.unitTable)
       
       vallay = QtGui.QVBoxLayout()
       vallay.addWidget(self.validationWdg)
@@ -249,6 +257,7 @@ class ArmyMainWidget(QtGui.QWidget):
       self.addUnitPb.clicked.connect(self.AddUnit)
       self.deleteUnitPb.clicked.connect(self.DeleteUnit)
       self.duplicateUnitPb.clicked.connect(self.DuplicateUnit)
+      self.optionsPb.clicked.connect(self.OptionsForUnit)
       self.primaryForceCb.currentIndexChanged.connect(self.PrimaryForceChanged)
       
       self.unitTable.itemSelectionChanged.connect(self.UpdateButtons)
@@ -284,7 +293,7 @@ class ArmyMainWidget(QtGui.QWidget):
       self.unitTable.setCellWidget(rowNum, 11, cbItem) # magic item
       cbItem.addItem("-")
       cbItem.addItems(["%s (%dp)" % (itm.Name(), itm.PointsCost()) for itm in QtGui.qApp.DataManager.ListItems()])
-      
+            
       # connections
       mapper = QtCore.QSignalMapper(self) # set mapping to identify combobox by its row
       mapper.setMapping(cb, rowNum)
@@ -417,7 +426,20 @@ class ArmyMainWidget(QtGui.QWidget):
       self.armyList.LoadFromFile(filename, QtGui.qApp.DataManager)
       self.UpdateUi()
       self.lastFilename = filename
-      self.SetModified(False)      
+      self.SetModified(False)
+      
+   def OptionsForUnit(self):
+      selRow = self.unitTable.selectedItems()[0].row()
+      selUnit = self.armyList.PrimaryForce().ListUnits()[self._MapRowToUnitId[selRow]]
+      
+      dlg = UnitOptionsDialog()
+      dlg.InitWithData(selUnit)
+      ret = dlg.exec_()
+      
+      if ret == QtGui.QDialog.Accepted:
+         self.UpdateRow(selRow)
+         self.siPointsChanged.emit(self.armyList.PrimaryForce().PointsTotal(), self.armyList.PointsLimit())
+         self.SetModified()
    
    def SaveArmyList(self, saveAs=False):
       if (not self.lastFilename) or saveAs:
@@ -606,11 +628,32 @@ class ArmyMainWidget(QtGui.QWidget):
       
    def UpdateButtons(self):
       if len(self.unitTable.selectedItems())>0:
-         self.duplicateUnitPb.setEnabled(True)
          self.deleteUnitPb.setEnabled(True)
+         self.duplicateUnitPb.setEnabled(True)
+         self.optionsPb.setEnabled(True)
       else:
-         self.duplicateUnitPb.setEnabled(False)
          self.deleteUnitPb.setEnabled(False)
+         self.optionsPb.setEnabled(False)
+         self.duplicateUnitPb.setEnabled(False)
+         
+   def UpdateRow(self, row):
+      if row >= self.unitTable.rowCount():
+         raise ValueError("Row number too high - does not exist!")
+      
+      unitid = self._MapRowToUnitId[row]
+      unit = self.armyList.PrimaryForce()._units[unitid]
+      
+      self.unitTable.item(row, 1).setText(unit.UnitType().Name()) # unit type
+      
+      # size options left untouched, do nothing
+      self.unitTable.item(row, 3).setText("%d" % unit.Sp())
+      self.unitTable.item(row, 4).setText(unit.MeStr())
+      self.unitTable.item(row, 5).setText(unit.RaStr())
+      self.unitTable.item(row, 6).setText(unit.DeStr())
+      self.unitTable.item(row, 7).setText(unit.AtStr())
+      self.unitTable.item(row, 8).setText(unit.NeStr())
+      self.unitTable.item(row, 9).setText("%d" % unit.PointsCost())
+      self.unitTable.item(row, 10).setText(", ".join(unit.SpecialRules()))
          
    def UpdateUi(self):
       """ This is called when an army list has been set (e.g. by loading a file) and the UI elements must be updated
@@ -633,7 +676,7 @@ class ArmyMainWidget(QtGui.QWidget):
          unit = units[unitId]
          self.SetRowToUnit(row, unit, unitId)
          
-      self.unitTable.setHorizontalHeaderLabels(("Unit", "Type", "Size", "Sp", "Me", "Ra", "De", "At", "Ne", "Points", "Special", "Magic item"))
+      self.unitTable.setHorizontalHeaderLabels(("Unit", "Type", "Size", "Sp", "Me", "Ra", "De", "At", "Ne", "Points", "Special", "Magic item", "Options"))
          
 #===============================================================================
 # main - entry point

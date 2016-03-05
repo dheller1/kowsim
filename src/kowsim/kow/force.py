@@ -62,6 +62,7 @@ class KowArmyList(object):
             try: unitGroup = self._primaryForce.Choices().GroupByName(unitName)
             except KeyError:
                print "Warning: Invalid unit %s! Skipping unit in army list." % unitName
+               print "Groups:", [g.Name() for g in self._primaryForce.Choices().ListGroups()]
                continue
             
             try: unitSizeOpt = unitGroup.OptionByName(unitSizeType)

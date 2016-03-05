@@ -21,7 +21,7 @@ class DataManager(object):
       pars = Flcp()
       
       for fn in os.listdir(os.path.join("..", "data", "kow", "forces")):
-         if fn.startswith(".") or fn.endswith("#"): # skip temporary lock files
+         if fn.startswith(".") or fn.endswith("#") or not fn.endswith(".csv"): # skip temporary lock files and unknown files
             continue
          pars.ReadLinesFromFile(os.path.join("..", "data", "kow", "forces", fn))
          force = pars.Parse()

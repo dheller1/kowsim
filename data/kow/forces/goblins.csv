@@ -11,9 +11,9 @@ Infantry,Spitters,Regiment(20),5,6,5,3,10,12/14,"Bows, Yellow-Bellied",,85,20x20
 Infantry,Spitters,Horde(40),5,6,5,3,20,19/21,"Bows, Yellow-Bellied",,140,20x20
 Cavalry,Mawbeast Pack*,Troop(5),6,3,0,3,6,9/11,"CS(1),Height(1), Nimble, Vicious, Yellow-Bellied",,60,25x50
 Cavalry,Mawbeast Pack*,Regiment(10),6,3,0,3,12,12/14,"CS(1),Height(1), Nimble, Vicious, Yellow-Bellied",,95,25x50
-Cavalry,Fleabag Riders ,Troop(5),10,4,0,4,7,9/11,"Nimble, TC(1), Yellow-Bellied",,95,25x50
-Cavalry,Fleabag Riders ,Regiment(10),10,4,0,4,14,12/14,"Nimble, TC(1), Yellow-Bellied",,145,25x50
-Cavalry,Fleabag Riders ,Horde(20),10,4,0,4,28,17/19,"Nimble, TC(1), Yellow-Bellied",,255,25x50
+Cavalry,Fleabag Riders,Troop(5),10,4,0,4,7,9/11,"Nimble, TC(1), Yellow-Bellied",,95,25x50
+Cavalry,Fleabag Riders,Regiment(10),10,4,0,4,14,12/14,"Nimble, TC(1), Yellow-Bellied",,145,25x50
+Cavalry,Fleabag Riders,Horde(20),10,4,0,4,28,17/19,"Nimble, TC(1), Yellow-Bellied",,255,25x50
 Cavalry,Fleabag Rider Sniffs,Troop(5),10,5,5,3,7,9/11,"Bows, Nimble, Yellow-Bellied",,95,25x50
 Cavalry,Fleabag Rider Sniffs,Regiment(10),10,5,5,3,14,12/14,"Bows, Nimble, Yellow-Bellied",,145,25x50
 Large Infantry,Trolls,Regiment(3),6,4,0,5,9,11/14,"CS(2), Regeneration(5+)",,125,40x40
@@ -21,7 +21,7 @@ Large Infantry,Trolls,Horde(6),6,4,0,5,18,14/17,"CS(2), Regeneration(5+)",,190,4
 Large Cavalry,Fleabag Chariots,Regiment(3),9,4,5,4,8,10/12,"Bows. TC(2), Yellow-Bellied",,110,50x100
 Large Cavalry,Fleabag Chariots,Horde(6),9,4,5,4,16,13/15,"Bows. TC(2), Yellow-Bellied",,170,50x100
 War Engine,Sharpstick Thrower,Individual,5,0,5,4,2,8/10,"Reload!, Blast(1D3), Piercing(2), Yellow-Bellied",,55,50x50
-War Engine,War-Trombone ,Individual,5,0,0,4,12,8/10,"Breath Attack(12), Piercing(1), Yellow-Bellied",,65,50x50
+War Engine,War-Trombone,Individual,5,0,0,4,12,8/10,"Breath Attack(12), Piercing(1), Yellow-Bellied",,65,50x50
 War Engine,Big Rocks Thrower,Individual,5,0,5,4,1,8/10,"Reload!, Blast(1D6+2), Piercing(2), Indirect Fire, Yellow-Bellied",,80,50x50
 Monster,Mincer,Individual,5,4,0,4,0,9/11,"Big Shield, Brutal, Height(3), TC(3), Yellow-Bellied, Random Attacks (1D6+6)",,80,50x100
 Monster,Giant,Individual,7,4,0,5,0,17/19,"Brutal, CS(3), Fury, Strider, Random Attacks (1D6+6)",,190,50x50

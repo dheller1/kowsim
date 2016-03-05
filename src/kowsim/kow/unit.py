@@ -6,7 +6,104 @@ import unittype as ut
 import sizetype as st
 
 from ..util.core import Size
+from modifiers import MOD_ADD, MOD_SET
+import stats
 
+
+#===============================================================================
+# KowUnitOptionEffect
+#   Effect that a specific unit option has. This may for instance change the profile
+#   value of the unit. For example, picking two-handed weapons might lower the Defense
+#   to 4+ for a unit (Set(De,4)), but grant CS(2) in turn.
+#   Subclasses for the specific effects shall be implemented, such as
+#   KowUnitOptionGrantSpecialRuleEffect, or
+#   KowUnitOptionModifyStatEffect
+#===============================================================================
+class KowUnitOptionEffect(object):
+   def __init__(self):
+      self._isApplied = False
+   
+   @staticmethod
+   def ParseFromString(s):
+      s = s.strip()
+      if s.startswith("Set"):
+         # syntax: Set( stat, value )
+         if not ("(" in s and ")" in s and "," in s):
+            print "Invalid effect %s! Skipping." % (s)
+            return None
+         
+         argsStart = s.index("(")+1
+         argsEnd = s.index(")")
+         argsStr = s[argsStart:argsEnd]
+         
+         args = argsStr.split(',') 
+         if not len(args)==2:
+            print "Invalid effect %s! Skipping." % (s)
+            return None
+         
+         setWhat, setTo = args[0], int(args[1])
+         if not setWhat in ("Speed","Melee","Ranged","Defense","Attacks","Nerve","NerveWaver","NerveBreak"):
+            print "Invalid argument %s for Set modifier effect! Skipping." % setWhat
+            return None
+         
+         effect = KowModifyStatEffect(stat=setWhat, modifier=setTo, modifierType=MOD_SET)
+         return effect
+      
+      elif s.startswith("Add"):
+         # syntax: Add( stat, value )
+         if not ("(" in s and ")" in s and "," in s):
+            print "Invalid effect %s! Skipping." % (s)
+            return None
+         
+         argsStart = s.index("(")+1
+         argsEnd = s.index(")")
+         argsStr = s[argsStart:argsEnd]
+         
+         args = argsStr.split(',') 
+         if not len(args)==2:
+            print "Invalid effect %s! Skipping." % (s)
+            return None
+         
+         addToWhat, summand = args[0], int(args[1])
+         if not addToWhat in ("Speed","Melee","Ranged","Defense","Attacks","NerveWaver","NerveBreak"):
+            print "Invalid argument %s for Add modifier effect! Skipping." % addToWhat
+            return None
+         
+         effect = KowModifyStatEffect(stat=addToWhat, modifier=summand, modifierType=MOD_ADD)
+         return effect
+      
+      else:
+         print "Invalid effect %s! Skipping." % s
+         return None
+         
+#===============================================================================
+# UnitOptionEffect which grants a special rule when active.
+#===============================================================================
+class KowGrantSpecialRuleEffect(KowUnitOptionEffect):
+   def __init__(self, specialRule=None):
+      super(KowGrantSpecialRuleEffect, self).__init__()
+      
+      self._specialRule = specialRule
+      
+#===============================================================================
+# UnitOptionEffect which modifies a stat (such as Melee, Defense) either by
+# setting it or by adding to it.
+#===============================================================================
+class KowModifyStatEffect(KowUnitOptionEffect):
+   def __init__(self, stat, modifier=0, modifierType=MOD_SET):
+      super(KowModifyStatEffect, self).__init__()
+      
+      if type(stat) in (str, unicode):
+         self._stat = stats.FindStat(stat)
+      else: self._stat = stat
+      
+      self._modifier = modifier
+      self._modifierType = modifierType
+   
+   def Modifier(self): return self._modifier
+   def ModType(self): return self._modifierType
+   def Stat(self): return self._stat
+      
 
 #===============================================================================
 # KowUnitOption
@@ -15,10 +112,21 @@ from ..util.core import Size
 #   of effects (e.g. increasing one profile value but lowering another one in turn).
 #===============================================================================
 class KowUnitOption(object):
-   def __init__(self, name, pointsCost=0, effects=[]):
+   def __init__(self, name, pointsCost=0, effects=[], isActive=False):
       self._name = name
       self._pointsCost = pointsCost
       self._effects = effects
+      
+   def Name(self): return self._name
+   def PointsCost(self): return self._pointsCost
+      
+   def __repr__(self):
+      if len(self._effects) == 0:
+         return "%s (%dp)" % (self._name, self._pointsCost)
+      elif len(self._effects) == 1:
+         return "%s (%dp), 1 effect" % (self._name, self._pointsCost)
+      elif len(self._effects) > 1:
+         return "%s (%dp), %d effects" % (self._name, self._pointsCost, len(self._effects))
 
 #===============================================================================
 # KowUnitProfile
@@ -43,14 +151,16 @@ class KowUnitProfile(object):
       self._item = args[13] if len(args)>13 else None
       self._options = args[14] if len(args)>14 else []
       
+      self._activeOptions = []
+      
    def __repr__(self):
       return "KowUnitProfile(%s)" % self._name
 
    # Getters
-   def At(self): return self._attacks
-   def AtStr(self): return "%d" % self._attacks if self._attacks>0 else "-"
-   def De(self): return self._defense
-   def DeStr(self): return "%d+" % self._defense
+   def At(self): return self._StatWithModifiers(stats.ST_ATTACKS)
+   def AtStr(self): return "%d" % self.At() if self.At()>0 else "-"
+   def De(self): return self._StatWithModifiers(stats.ST_DEFENSE)
+   def DeStr(self): return "%d+" % self.De()
    def Item(self): return self._item
    def ItemCost(self):
       if self._item: return self._item.PointsCost()
@@ -58,17 +168,25 @@ class KowUnitProfile(object):
    def ItemName(self):
       if self._item: return self._item.Name()
       else: return ""
-   def Me(self): return self._melee
-   def MeStr(self): return "%d+" % self._melee if self._melee>0 else "-"
+   def Me(self): return self._StatWithModifiers(stats.ST_MELEE)
+   def MeStr(self): return "%d+" % self.Me() if self.Me()>0 else "-"
    def Ne(self): return (self._nerveWaver, self._nerveBreak)
    def NeStr(self): return "%s/%d" % (str(self._nerveWaver) if self._nerveWaver != 0 else "-", self._nerveBreak)
    def Name(self): return self._name
-   def Options(self): return self._options
-   def PointsCost(self): return self._pointsCost + self._item.PointsCost() if self._item else self._pointsCost
-   def Ra(self): return self._ranged
-   def RaStr(self): return "%d+" % self._ranged if self._ranged>0 else "-"
+   def ListActiveOptions(self): return self._activeOptions
+   def ListOptions(self): return self._options
+   def PointsCost(self):
+      pc = self._pointsCost
+      if self._item:
+         pc += self.Item().PointsCost()
+      for o in self._activeOptions:
+         pc += o.PointsCost()
+      return pc
+   
+   def Ra(self): self._StatWithModifiers(stats.ST_RANGED)
+   def RaStr(self): return "%d+" % self.Ra() if self.Ra()>0 else "-"
    def SizeType(self): return self._sizeType
-   def Sp(self): return self._speed
+   def Sp(self): return self._StatWithModifiers(stats.ST_SPEED)
    def SpecialRules(self): return self._specialRules
    def UnitType(self): return self._unitType
    
@@ -83,6 +201,64 @@ class KowUnitProfile(object):
    def Clone(self):
       return KowUnitProfile(self._name, self._speed, self._melee, self._ranged, self._defense, self._attacks, self._nerveWaver, self._nerveBreak, self._pointsCost,
                             self._unitType, self._sizeType, self._baseSize, self._specialRules, self._item, self._options)
+      
+   def _StatWithModifiers(self, stat):
+      """ Return the unit's current effective stat (KowStat instance) with all its modifiers from options or magic items. """
+      setModifiers = []
+      addModifiers = []
+      
+      if stat == stats.ST_SPEED:
+         val = self._speed
+         for o in self._activeOptions:
+            for e in o._effects:
+               if type(e) == KowModifyStatEffect and e.Stat()==stats.ST_SPEED:
+                  if e.ModType()==MOD_ADD: addModifiers.append(e)
+                  elif e.ModType()==MOD_SET: setModifiers.append(e)
+      
+      elif stat == stats.ST_MELEE:
+         val = self._melee
+         for o in self._activeOptions:
+            for e in o._effects:
+               if type(e) == KowModifyStatEffect and e.Stat()==stats.ST_MELEE:
+                  if e.ModType()==MOD_ADD: addModifiers.append(e)
+                  elif e.ModType()==MOD_SET: setModifiers.append(e)
+               
+      elif stat == stats.ST_RANGED:
+         val = self._ranged
+         for o in self._activeOptions:
+            for e in o._effects:
+               if type(e) == KowModifyStatEffect and e.Stat()==stats.ST_RANGED:
+                  if e.ModType()==MOD_ADD: addModifiers.append(e)
+                  elif e.ModType()==MOD_SET: setModifiers.append(e)
+               
+      elif stat == stats.ST_DEFENSE:
+         val = self._defense
+         for o in self._activeOptions:
+            for e in o._effects:
+               if type(e) == KowModifyStatEffect and e.Stat()==stats.ST_DEFENSE:
+                  if e.ModType()==MOD_ADD: addModifiers.append(e)
+                  elif e.ModType()==MOD_SET: setModifiers.append(e)
+               
+      elif stat == stats.ST_ATTACKS:
+         val = self._attacks
+         for o in self._activeOptions:
+            for e in o._effects:
+               if type(e) == KowModifyStatEffect and e.Stat()==stats.ST_ATTACKS:
+                  if e.ModType()==MOD_ADD: addModifiers.append(e)
+                  elif e.ModType()==MOD_SET: setModifiers.append(e)
+               
+      elif stat == stats.ST_NERVE:
+         raise ValueError("Nerve modifiers not yet supported!")
+         return 0
+      
+      if len(setModifiers)>1:
+         print "Warning: Multiple 'Set' modifiers for %s!" % stat.Name()
+         
+      if len(setModifiers)>0:
+         val = setModifiers[-1].Modifier()
+      
+      for a in addModifiers: val += a.Modifier()
+      return val
    
    # derived properties
    def Footprint(self):
@@ -124,6 +300,7 @@ class KowUnitProfile(object):
       # footprint is the single base size times the formation models
       return Size(self._baseSize.W() * formation[0], self._baseSize.H() * formation[1])
    
+   # static generators
    @staticmethod
    def FromCsv(cols):
       """ Generate from a CSV row (individual columns given as list). """
@@ -136,7 +313,9 @@ class KowUnitProfile(object):
       if not utype: raise ValueError("Unknown unit type: %s" % cols[0])
       
       #unit name
-      name = unicode(cols[1])
+      name = unicode(cols[1]).strip()
+      if name != name.strip():
+         print "Warning: Unit name %s has leading or trailing blanks!" % name
       
       #size
       stype = st.Find(cols[2])
@@ -160,6 +339,7 @@ class KowUnitProfile(object):
       options = cols[10] # Options
       opts = KowUnitProfile.ParseOptionsString(options)
       print "%d options for unit %s." % (len(opts), name)
+      for o in opts: print (" %s" % o)
       
       points = int(cols[11]) # Points
       baseW, baseH = cols[12].split('x') # Base Size
@@ -173,7 +353,13 @@ class KowUnitProfile(object):
       """ Parse options string as read from CSV and generate unit options from it. """
       if len(s)==0: return []
       
-      options = s.split(',')
+      # option syntax: Name
+      #         or:     Name|+35
+      #         or:     Name|+35|Effect1|Effect2|...
+      #
+      # multiple options must be separated with semicolons
+      # e.g. " Lightning Bolt(5)|+45;Fireball (10)|+10;Wind Blast (5)|+30;Bane Chant(2)|+15;Sabre-toothed Pussycat|+10;Mount|+15|Set(Speed,9) "
+      options = s.split(';')
       optList = []
       for o in options:
          params = o.split('|')
@@ -184,9 +370,14 @@ class KowUnitProfile(object):
                print "Warning: Invalid points cost '%s' for option %s! Skipping option!" % (params[1], optName)
                continue
          else: optPointsCost = 0
-         if len(params)>2: optEffects = params[2:]
-         else: optEffects = []
+         if len(params)>2: effectStrs = params[2:]
+         else: effectStrs = []
          
-         optObject = KowUnitOption(optName, optPointsCost, optEffects)
+         effects = []
+         for e in effectStrs:
+            effect = KowUnitOptionEffect.ParseFromString(e)
+            if effect is not None: effects.append(effect)
+         
+         optObject = KowUnitOption(optName, optPointsCost, effects)
          optList.append(optObject)
       return optList
