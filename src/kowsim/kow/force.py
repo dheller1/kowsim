@@ -127,7 +127,7 @@ class KowUnitGroup(object):
 # KowForceChoices
 #   e.g. Elves, Dwarves, a single KoW army force with all of its unit choices.
 #   This is static data, to generate a specific army list with some incorporated
-#   units, use KowForce instead
+#   units, use KowDetachment instead
 #===============================================================================
 class KowForceChoices(object):
    def __init__(self, name, alignment, units=[]):

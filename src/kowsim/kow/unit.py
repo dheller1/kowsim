@@ -21,7 +21,7 @@ import stats
 #===============================================================================
 class KowUnitOptionEffect(object):
    def __init__(self):
-      self._isApplied = False
+      pass
    
    @staticmethod
    def ParseFromString(s):
