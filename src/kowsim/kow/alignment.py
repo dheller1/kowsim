@@ -4,10 +4,10 @@
 #===============================================================================
 class KowAlignment(object):
    def __init__(self, name):
-      self._name = name
+      self._customName = name
       
    def Name(self):
-      return self._name
+      return self._customName
 
 AL_GOOD = KowAlignment("Good")
 AL_NEUT = KowAlignment("Neutral")

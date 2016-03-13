@@ -6,8 +6,8 @@ import os, sys
 from PySide import QtGui, QtCore
 from PySide.QtCore import Qt
 
-from ..kow.force import KowArmyList, KowDetachment
-from ..kow.unit import KowUnitProfile
+from ..kow.force import KowArmyList, Detachment
+from ..kow.unit import UnitProfile
 from ..kow import unittype as KUT
 from load_data import DataManager
 from ui import UnitOptionsDialog
@@ -312,7 +312,7 @@ class ArmyMainWidget(QtGui.QWidget):
       mapperItm.mapped[int].connect(self.UnitItemChanged)
       
       # register a default unit in armyList and store its index in the armyList._units array
-      index = self.armyList.PrimaryForce().AddUnit(KowUnitProfile())
+      index = self.armyList.PrimaryForce().AddUnit(UnitProfile())
       self._MapRowToUnitId[rowNum] = index
       self._MapUnitIdToRow[index] = rowNum
       
@@ -417,7 +417,7 @@ class ArmyMainWidget(QtGui.QWidget):
       #self.unitTable.setRowCount(0)
       pfn = self.primaryForceCb.currentText()
       pfc = QtGui.qApp.DataManager.ForceChoicesByName(pfn)
-      self.armyList.SetPrimaryForce(KowDetachment(pfc))
+      self.armyList.SetPrimaryForce(Detachment(pfc))
       
       self.SetModified(True)
       
@@ -554,7 +554,7 @@ class ArmyMainWidget(QtGui.QWidget):
       self.unitTable.item(row, 7).setText(option.AtStr())
       self.unitTable.item(row, 8).setText(option.NeStr())
       self.unitTable.item(row, 9).setText("%d" % option.PointsCost())
-      self.unitTable.item(row, 10).setText(", ".join(option.SpecialRules()))
+      self.unitTable.item(row, 10).setText(", ".join(option.ListSpecialRules()))
       
       # can it have a magical item?
       if option.UnitType() in (KUT.UT_MON, KUT.UT_WENG):
@@ -563,7 +563,7 @@ class ArmyMainWidget(QtGui.QWidget):
       else: self.unitTable.cellWidget(row, 11).setEnabled(True)
       
       # replace unit in armylist
-      newUnit = option.Clone()
+      newUnit = option.CreateInstance()
       self.armyList.PrimaryForce().ReplaceUnit(self._MapRowToUnitId[row], newUnit)
       self.siPointsChanged.emit(self.armyList.PrimaryForce().PointsTotal(), self.armyList.PointsLimit())
       self.SetModified()
@@ -589,7 +589,7 @@ class ArmyMainWidget(QtGui.QWidget):
       self.unitTable.item(row, 7).setText(option.AtStr())
       self.unitTable.item(row, 8).setText(option.NeStr())
       self.unitTable.item(row, 9).setText("%d" % option.PointsCost())
-      self.unitTable.item(row, 10).setText(", ".join(option.SpecialRules()))
+      self.unitTable.item(row, 10).setText(", ".join(option.ListSpecialRules()))
       
       # can it have a magical item?
       if option.UnitType() in (KUT.UT_MON, KUT.UT_WENG):
@@ -598,7 +598,7 @@ class ArmyMainWidget(QtGui.QWidget):
       else: self.unitTable.cellWidget(row, 11).setEnabled(True)
       
       # replace unit in armylist
-      newUnit = option.Clone()
+      newUnit = option.CreateInstance()
       self.armyList.PrimaryForce().ReplaceUnit(self._MapRowToUnitId[row], newUnit)
       self.siPointsChanged.emit(self.armyList.PrimaryForce().PointsTotal(), self.armyList.PointsLimit())
       self.SetModified()
@@ -653,7 +653,7 @@ class ArmyMainWidget(QtGui.QWidget):
       self.unitTable.item(row, 7).setText(unit.AtStr())
       self.unitTable.item(row, 8).setText(unit.NeStr())
       self.unitTable.item(row, 9).setText("%d" % unit.PointsCost())
-      self.unitTable.item(row, 10).setText(", ".join(unit.SpecialRules()))
+      self.unitTable.item(row, 10).setText(", ".join(unit.ListSpecialRules()))
          
    def UpdateUi(self):
       """ This is called when an army list has been set (e.g. by loading a file) and the UI elements must be updated

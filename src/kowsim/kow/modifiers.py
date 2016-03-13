@@ -11,7 +11,7 @@
 #===============================================================================
 class KowModifier(object):
    def __init__(self, name):
-      self._name = name
+      self._customName = name
       
 MOD_SET = KowModifier("Set to")
 MOD_ADD = KowModifier("Add to")

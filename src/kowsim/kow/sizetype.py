@@ -4,9 +4,9 @@
 #===============================================================================
 class KowSizeType(object):
    def __init__(self, name):
-      self._name = name
+      self._customName = name
       
-   def Name(self): return self._name
+   def Name(self): return self._customName
 
 ST_TRP = KowSizeType("Troop")
 ST_REG = KowSizeType("Regiment")

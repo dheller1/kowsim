@@ -4,14 +4,14 @@
 #===============================================================================
 class KowStat(object):
    def __init__(self, name, short):
-      self._name = name
+      self._customName = name
       self._short = short
       
    def __repr__(self):
-      return self._name
+      return self._customName
       
    def Name(self):
-      return self._name
+      return self._customName
    
    def Abbreviation(self):
       return self._short

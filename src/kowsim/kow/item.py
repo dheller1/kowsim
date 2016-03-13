@@ -12,12 +12,12 @@
 class KowItem(object):
 
    def __init__(self, name, points, description=""):
-      self._name = name
+      self._customName = name
       self._pointsCost = points
       self._description = description
 
    def Description(self): return self._description   
-   def Name(self): return self._name
+   def Name(self): return self._customName
    def PointsCost(self): return self._pointsCost
 
    @staticmethod

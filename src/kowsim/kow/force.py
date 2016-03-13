@@ -2,9 +2,8 @@
 
 # kow/force.py
 #===============================================================================
-import alignment as al
 import codecs
-from unit import KowUnitProfile
+from unit import UnitProfile
 
 #===============================================================================
 # KowArmyList
@@ -13,24 +12,24 @@ from unit import KowUnitProfile
 #===============================================================================
 class KowArmyList(object):
    def __init__(self, name, points=2000):
-      self._name = name
+      self._customName = name
 
-      self._primaryForce = KowDetachment(KowForceChoices("Elves", al.AL_GOOD), "Elf detachment")
-      self._alliedForces = []
+      self._detachments = []
       self._pointsLimit = points
    
    # getters/setters
-   def Name(self): return self._name
+   def CustomName(self): return self._customName
    def PointsLimit(self): return self._pointsLimit
-   def PrimaryForce(self): return self._primaryForce
-   def SetName(self, name): self._name = name
+   def SetCustomName(self, name): self._customName = name
    def SetPointsLimit(self, pts): self._pointsLimit = pts
-   def SetPrimaryForce(self, force): self._primaryForce = force
    
    # routines
+   def AddDetachment(self, detachment):
+      self._detachments.append(detachment)
+   
    def LoadFromFile(self, filename, dataMgr): # dataMgr needed for access to force lists and units by name
       with codecs.open(filename, "r", encoding='UTF-8') as f:
-         self._name = f.readline().strip()
+         self._customName = f.readline().strip()
          try: self._pointsLimit = int(f.readline().strip())
          except ValueError:
             raise IOError("Invalid file %s. (Can't convert total points cost to int)" % filename)
@@ -41,7 +40,7 @@ class KowArmyList(object):
          del self._primaryForce
          # somehow, if you don't explicitly set units=[] here, it causes a giant bug where units is a non-empty
          # list of units in the previous army list. should now be fixed.
-         self._primaryForce = KowDetachment(dataMgr.ForceChoicesByName(pfArmy), pfName, units=[])
+         self._primaryForce = Detachment(dataMgr.ForceChoicesByName(pfArmy), pfName, units=[])
          
          try: numUnits = int(f.readline().strip())
          except ValueError:
@@ -85,11 +84,11 @@ class KowArmyList(object):
                
             self._primaryForce.AddUnit(unit)
             
-      print "Successfully loaded army list %s (%s), %d units." % (self._name, filename, self._primaryForce.NumUnits())
+      print "Successfully loaded army list %s (%s), %d units." % (self._customName, filename, self._primaryForce.NumUnits())
    
    def SaveToFile(self, filename):
       with codecs.open(filename, 'w', encoding='UTF-8') as f:
-         f.write(self._name + "\n")
+         f.write(self._customName + "\n")
          f.write(str(self._pointsLimit) + "\n")
          f.write(self._primaryForce.Name() + "\n") # detachment name
          f.write(self._primaryForce.Choices().Name() + "\n") # detachment army name
@@ -104,7 +103,7 @@ class KowArmyList(object):
 #===============================================================================
 class KowUnitGroup(object):
    def __init__(self, name, default=None):
-      self._name = name
+      self._customName = name
       self._defaultOption = default
       self._sizeOptions = [] # list of KowUnitProfiles
       self._optionsByName = {}
@@ -113,7 +112,7 @@ class KowUnitGroup(object):
          
    def Default(self): return self._defaultOption
    def ListOptions(self): return self._sizeOptions
-   def Name(self): return self._name
+   def Name(self): return self._customName
    def OptionByName(self, name): return self._optionsByName[name]
       
    def AddSizeOption(self, opt):
@@ -127,11 +126,11 @@ class KowUnitGroup(object):
 # KowForceChoices
 #   e.g. Elves, Dwarves, a single KoW army force with all of its unit choices.
 #   This is static data, to generate a specific army list with some incorporated
-#   units, use KowDetachment instead
+#   units, use Detachment instead
 #===============================================================================
 class KowForceChoices(object):
    def __init__(self, name, alignment, units=[]):
-      self._name = name
+      self._customName = name
       self._alignment = alignment
       self._units = units
       self._groups = []
@@ -159,28 +158,30 @@ class KowForceChoices(object):
       if len(self._groups)==0: self.GroupUnits()
       return self._groups
    def ListUnits(self): return self._units   
-   def Name(self): return self._name
+   def Name(self): return self._customName
    def NumUnits(self): return len(self._units)   
 
 
 #===============================================================================
-# KowDetachment
+# Detachment
 #   A specific single KoW detachment such as an Elf detachment in a KowArmyList.
 #   May contain anything from 0 to 100 units chosen from the associated
 #   KowForceChoices representing the army (e.g. Elves).
 #===============================================================================
-class KowDetachment(object):
-   def __init__(self, choices, name="Unnamed detachment", units=[]):
+class Detachment(object):
+   def __init__(self, choices, customName="Unnamed detachment", units=[], isPrimary=False):
       self._choices = choices
-      self._name = name
+      self._customName = customName
       self._units = units
+      self._isPrimary = isPrimary
       
    def AddUnit(self, unit):
       self._units.append(unit)
       return len(self._units)-1 # return index of new unit
    def Choices(self): return self._choices
+   def CustomName(self): return self._customName
+   def IsPrimary(self): return self._isPrimary
    def ListUnits(self): return self._units
-   def Name(self): return self._name
    def NumUnits(self): return len(self._units)
    def PointsTotal(self):
       sum = 0

@@ -3,7 +3,7 @@
 # armybuilder/parsers.py
 #===============================================================================
 from ..util.csv_util import CsvParser
-from ..kow.unit import KowUnitProfile
+from ..kow.unit import UnitProfile
 from ..kow.alignment import KowAlignment, Find
 from ..kow.force import KowForceChoices
 from ..kow.item import KowItem
@@ -31,7 +31,7 @@ class ForceListCsvParser(CsvParser):
             
          # then parse unit profiles
          else:
-            profile = KowUnitProfile.FromCsv(row)
+            profile = UnitProfile.FromCsv(row)
             unitChoices.append(profile)
 
       force = KowForceChoices(name, alignment, unitChoices)

@@ -8,17 +8,17 @@ class GenericSpecialRule(object):
     and they might have a parameter, such as Random Attacks (D6), and might be cumulative,
     such as Piercing(2). """
    def __init__(self, name, desc, param=None, cumulative=False):
-      self._name = name
+      self._customName = name
       self._description = desc
       self._param = param
       self._isCumulative = cumulative
      
       
    def __repr__(self):
-      return self._name
+      return self._customName
       
    def Name(self):
-      return self._name
+      return self._customName
    
    def Description(self):
       return self._desc

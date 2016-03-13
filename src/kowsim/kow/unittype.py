@@ -4,9 +4,9 @@
 #===============================================================================
 class KowUnitType(object):
    def __init__(self, name):
-      self._name = name
+      self._customName = name
    
-   def Name(self): return self._name
+   def Name(self): return self._customName
 
 UT_INF = KowUnitType("Infantry")
 UT_CAV = KowUnitType("Cavalry")
