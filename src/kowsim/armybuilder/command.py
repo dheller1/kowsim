@@ -7,6 +7,7 @@ from kowsim.command.command import ModelViewCommand, ReversibleCommandMixin
 from kowsim.kow.force import Detachment
 from dialogs import AddDetachmentDialog
 from kowsim.kow.unit import UnitInstance
+import kowsim.kow.sizetype
 
 #===============================================================================
 # AddDetachmentCmd
@@ -69,3 +70,20 @@ class ChangeUnitCmd(ModelViewCommand, ReversibleCommandMixin):
       
       self._model.ReplaceUnit(row, newUnit)
       self._view.SetRow(row, newUnit)
+      
+
+#===============================================================================
+# ChangeUnitSizeCmd
+#===============================================================================
+class ChangeUnitSizeCmd(ModelViewCommand, ReversibleCommandMixin):
+   def __init__(self, detachment, unittable):
+      ModelViewCommand.__init__(self, model=detachment, view=unittable, name="ChangeUnitSizeCmd")
+      ReversibleCommandMixin.__init__(self)
+   
+   def Execute(self, row, sizeStr):
+      newSize = kowsim.kow.sizetype.Find(sizeStr).Name()
+      
+      unitname = self._model.Unit(row).Profile().Name()
+      newProfile = self._model.Choices().GroupByName(unitname).ProfileForSize(newSize)
+      self._model.Unit(row).SetProfile(newProfile)
+      self._view.UpdateTextInRow(row)

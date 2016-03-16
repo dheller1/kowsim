@@ -18,20 +18,20 @@ import stats
 #===============================================================================
 class KowUnitOption(object):
    def __init__(self, name, pointsCost=0, effects=[], isActive=False):
-      self._customName = name
+      self._name = name
       self._pointsCost = pointsCost
       self._effects = effects
       
-   def Name(self): return self._customName
+   def Name(self): return self._name
    def PointsCost(self): return self._pointsCost
       
    def __repr__(self):
       if len(self._effects) == 0:
-         return "%s (%dp)" % (self._customName, self._pointsCost)
+         return "%s (%dp)" % (self._name, self._pointsCost)
       elif len(self._effects) == 1:
-         return "%s (%dp), 1 effect" % (self._customName, self._pointsCost)
+         return "%s (%dp), 1 effect" % (self._name, self._pointsCost)
       elif len(self._effects) > 1:
-         return "%s (%dp), %d effects" % (self._customName, self._pointsCost, len(self._effects))
+         return "%s (%dp), %d effects" % (self._name, self._pointsCost, len(self._effects))
 
 #===============================================================================
 # UnitProfile
@@ -40,7 +40,7 @@ class KowUnitOption(object):
 #===============================================================================
 class UnitProfile(object):
    def __init__(self, *args):
-      self._customName = args[0] if len(args)>0 else "Unknown unit"
+      self._name = args[0] if len(args)>0 else "Unknown unit"
       self._speed = args[1] if len(args)>1 else 5
       self._melee = args[2] if len(args)>2 else 4
       self._ranged = args[3] if len(args)>3 else 0
@@ -57,7 +57,7 @@ class UnitProfile(object):
       self._options = args[14] if len(args)>14 else []
             
    def __repr__(self):
-      return "UnitProfile(%s)" % self._customName
+      return "UnitProfile(%s)" % self._name
 
    # Getters
    def At(self): return self._attacks
@@ -69,7 +69,7 @@ class UnitProfile(object):
    def MeStr(self): return "%d+" % self.Me() if self.Me()>0 else "-"
    def Ne(self): return (self._nerveWaver, self._nerveBreak)
    def NeStr(self): return "%s/%d" % (str(self._nerveWaver) if self._nerveWaver != 0 else "-", self._nerveBreak)
-   def Name(self): return self._customName
+   def Name(self): return self._name
    def ListOptions(self): return self._options
    def ListSpecialRules(self): return self._specialRules
    def PointsCost(self): return self._pointsCost
@@ -80,7 +80,7 @@ class UnitProfile(object):
    def UnitType(self): return self._unitType
    
    # Setters
-   def SetName(self, name): self._customName = name
+   def SetName(self, name): self._name = name
    
    # property decorators
    name = property(Name, SetName)
@@ -245,11 +245,14 @@ class UnitInstance(object):
    def Me(self): return self._StatWithModifiers(stats.ST_MELEE)
    def MeStr(self): return "%d+" % self.Me() if self.Me()>0 else "-"
    def Name(self): return self._profile.Name()
-   def Ne(self): return (self._nerveWaver, self._nerveBreak)
+   def Ne(self): return (self._profile._nerveWaver, self._profile._nerveBreak)
    def NeStr(self): return "%s/%d" % (str(self._profile._nerveWaver) if self._profile._nerveWaver != 0 else "-", self._profile._nerveBreak)
    def Profile(self): return self._profile
    def Ra(self): self._StatWithModifiers(stats.ST_RANGED)
    def RaStr(self): return "%d+" % self.Ra() if self.Ra()>0 else "-"
+   def SetProfile(self, profile):
+      self._profile = profile
+      self.Validate()
    def SizeType(self): return self._profile.SizeType()
    def Sp(self): return self._StatWithModifiers(stats.ST_SPEED)
    def UnitType(self): return self._profile.UnitType()
@@ -270,6 +273,15 @@ class UnitInstance(object):
       for o in self._chosenOptions:
          pc += o.PointsCost()
       return pc
+   
+   def Validate(self):
+      if self.Item() is not None and (not self._profile.CanHaveItem()):
+         raise ValueError("Unit %s has an item but isn't allowed to have one." % self.Name())
+      
+      for opt in self._chosenOptions:
+         if opt not in self._profile.ListOptions():
+            raise ValueError("Unit %s has chosen option %s which should not be available." % (self.Name(), opt.Name()))
+      
    
    def _StatWithModifiers(self, stat):
       """ Return the unit's current effective stat (KowStat instance) with all its modifiers from options or magic items. """

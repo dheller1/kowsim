@@ -6,7 +6,7 @@
 
 from PySide import QtGui#, QtCore
 from PySide.QtCore import Qt
-from command import ChangeUnitCmd
+from command import ChangeUnitCmd, ChangeUnitSizeCmd
 
 #===============================================================================
 # UnitTable
@@ -35,7 +35,14 @@ class UnitTable(QtGui.QTableWidget):
       cmd.Execute(row, newUnitName)
       
    def ChangeSize(self, newindex):
-      pass
+      sender = self.sender() 
+      row = sender.rowForWidget
+      
+      newSizeStr = self.cellWidget(row, self._columns.index("Size")).currentText()
+      
+      cmd = ChangeUnitSizeCmd(self._model, self)
+      cmd.Execute(row, newSizeStr)
+      
    def ChangeItem(self, newindex):
       pass
       
@@ -53,22 +60,14 @@ class UnitTable(QtGui.QTableWidget):
             
       self.setRowHeight(row, UnitTable.DefaultRowHeight)
             
-      self.setItem(row, self._columns.index("Unit"), QtGui.QTableWidgetItem(unit.Name()))
-      self.setItem(row, self._columns.index("Type"), QtGui.QTableWidgetItem(unit.UnitType().Name()))
-      self.setItem(row, self._columns.index("Sp"), QtGui.QTableWidgetItem("%d" % unit.Sp()))
-      self.setItem(row, self._columns.index("Me"), QtGui.QTableWidgetItem(unit.MeStr()))
-      self.setItem(row, self._columns.index("Ra"), QtGui.QTableWidgetItem(unit.RaStr()))
-      self.setItem(row, self._columns.index("De"), QtGui.QTableWidgetItem(unit.DeStr()))
-      self.setItem(row, self._columns.index("At"), QtGui.QTableWidgetItem(unit.AtStr()))
-      self.setItem(row, self._columns.index("Ne"), QtGui.QTableWidgetItem(unit.NeStr()))
-      self.setItem(row, self._columns.index("Points"), QtGui.QTableWidgetItem("%d" % unit.PointsCost()))
-      self.setItem(row, self._columns.index("Special"), QtGui.QTableWidgetItem(", ".join(unit.ListSpecialRules())))
-      
       for col in [self._columns.index(s) for s in ("Type", "Sp", "Me", "Ra", "De", "At", "Ne", "Points", "Special")]:
+         self.setItem(row, col, QtGui.QTableWidgetItem())
          self.item(row, col).setFlags(self.item(row, col).flags() ^ Qt.ItemIsEditable) # remove editable flag)
-      
+         
       for col in [self._columns.index(s) for s in ("Type", "Sp", "Me", "Ra", "De", "At", "Ne", "Points")]:   
          self.item(row, col).setTextAlignment(Qt.AlignCenter)
+      
+      self.UpdateTextInRow(row)
       
       # unit options
       self.unitCb = QtGui.QComboBox()
@@ -114,6 +113,20 @@ class UnitTable(QtGui.QTableWidget):
       self.sizeCb.currentIndexChanged.connect(self.ChangeSize)
       self.itemCb.currentIndexChanged.connect(self.ChangeItem)
       
+   def UpdateTextInRow(self, row):
+      """ Updates each TableWidgetItem where only text is displayed but
+      leaves more complex CellWidgets (e.g. combo boxes) untouched. """
+      unit = self._model.Unit(row)
+      self.item(row, self._columns.index("Type")).setText(unit.UnitType().Name())
+      self.item(row, self._columns.index("Sp")).setText("%d" % unit.Sp())
+      self.item(row, self._columns.index("Me")).setText(unit.MeStr())
+      self.item(row, self._columns.index("Ra")).setText(unit.RaStr())
+      self.item(row, self._columns.index("De")).setText(unit.DeStr())
+      self.item(row, self._columns.index("At")).setText(unit.AtStr())
+      self.item(row, self._columns.index("Ne")).setText(unit.NeStr())
+      self.item(row, self._columns.index("Points")).setText("%d" % unit.PointsCost())
+      self.item(row, self._columns.index("Special")).setText(", ".join(unit.ListSpecialRules()))
+            
 
 #===============================================================================
 # ValidationWidget

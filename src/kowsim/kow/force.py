@@ -114,7 +114,7 @@ class KowUnitGroup(object):
    def Default(self): return self._defaultOption
    def ListOptions(self): return self._sizeOptions
    def Name(self): return self._customName
-   def OptionByName(self, name): return self._optionsByName[name]
+   def ProfileForSize(self, size): return self._optionsByName[size]
       
    def AddSizeOption(self, opt):
       if len(self._sizeOptions)==0:
@@ -202,4 +202,4 @@ class Detachment(object):
          self._units[index] = newUnit
          
    def SetCustomName(self, name): self._customName = name
-   
+   def Unit(self, index): return self._units[index]
