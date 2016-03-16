@@ -1,0 +1,71 @@
+# -*- coding: utf-8 -*-
+
+# armybuilder/command.py
+#===============================================================================
+from PySide import QtGui#, QtCore
+from kowsim.command.command import ModelViewCommand, ReversibleCommandMixin
+from kowsim.kow.force import Detachment
+from dialogs import AddDetachmentDialog
+from kowsim.kow.unit import UnitInstance
+
+#===============================================================================
+# AddDetachmentCmd
+#===============================================================================
+class AddDetachmentCmd(ModelViewCommand, ReversibleCommandMixin):
+   def __init__(self, armylist, armylistview):
+      ModelViewCommand.__init__(self, model=armylist, view=armylistview, name="AddDetachmentCmd")
+      ReversibleCommandMixin.__init__(self)
+      
+   def Execute(self):
+      dlg = AddDetachmentDialog()
+      
+      if QtGui.QDialog.Accepted == dlg.exec_():
+         self._model.AddDetachment(Detachment(dlg.Force(), isPrimary=dlg.MakePrimary()))
+         self._view.Update()
+         self._view.detachmentsTw.setCurrentIndex(self._view.detachmentsTw.count()-2)
+         
+         
+#===============================================================================
+# RenameDetachmentCmd
+#===============================================================================
+class RenameDetachmentCmd(ModelViewCommand, ReversibleCommandMixin):
+   def __init__(self, detachment, armylistview):
+      ModelViewCommand.__init__(self, model=detachment, view=armylistview, name="RenameDetachmentCmd")
+      ReversibleCommandMixin.__init__(self)
+      
+   def Execute(self, name):
+      oldname = self._model.CustomName()
+      
+      if name!=oldname:
+         self._model.SetCustomName(name)
+         self._view.siNameChanged.emit(name)
+
+         
+#===============================================================================
+# AddDefaultUnitCmd
+#===============================================================================
+class AddDefaultUnitCmd(ModelViewCommand, ReversibleCommandMixin):
+   def __init__(self, detachment, detachmentview):
+      ModelViewCommand.__init__(self, model=detachment, view=detachmentview, name="AddDefaultUnitCmd")
+      ReversibleCommandMixin.__init__(self)
+   
+   def Execute(self):
+      self._model.AddUnit(UnitInstance(self._model.Choices().ListUnits()[0], self._model))
+      index = self._model.NumUnits()-1
+      self._view.UpdateUnit(index)
+      
+      
+#===============================================================================
+# ChangeUnitCmd
+#===============================================================================
+class ChangeUnitCmd(ModelViewCommand, ReversibleCommandMixin):
+   def __init__(self, detachment, unittable):
+      ModelViewCommand.__init__(self, model=detachment, view=unittable, name="ChangeUnitCmd")
+      ReversibleCommandMixin.__init__(self)
+   
+   def Execute(self, row, newUnitName):
+      newProfile = self._model.Choices().GroupByName(newUnitName).ListOptions()[0]
+      newUnit = newProfile.CreateInstance(self._model)
+      
+      self._model.ReplaceUnit(row, newUnit)
+      self._view.SetRow(row, newUnit)

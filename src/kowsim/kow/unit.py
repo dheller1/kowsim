@@ -62,6 +62,7 @@ class UnitProfile(object):
    # Getters
    def At(self): return self._attacks
    def AtStr(self): return "%d" % self.At() if self.At()>0 else "-"
+   def CanHaveItem(self): return self._unitType not in (ut.UT_MON, ut.UT_WENG)
    def De(self): return self._defense
    def DeStr(self): return "%d+" % self.De()
    def Me(self): return self._melee
@@ -85,8 +86,8 @@ class UnitProfile(object):
    name = property(Name, SetName)
    
    # generate a fresh instance of a unit using this profile
-   def CreateInstance(self):
-      return UnitInstance(profile=self)
+   def CreateInstance(self, detachment):
+      return UnitInstance(self, detachment)
       
    # derived properties
    def Footprint(self):
@@ -219,29 +220,39 @@ class UnitProfile(object):
 #   originates from (e.g. Shield Guard Horde).
 #===============================================================================
 class UnitInstance(object):
-   def __init__(self, profile, customName=None, chosenOptions=[], chosenItem=None):
+   def __init__(self, profile, detachment, customName=None, chosenOptions=[], chosenItem=None):
       self._profile = profile
+      self._detachment = detachment
       self._customName = customName
       self._chosenOptions = chosenOptions
       self._chosenItem = chosenItem
+      
+   def __repr__(self):
+      return "UnitInstance(%s)" % self.Name()
       
    def ListOptions(self): return self._chosenOptions
 
    # Getters
    def At(self): return self._StatWithModifiers(stats.ST_ATTACKS)
    def AtStr(self): return "%d" % self.At() if self.At()>0 else "-"
+   def CanHaveItem(self): return self._profile.CanHaveItem()
    def CustomName(self): return self._customName if self._customName is not None else ""
    def De(self): return self._StatWithModifiers(stats.ST_DEFENSE)
    def DeStr(self): return "%d+" % self.De()
+   def Detachment(self): return self._detachment
    def Item(self): return self._chosenItem
+   def ListSpecialRules(self): return self._profile._specialRules
    def Me(self): return self._StatWithModifiers(stats.ST_MELEE)
    def MeStr(self): return "%d+" % self.Me() if self.Me()>0 else "-"
+   def Name(self): return self._profile.Name()
    def Ne(self): return (self._nerveWaver, self._nerveBreak)
-   def NeStr(self): return "%s/%d" % (str(self._nerveWaver) if self._nerveWaver != 0 else "-", self._nerveBreak)
+   def NeStr(self): return "%s/%d" % (str(self._profile._nerveWaver) if self._profile._nerveWaver != 0 else "-", self._profile._nerveBreak)
    def Profile(self): return self._profile
    def Ra(self): self._StatWithModifiers(stats.ST_RANGED)
    def RaStr(self): return "%d+" % self.Ra() if self.Ra()>0 else "-"
+   def SizeType(self): return self._profile.SizeType()
    def Sp(self): return self._StatWithModifiers(stats.ST_SPEED)
+   def UnitType(self): return self._profile.UnitType()
    
    # Setters
    def SetItem(self, item): self._item = item
@@ -266,7 +277,7 @@ class UnitInstance(object):
       addModifiers = []
       
       if stat == stats.ST_SPEED:
-         val = self._speed
+         val = self._profile._speed
          for o in self._chosenOptions:
             for e in o._effects:
                if type(e) == ModifyStatEffect and e.Stat()==stats.ST_SPEED:
@@ -274,7 +285,7 @@ class UnitInstance(object):
                   elif e.ModType()==MOD_SET: setModifiers.append(e)
       
       elif stat == stats.ST_MELEE:
-         val = self._melee
+         val = self._profile._melee
          for o in self._chosenOptions:
             for e in o._effects:
                if type(e) == ModifyStatEffect and e.Stat()==stats.ST_MELEE:
@@ -282,7 +293,7 @@ class UnitInstance(object):
                   elif e.ModType()==MOD_SET: setModifiers.append(e)
                
       elif stat == stats.ST_RANGED:
-         val = self._ranged
+         val = self._profile._ranged
          for o in self._chosenOptions:
             for e in o._effects:
                if type(e) == ModifyStatEffect and e.Stat()==stats.ST_RANGED:
@@ -290,7 +301,7 @@ class UnitInstance(object):
                   elif e.ModType()==MOD_SET: setModifiers.append(e)
                
       elif stat == stats.ST_DEFENSE:
-         val = self._defense
+         val = self._profile._defense
          for o in self._chosenOptions:
             for e in o._effects:
                if type(e) == ModifyStatEffect and e.Stat()==stats.ST_DEFENSE:
@@ -298,7 +309,7 @@ class UnitInstance(object):
                   elif e.ModType()==MOD_SET: setModifiers.append(e)
                
       elif stat == stats.ST_ATTACKS:
-         val = self._attacks
+         val = self._profile._attacks
          for o in self._chosenOptions:
             for e in o._effects:
                if type(e) == ModifyStatEffect and e.Stat()==stats.ST_ATTACKS:

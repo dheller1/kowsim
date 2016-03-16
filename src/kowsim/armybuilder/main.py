@@ -6,11 +6,14 @@ import os, sys
 from PySide import QtGui, QtCore
 from PySide.QtCore import Qt
 
-from ..kow.force import KowArmyList, Detachment
+from ..kow.force import ArmyList, Detachment
 from ..kow.unit import UnitProfile
 from ..kow import unittype as KUT
 from load_data import DataManager
 from ui import UnitOptionsDialog
+from views import ArmyListView
+from dialogs import NewArmyListDialog
+from kowsim.armybuilder.dialogs import NewArmyListDialog
 
 
 #===============================================================================
@@ -120,39 +123,26 @@ class MdiArea(QtGui.QMdiArea):
       #self.AddArmySubWindow()
       
    def AddArmySubWindow(self):
-      num = len(self.subWindowList())
-      if num==0: name = "Unnamed army"
-      else: name = "Unnamed army (%d)" % (num+1)
-      sub = ArmyMainWidget(name)
-      print "Previously:", len(self.subWindowList()), "subwindows."
-      self.addSubWindow(sub)
-      sub.show() # important!
-      sub.showMaximized()
-      print sub.armyList.PrimaryForce().ListUnits()
-      return sub
+      dlg = NewArmyListDialog()
+      if QtGui.QDialog.Accepted == dlg.exec_():
+         # number of unnamed armies
+         num = len(self.subWindowList())
+         if num==0: name = "Unnamed army"
+         else: name = "Unnamed army (%d)" % (num+1)
+         
+         
+         armyList = ArmyList(name, dlg.PointsLimit())
+         armyList.AddDetachment( Detachment(dlg.PrimaryForce(), isPrimary=True) )
+         
+         #sub = ArmyMainWidget(name)
+         sub = ArmyListView(armyList)
+         self.addSubWindow(sub)
+         sub.show() # important!
+         sub.showMaximized()
+         return sub
       
-#===============================================================================
-# ValidationWidget
-#===============================================================================
-class ValidationWidget(QtGui.QWidget):
-   def __init__(self, parent=None):
-      super(ValidationWidget, self).__init__(parent)
+      return None
       
-      self.setMinimumWidth(300)
-      
-      # child widgets
-      self.pointsTotalLbl = QtGui.QLabel("Total points: <b>0</b>/2000")
-      
-      # layout
-      lay = QtGui.QGridLayout()
-      lay.addWidget(self.pointsTotalLbl)
-      self.setLayout(lay)
-      
-   def UpdateTotalPoints(self, points, pointsLimit):
-      if points <= pointsLimit:
-         self.pointsTotalLbl.setText("Total points: <b>%d</b>/%d" % (points, pointsLimit))
-      else:
-         self.pointsTotalLbl.setText("Total points: <b><span style='color:#ff0000;'>%d</span></b>/%d" % (points, pointsLimit))
             
 #===============================================================================
 # ArmyMainWidget
@@ -168,7 +158,7 @@ class ArmyMainWidget(QtGui.QWidget):
       
       self.setMinimumSize(400,300)
       self.setWindowTitle(("*" + name))
-      self.armyList = KowArmyList(name, points=2000)
+      self.armyList = ArmyList(name, points=2000)
       
       self._MapRowToUnitId = {}
       self._MapUnitIdToRow = {}
@@ -177,9 +167,6 @@ class ArmyMainWidget(QtGui.QWidget):
       # child widgets
       #=========================================================================
       self.armyNameLe = QtGui.QLineEdit(name)
-      self.primaryForceCb = QtGui.QComboBox()
-      for f in QtGui.qApp.DataManager.ListForceChoices():
-         self.primaryForceCb.addItem(f.Name())
          
       self.pointsLimitSb = QtGui.QSpinBox()
       self.pointsLimitSb.setRange(1, 1000000)
@@ -222,9 +209,6 @@ class ArmyMainWidget(QtGui.QWidget):
       genlay.addWidget(QtGui.QLabel("Army name:"), row, 0)
       genlay.addWidget(self.armyNameLe, row, 1)
       row += 1
-      genlay.addWidget(QtGui.QLabel("Primary force:"), row, 0)
-      genlay.addWidget(self.primaryForceCb, row, 1)
-      row += 1
       genlay.addWidget(QtGui.QLabel("Points limit:"), row, 0)
       genlay.addWidget(self.pointsLimitSb, row, 1)
       row += 1
@@ -258,7 +242,6 @@ class ArmyMainWidget(QtGui.QWidget):
       self.deleteUnitPb.clicked.connect(self.DeleteUnit)
       self.duplicateUnitPb.clicked.connect(self.DuplicateUnit)
       self.optionsPb.clicked.connect(self.OptionsForUnit)
-      self.primaryForceCb.currentIndexChanged.connect(self.PrimaryForceChanged)
       
       self.unitTable.itemSelectionChanged.connect(self.UpdateButtons)
       self.pointsLimitSb.valueChanged.connect(self.PointsLimitChanged)
@@ -268,7 +251,7 @@ class ArmyMainWidget(QtGui.QWidget):
       #=========================================================================
       # Final init, full update
       #=========================================================================
-      self.PrimaryForceChanged()
+      pass
       
    def AddUnit(self):
       rowNum = self.unitTable.rowCount()
@@ -407,22 +390,9 @@ class ArmyMainWidget(QtGui.QWidget):
       self.armyList.SetPointsLimit(self.pointsLimitSb.value())
       self.siPointsChanged.emit(self.armyList._primaryForce.PointsTotal(), self.pointsLimitSb.value())
       self.SetModified(True)
-   
-   def PrimaryForceChanged(self):
-      #if (self.unitTable.rowCount()>0):
-      #   if QtGui.QMessageBox.Yes != QtGui.QMessageBox.warning(self, "Switch primary force", "This will delete all current units.<br />Are you sure?", QtGui.QMessageBox.Yes | QtGui.QMessageBox.Cancel):
-      #      self.primaryForceCb.setCurrentIndex(self.primaryForceCb.findText(self.armyList.PrimaryForce().Choices().Name()))
-      #      return
-      
-      #self.unitTable.setRowCount(0)
-      pfn = self.primaryForceCb.currentText()
-      pfc = QtGui.qApp.DataManager.ForceChoicesByName(pfn)
-      self.armyList.SetPrimaryForce(Detachment(pfc))
-      
-      self.SetModified(True)
       
    def OpenFromFile(self, filename):
-      self.armyList = KowArmyList("blank")
+      self.armyList = ArmyList("blank")
       self.armyList.LoadFromFile(filename, QtGui.qApp.DataManager)
       self.UpdateUi()
       self.lastFilename = filename

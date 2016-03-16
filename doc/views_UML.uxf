@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="14.1.1">
+  <zoom_level>17</zoom_level>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>289</x>
+      <y>663</y>
+      <w>374</w>
+      <h>289</h>
+    </coordinates>
+    <panel_attributes>*DetachmentView(QWidget)*
+--
+model : kow.Detachment
+customNameLe : QLineEdit
+isPrimaryCb : QCheckBox
+unitTable : custom
+--
+addUnitPb
+duplicateUnitPb
+deleteUnitPb
+unitOptionsPb</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>289</x>
+      <y>425</y>
+      <w>374</w>
+      <h>187</h>
+    </coordinates>
+    <panel_attributes>*ArmyListView(QWidget)*
+--
+model : kow.ArmyList
+pointsLimitSb : QSpinBox
+detachmentsTw : QTabWidget(?)
+validationWdg : ValidationWidget
+--
+addDetachmentPb</panel_attributes>
+    <additional_attributes/>
+  </element>
+</diagram>

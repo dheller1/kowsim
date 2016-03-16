@@ -5,19 +5,19 @@
 
 
 #===============================================================================
-# KowItem
-#   Represents a magic item in Kow with a name (e.g. Brew of Strenght) and
+# Item
+#   Represents a magic item in Kow with a name (e.g. Brew of Strength) and
 #   an associated points cost (e.g. 30).
 #===============================================================================
-class KowItem(object):
+class Item(object):
 
    def __init__(self, name, points, description=""):
-      self._customName = name
+      self._name = name
       self._pointsCost = points
       self._description = description
 
    def Description(self): return self._description   
-   def Name(self): return self._customName
+   def Name(self): return self._name
    def PointsCost(self): return self._pointsCost
 
    @staticmethod
@@ -30,4 +30,4 @@ class KowItem(object):
       name = cols[0]
       description = cols[1]
       points = int(cols[2])
-      return KowItem(name, points, description)
+      return Item(name, points, description)

@@ -6,7 +6,7 @@ from ..util.csv_util import CsvParser
 from ..kow.unit import UnitProfile
 from ..kow.alignment import KowAlignment, Find
 from ..kow.force import KowForceChoices
-from ..kow.item import KowItem
+from ..kow.item import Item
 
 
 class ForceListCsvParser(CsvParser):
@@ -40,7 +40,7 @@ class ForceListCsvParser(CsvParser):
 #===============================================================================
 # ItemCsvParser
 #   Parse kow/items/items.csv for the list of magical artefacts and return
-#   this list as a list of KowItem objects to choose from.
+#   this list as a list of Item objects to choose from.
 #===============================================================================
 class ItemCsvParser(CsvParser):
    def __init__(self):
@@ -54,7 +54,7 @@ class ItemCsvParser(CsvParser):
       for row in self._csvLines:
          if len(row)==0 or row[0].startswith("#"): continue # skip comments and blank lines
          
-         item = KowItem.FromCsv(row)
+         item = Item.FromCsv(row)
          if item is not None:
             items.append(item)
             

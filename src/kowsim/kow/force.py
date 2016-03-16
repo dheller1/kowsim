@@ -3,14 +3,14 @@
 # kow/force.py
 #===============================================================================
 import codecs
-from unit import UnitProfile
+#from unit import UnitProfile
 
 #===============================================================================
-# KowArmyList
+# ArmyList
 #   Specific army list for a KoW army, may contain several KowForces (one primary
 #   and up to multiple allied forces).
 #===============================================================================
-class KowArmyList(object):
+class ArmyList(object):
    def __init__(self, name, points=2000):
       self._customName = name
 
@@ -19,6 +19,7 @@ class KowArmyList(object):
    
    # getters/setters
    def CustomName(self): return self._customName
+   def ListDetachments(self): return self._detachments
    def PointsLimit(self): return self._pointsLimit
    def SetCustomName(self, name): self._customName = name
    def SetPointsLimit(self, pts): self._pointsLimit = pts
@@ -135,7 +136,8 @@ class KowForceChoices(object):
       self._units = units
       self._groups = []
       self._groupsByName = {}
-      
+   
+   def AlignmentName(self): return self._alignment.Name()
    def GroupUnits(self):
       """ Group units by their type (e.g. Sea Guard) which might have multiple size options
          (e.g. Regiment, Horde). """
@@ -164,14 +166,17 @@ class KowForceChoices(object):
 
 #===============================================================================
 # Detachment
-#   A specific single KoW detachment such as an Elf detachment in a KowArmyList.
+#   A specific single KoW detachment such as an Elf detachment in a ArmyList.
 #   May contain anything from 0 to 100 units chosen from the associated
 #   KowForceChoices representing the army (e.g. Elves).
 #===============================================================================
 class Detachment(object):
-   def __init__(self, choices, customName="Unnamed detachment", units=[], isPrimary=False):
+   def __init__(self, choices, customName=None, units=[], isPrimary=False):
       self._choices = choices
-      self._customName = customName
+      if not customName:
+         self._customName = "%s detachment" % choices.Name()
+      else: self._customName = customName
+      
       self._units = units
       self._isPrimary = isPrimary
       
@@ -195,4 +200,6 @@ class Detachment(object):
       if index>=len(self._units): raise IndexError("Can't replace unit %d, only have %d units!" % (index, len(self._units)))
       else:
          self._units[index] = newUnit
+         
+   def SetCustomName(self, name): self._customName = name
    
