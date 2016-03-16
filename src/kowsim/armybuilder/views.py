@@ -85,6 +85,11 @@ class ArmyListView(QtGui.QWidget):
    def _initConnections(self):
       self.detachmentsTw.currentChanged.connect(self.DetachmentTabChanged)
       
+   def AddDetachmentView(self, detachment):
+      dv = DetachmentView(detachment)
+      self.detachmentsTw.insertTab(self.detachmentsTw.count()-1, dv, detachment.CustomName())
+      self.detachmentsTw.setCurrentIndex(self.detachmentsTw.count()-2) # switch to new tab
+      
    def DetachmentNameChanged(self, name):
       sender = self.sender()
       index = self.detachmentsTw.indexOf(sender)
@@ -100,19 +105,6 @@ class ArmyListView(QtGui.QWidget):
       else:
          self._lastIndex = tw.currentIndex()
          
-   def Update(self):
-      self.customNameLe.setText(self._model.CustomName())
-      self.pointsLimitSb.setValue(self._model.PointsLimit())
-      
-      self.detachmentsTw.currentChanged.disconnect()
-      self.detachmentsTw.clear()
-      for det in self._model.ListDetachments():
-         dv = DetachmentView(det)
-         dv.siNameChanged.connect(self.DetachmentNameChanged)
-         self.detachmentsTw.addTab(dv, det.CustomName())
-      self.detachmentsTw.addTab(QtGui.QWidget(), "+")
-      self.detachmentsTw.currentChanged.connect(self.DetachmentTabChanged)
-      
 
 #===============================================================================
 # DetachmentView(QWidget)
@@ -127,6 +119,7 @@ class DetachmentView(QtGui.QWidget):
       self._initChildren()
       self._initLayout()
       self._initConnections()
+      print "Initializing view for detachment %s." % self._model
       
    def _initChildren(self):
       self.customNameLe = QtGui.QLineEdit(self._model.CustomName())

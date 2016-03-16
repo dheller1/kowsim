@@ -21,9 +21,9 @@ class AddDetachmentCmd(ModelViewCommand, ReversibleCommandMixin):
       dlg = AddDetachmentDialog()
       
       if QtGui.QDialog.Accepted == dlg.exec_():
-         self._model.AddDetachment(Detachment(dlg.Force(), isPrimary=dlg.MakePrimary()))
-         self._view.Update()
-         self._view.detachmentsTw.setCurrentIndex(self._view.detachmentsTw.count()-2)
+         detachment = Detachment(dlg.Force(), isPrimary=dlg.MakePrimary())
+         self._model.AddDetachment(detachment)
+         self._view.AddDetachmentView(detachment)
          
          
 #===============================================================================

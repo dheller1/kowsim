@@ -135,6 +135,7 @@ class MdiArea(QtGui.QMdiArea):
          armyList.AddDetachment( Detachment(dlg.PrimaryForce(), isPrimary=True) )
          
          #sub = ArmyMainWidget(name)
+         print "Initializing view for armylist %s." % armyList
          sub = ArmyListView(armyList)
          self.addSubWindow(sub)
          sub.show() # important!
