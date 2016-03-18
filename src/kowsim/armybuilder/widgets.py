@@ -6,7 +6,7 @@
 
 from PySide import QtGui, QtCore
 from PySide.QtCore import Qt
-from command import ChangeUnitCmd, ChangeUnitSizeCmd
+from command import ChangeUnitCmd, ChangeUnitSizeCmd, ChangeUnitItemCmd
 from kowsim.armybuilder.command import SetUnitOptionsCmd
 
 #===============================================================================
@@ -27,7 +27,25 @@ class UnitTable(QtGui.QTableWidget):
       for idx, col in enumerate(self._columns):
          self.setColumnWidth(idx, self._colWidths[col])
       self.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+   
+   def ChangeItem(self):
+      sender = self.sender()
+      row = sender.rowForWidget
+      unit = self._model.Unit(row)
       
+      itemName = self.cellWidget(row, self._columns.index("Magic item")).currentText()
+
+      if itemName == "-":
+         item = None
+      else:
+         # extract item name by stripping the points cost (e.g. 'Brew of Strength (30p)')
+         leftBracket = itemName.index('(')
+         itemName = itemName[:leftBracket].strip()
+         item = QtGui.qApp.DataManager.ItemByName(itemName)
+         
+      cmd = ChangeUnitItemCmd(unit, self)
+      cmd.Execute(row, item)
+   
    def ChangeOptions(self):
       optMenu = self.sender()
       row = optMenu.rowForWidget
@@ -58,9 +76,6 @@ class UnitTable(QtGui.QTableWidget):
       
       cmd = ChangeUnitSizeCmd(self._model, self)
       cmd.Execute(row, newSizeStr)
-      
-   def ChangeItem(self, newindex):
-      pass
       
    def SetRow(self, row, unit):
       if row>=self.rowCount():

@@ -30,4 +30,6 @@ class Item(object):
       name = cols[0]
       description = cols[1]
       points = int(cols[2])
-      return Item(name, points, description)
+      if name != name.strip():
+         print "WARNING: Item name '%s' not stripped!" % name
+      return Item(name.strip(), points, description)

@@ -1,5 +1,5 @@
 # name,description,points
-Fire-oil ,"This unit gains an additional Piercing (1) on normal ranged attacks, and Crushing Strength (1) against units with the Regeneration rule.",5
+Fire-oil,"This unit gains an additional Piercing (1) on normal ranged attacks, and Crushing Strength (1) against units with the Regeneration rule.",5
 Mace of Crushing,"Whenever the unit rolls to damage in melee, it can re-roll one of the dice that failed to damage.",5
 War-bow of Kaba,"The unit has a ranged attack for which you roll a single die, regardless of the Attacks value of the unit. This attack has a range of 24” and, when rolling to hit, the unit uses a basic Ra value of 4+, regardless of its actual Ra value. The roll to hit is affected as normal by to-hit modifiers, and if a hit is scored, it is resolved at Piercing (1).",5
 Kevinar’s Flying Hammer,"The unit has a ranged attack for which you roll a single die, regardless of the Attacks value of the unit. This attack has a range of 12” and always hits on 4+, regardless of modifiers, and if a hit is scored, it is resolved at Piercing (2).",5

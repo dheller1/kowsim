@@ -273,7 +273,7 @@ class UnitInstance(object):
    def UnitType(self): return self._profile.UnitType()
    
    # Setters
-   def SetItem(self, item): self._item = item
+   def SetItem(self, item): self._chosenItem = item
    
    def HasPointsCostModifier(self):
       if self.Item() is not None and self.Item().PointsCost() > 0:

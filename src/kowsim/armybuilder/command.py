@@ -96,6 +96,20 @@ class ChangeUnitSizeCmd(ModelViewCommand, ReversibleCommandMixin):
       
 
 #===============================================================================
+# ChangeUnitItemCmd
+#===============================================================================
+class ChangeUnitItemCmd(ModelViewCommand, ReversibleCommandMixin):
+   def __init__(self, unit, unittable):
+      ModelViewCommand.__init__(self, model=unit, view=unittable, name="ChangeUnitSizeCmd")
+      ReversibleCommandMixin.__init__(self)
+   
+   def Execute(self, row, item):
+      self._model.SetItem(item)
+      self._view.UpdateTextInRow(row)
+      self._view.siPointsChanged.emit()
+      
+      
+#===============================================================================
 # SetUnitOptionsCmd
 #===============================================================================
 class SetUnitOptionsCmd(ModelViewCommand, ReversibleCommandMixin):
