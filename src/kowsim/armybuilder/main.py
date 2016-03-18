@@ -130,12 +130,10 @@ class MdiArea(QtGui.QMdiArea):
          if num==0: name = "Unnamed army"
          else: name = "Unnamed army (%d)" % (num+1)
          
-         
          armyList = ArmyList(name, dlg.PointsLimit())
          armyList.AddDetachment( Detachment(dlg.PrimaryForce(), isPrimary=True) )
          
          #sub = ArmyMainWidget(name)
-         print "Initializing view for armylist %s." % armyList
          sub = ArmyListView(armyList)
          self.addSubWindow(sub)
          sub.show() # important!

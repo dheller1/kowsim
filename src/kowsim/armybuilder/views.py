@@ -6,14 +6,11 @@ import os
 
 from PySide import QtGui, QtCore
 from widgets import ValidationWidget
-from kowsim.armybuilder.dialogs import AddDetachmentDialog
 from command import AddDetachmentCmd
 from kowsim.armybuilder.command import RenameDetachmentCmd, AddDefaultUnitCmd
 from kowsim.armybuilder.widgets import UnitTable
-from pip.models import index
 #from PySide.QtCore import Qt
 
-#from ..kow.force import ArmyList 
 
 #===============================================================================
 # ArmyListView(QWidget)
@@ -42,9 +39,7 @@ class ArmyListView(QtGui.QWidget):
       self.detachmentsTw = QtGui.QTabWidget(parent=self)
       #self.addDetachmentPb = QtGui.QPushButton(QtGui.QIcon(os.path.join("..", "data","icons","plus.png")), "&Add detachment")
       for det in self._model.ListDetachments():
-         dv = DetachmentView(det)
-         dv.siNameChanged.connect(self.DetachmentNameChanged)
-         self.detachmentsTw.addTab(dv, det.CustomName())
+         self.AddDetachmentView(det)
       self.detachmentsTw.addTab(QtGui.QWidget(), "+")
       
       self.generalGb = QtGui.QGroupBox("General")
@@ -66,12 +61,7 @@ class ArmyListView(QtGui.QWidget):
       
       self.detachmentsGb.setLayout(QtGui.QVBoxLayout())
       self.detachmentsGb.layout().addWidget(self.detachmentsTw)
-      
-      #detButtonsLay = QtGui.QHBoxLayout()
-      #detButtonsLay.addWidget(self.addDetachmentPb)
-      #detButtonsLay.addStretch(1)
-      #self.detachmentsGb.layout().addLayout(detButtonsLay)
-      
+            
       vallay = QtGui.QVBoxLayout()
       vallay.addWidget(self.validationWdg)
       self.valGb.setLayout(vallay)
@@ -89,6 +79,8 @@ class ArmyListView(QtGui.QWidget):
       dv = DetachmentView(detachment)
       self.detachmentsTw.insertTab(self.detachmentsTw.count()-1, dv, detachment.CustomName())
       self.detachmentsTw.setCurrentIndex(self.detachmentsTw.count()-2) # switch to new tab
+      dv.siNameChanged.connect(self.DetachmentNameChanged)
+      dv.siPointsChanged.connect(self.UpdatePoints)
       
    def DetachmentNameChanged(self, name):
       sender = self.sender()
@@ -104,6 +96,10 @@ class ArmyListView(QtGui.QWidget):
          cmd.Execute()
       else:
          self._lastIndex = tw.currentIndex()
+      
+   def UpdatePoints(self):
+      pts = self._model.PointsTotal()
+      self.validationWdg.UpdateTotalPoints(pts, self._model.PointsLimit())
          
 
 #===============================================================================
@@ -112,6 +108,7 @@ class ArmyListView(QtGui.QWidget):
 #===============================================================================
 class DetachmentView(QtGui.QWidget):
    siNameChanged = QtCore.Signal(str)
+   siPointsChanged = QtCore.Signal()
    
    def __init__(self, model, parent=None):
       QtGui.QWidget.__init__(self, parent)
@@ -119,7 +116,6 @@ class DetachmentView(QtGui.QWidget):
       self._initChildren()
       self._initLayout()
       self._initConnections()
-      print "Initializing view for detachment %s." % self._model
       
    def _initChildren(self):
       self.customNameLe = QtGui.QLineEdit(self._model.CustomName())
@@ -128,6 +124,8 @@ class DetachmentView(QtGui.QWidget):
       if self._model.IsPrimary(): self.isPrimaryDetachmentCb.setChecked(True)
       
       self.unitTable = UnitTable(self._model)
+      
+      self.pointsLbl = QtGui.QLabel("<b>0</b>")
             
       self.addUnitPb = QtGui.QPushButton(QtGui.QIcon(os.path.join("..", "data","icons","plus.png")), "&Add")
       self.duplicateUnitPb = QtGui.QPushButton(QtGui.QIcon(os.path.join("..", "data","icons","copy.png")), "Dupli&cate")
@@ -181,7 +179,7 @@ class DetachmentView(QtGui.QWidget):
       detlay.addWidget(QtGui.QLabel("<b>%s</b>" % self._model.Choices().AlignmentName()), row, 1)
       row += 1
       detlay.addWidget(QtGui.QLabel("Total points:"), row, 0)
-      detlay.addWidget(QtGui.QLabel("<b>0</b>"))
+      detlay.addWidget(self.pointsLbl)
       row += 1
       
       mainlay = QtGui.QGridLayout()
@@ -193,6 +191,7 @@ class DetachmentView(QtGui.QWidget):
    def _initConnections(self):
       self.customNameLe.editingFinished.connect(self.RenameDetachment)
       self.addUnitPb.clicked.connect(self.AddUnit)
+      self.unitTable.siPointsChanged.connect(self.UpdatePoints)
    
    def AddUnit(self):
       cmd = AddDefaultUnitCmd(self._model, self)
@@ -201,6 +200,11 @@ class DetachmentView(QtGui.QWidget):
    def RenameDetachment(self):
       cmd = RenameDetachmentCmd(self._model, self)
       cmd.Execute(name=self.customNameLe.text())
+      
+   def UpdatePoints(self):
+      pts = self._model.PointsTotal()
+      self.pointsLbl.setText("<b>%d</b>" % pts)
+      self.siPointsChanged.emit()
    
    def UpdateUnit(self, index):
       self.unitTable.SetRow(index, self._model.ListUnits()[index])

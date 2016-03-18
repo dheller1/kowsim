@@ -33,8 +33,8 @@ class AddDetachmentCmd(ModelViewCommand, ReversibleCommandMixin):
 # RenameDetachmentCmd
 #===============================================================================
 class RenameDetachmentCmd(ModelViewCommand, ReversibleCommandMixin):
-   def __init__(self, detachment, armylistview):
-      ModelViewCommand.__init__(self, model=detachment, view=armylistview, name="RenameDetachmentCmd")
+   def __init__(self, detachment, detachmentview):
+      ModelViewCommand.__init__(self, model=detachment, view=detachmentview, name="RenameDetachmentCmd")
       ReversibleCommandMixin.__init__(self)
       
    def Execute(self, name):
@@ -57,6 +57,7 @@ class AddDefaultUnitCmd(ModelViewCommand, ReversibleCommandMixin):
       self._model.AddUnit(UnitInstance(self._model.Choices().ListUnits()[0], self._model))
       index = self._model.NumUnits()-1
       self._view.UpdateUnit(index)
+      self._view.UpdatePoints()
       
       
 #===============================================================================
@@ -73,6 +74,7 @@ class ChangeUnitCmd(ModelViewCommand, ReversibleCommandMixin):
       
       self._model.ReplaceUnit(row, newUnit)
       self._view.SetRow(row, newUnit)
+      self._view.siPointsChanged.emit()
       
 
 #===============================================================================
@@ -90,3 +92,4 @@ class ChangeUnitSizeCmd(ModelViewCommand, ReversibleCommandMixin):
       newProfile = self._model.Choices().GroupByName(unitname).ProfileForSize(newSize)
       self._model.Unit(row).SetProfile(newProfile)
       self._view.UpdateTextInRow(row)
+      self._view.siPointsChanged.emit()

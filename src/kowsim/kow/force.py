@@ -21,6 +21,10 @@ class ArmyList(object):
    def CustomName(self): return self._customName
    def ListDetachments(self): return self._detachments
    def PointsLimit(self): return self._pointsLimit
+   def PointsTotal(self):
+      s = 0
+      for det in self._detachments: s += det.PointsTotal()
+      return s
    def SetCustomName(self, name): self._customName = name
    def SetPointsLimit(self, pts): self._pointsLimit = pts
    
@@ -179,8 +183,6 @@ class Detachment(object):
       
       self._units = units
       self._isPrimary = isPrimary
-      print "New detachment (choices %s)" % self._choices
-      print "Units:", self._units
       
    def AddUnit(self, unit):
       self._units.append(unit)
@@ -191,9 +193,9 @@ class Detachment(object):
    def ListUnits(self): return self._units
    def NumUnits(self): return len(self._units)
    def PointsTotal(self):
-      sum = 0
-      for u in self._units: sum += u.PointsCost()
-      return sum
+      s = 0
+      for u in self._units: s += u.PointsCost()
+      return s
    
    def RemoveUnit(self, index):
       self._units.pop(index)

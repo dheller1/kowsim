@@ -281,7 +281,6 @@ class UnitInstance(object):
       for opt in self._chosenOptions:
          if opt not in self._profile.ListOptions():
             raise ValueError("Unit %s has chosen option %s which should not be available." % (self.Name(), opt.Name()))
-      
    
    def _StatWithModifiers(self, stat):
       """ Return the unit's current effective stat (KowStat instance) with all its modifiers from options or magic items. """
@@ -340,5 +339,4 @@ class UnitInstance(object):
       
       for a in addModifiers: val += a.Modifier()
       return val
-   
    

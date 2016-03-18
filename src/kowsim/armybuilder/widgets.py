@@ -4,7 +4,7 @@
 #===============================================================================
 #import os
 
-from PySide import QtGui#, QtCore
+from PySide import QtGui, QtCore
 from PySide.QtCore import Qt
 from command import ChangeUnitCmd, ChangeUnitSizeCmd
 
@@ -12,11 +12,12 @@ from command import ChangeUnitCmd, ChangeUnitSizeCmd
 # UnitTable
 #===============================================================================
 class UnitTable(QtGui.QTableWidget):
+   siPointsChanged = QtCore.Signal()
    DefaultRowHeight = 22
    
    def __init__(self, model):
       QtGui.QTableWidget.__init__(self)
-      self._model = model # detachment object
+      self._model = model # Detachment object
       self._columns = ("Unit", "Type", "Size", "Sp", "Me", "Ra", "De", "At", "Ne", "Points", "Special", "Magic item", "Options")
       self._colWidths = {"Unit": 170, "Type": 90, "Size": 80, "Sp": 30, "Me": 30, "Ra": 30, "De": 30, "At": 30, "Ne": 45, "Points": 45, "Special": 350, "Magic item": 200, "Options": 50}
       self.setColumnCount(len(self._columns))
@@ -101,6 +102,7 @@ class UnitTable(QtGui.QTableWidget):
       self.optPb = QtGui.QPushButton("...")
       optMenu = QtGui.QMenu(self.optPb)
       self.optPb.setMenu(optMenu)
+      self.optPb.setStyleSheet("border-style: none;")
       a1 = optMenu.addAction("Bla 1")
       a2 = optMenu.addAction("Opt 2")
       a1.setCheckable(True)
