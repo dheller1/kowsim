@@ -179,6 +179,8 @@ class Detachment(object):
       
       self._units = units
       self._isPrimary = isPrimary
+      print "New detachment (choices %s)" % self._choices
+      print "Units:", self._units
       
    def AddUnit(self, unit):
       self._units.append(unit)

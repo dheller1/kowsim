@@ -21,7 +21,10 @@ class AddDetachmentCmd(ModelViewCommand, ReversibleCommandMixin):
       dlg = AddDetachmentDialog()
       
       if QtGui.QDialog.Accepted == dlg.exec_():
-         detachment = Detachment(dlg.Force(), isPrimary=dlg.MakePrimary())
+         ## BUG: WTF - This will initialize units with something != [] !?!?!?!?
+         ##detachment = Detachment(dlg.Force(), isPrimary=dlg.MakePrimary())
+         ## use this instead:
+         detachment = Detachment(dlg.Force(), None, [], dlg.MakePrimary())
          self._model.AddDetachment(detachment)
          self._view.AddDetachmentView(detachment)
          
