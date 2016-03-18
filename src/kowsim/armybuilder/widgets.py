@@ -7,6 +7,7 @@
 from PySide import QtGui, QtCore
 from PySide.QtCore import Qt
 from command import ChangeUnitCmd, ChangeUnitSizeCmd
+from kowsim.armybuilder.command import SetUnitOptionsCmd
 
 #===============================================================================
 # UnitTable
@@ -26,6 +27,20 @@ class UnitTable(QtGui.QTableWidget):
       for idx, col in enumerate(self._columns):
          self.setColumnWidth(idx, self._colWidths[col])
       self.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+      
+   def ChangeOptions(self):
+      optMenu = self.sender()
+      row = optMenu.rowForWidget
+      unit = self._model.Unit(row)
+      
+      chosenOpts = []
+      for act in optMenu.actions():
+         opt = act.option # option reference was previously saved in the QAction object
+         if act.isChecked():
+            chosenOpts.append(opt)
+      
+      cmd = SetUnitOptionsCmd(unit, self)
+      cmd.Execute(row, chosenOpts)
       
    def ChangeUnit(self, newindex):
       sender = self.sender() # determine which exact combobox was changed
@@ -77,7 +92,7 @@ class UnitTable(QtGui.QTableWidget):
       self.setCellWidget(row, self._columns.index("Unit"), self.unitCb)
       self.unitCb.rowForWidget = row
       self.unitCb.setCurrentIndex(self.unitCb.findText(unit.Profile().Name()))
-      
+   
       # size type options
       self.sizeCb = QtGui.QComboBox()
       for profile in unit.Detachment().Choices().GroupByName(unit.Profile().Name()).ListOptions():
@@ -101,14 +116,15 @@ class UnitTable(QtGui.QTableWidget):
       # options
       self.optPb = QtGui.QPushButton("...")
       optMenu = QtGui.QMenu(self.optPb)
+      optMenu.rowForWidget = row
       self.optPb.setMenu(optMenu)
       self.optPb.setStyleSheet("border-style: none;")
-      a1 = optMenu.addAction("Bla 1")
-      a2 = optMenu.addAction("Opt 2")
-      a1.setCheckable(True)
-      a2.setCheckable(True)
       self.setCellWidget(row, self._columns.index("Options"), self.optPb)
-      
+      for opt in unit.Profile().ListOptions():
+         act = optMenu.addAction(opt.DisplayStr())
+         act.setCheckable(True)
+         act.option = opt # just save corresponding UnitOption object inside the QAction
+      optMenu.triggered.connect(self.ChangeOptions)
       
       # after everything has been set, register connections
       self.unitCb.currentIndexChanged.connect(self.ChangeUnit)
@@ -127,7 +143,17 @@ class UnitTable(QtGui.QTableWidget):
       self.item(row, self._columns.index("At")).setText(unit.AtStr())
       self.item(row, self._columns.index("Ne")).setText(unit.NeStr())
       self.item(row, self._columns.index("Points")).setText("%d" % unit.PointsCost())
-      self.item(row, self._columns.index("Special")).setText(", ".join(unit.ListSpecialRules()))
+      
+      font = self.item(row, self._columns.index("Points")).font()
+      font.setBold(unit.HasPointsCostModifier())
+      self.item(row, self._columns.index("Points")).setFont(font)
+      
+      specialText = ", ".join(unit.ListSpecialRules())
+      if len(unit.ListChosenOptions())>0:
+         optsText = ", ".join(["%s" % o.Name() for o in unit.ListChosenOptions()])
+         specialText += ", " + optsText
+      self.item(row, self._columns.index("Special")).setText(specialText)
+      self.item(row, self._columns.index("Special")).setToolTip(specialText)
             
 
 #===============================================================================

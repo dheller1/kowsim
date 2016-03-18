@@ -93,3 +93,20 @@ class ChangeUnitSizeCmd(ModelViewCommand, ReversibleCommandMixin):
       self._model.Unit(row).SetProfile(newProfile)
       self._view.UpdateTextInRow(row)
       self._view.siPointsChanged.emit()
+      
+
+#===============================================================================
+# SetUnitOptionsCmd
+#===============================================================================
+class SetUnitOptionsCmd(ModelViewCommand, ReversibleCommandMixin):
+   def __init__(self, unit, unittable):
+      ModelViewCommand.__init__(self, model=unit, view=unittable, name="SetUnitOptionsCmd")
+      ReversibleCommandMixin.__init__(self)
+   
+   def Execute(self, row, options):
+      self._model.ClearChosenOptions()
+      for opt in options:
+         self._model.ChooseOption(opt)
+      
+      self._view.UpdateTextInRow(row)
+      self._view.siPointsChanged.emit()

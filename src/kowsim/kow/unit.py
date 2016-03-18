@@ -32,6 +32,12 @@ class KowUnitOption(object):
          return "%s (%dp), 1 effect" % (self._name, self._pointsCost)
       elif len(self._effects) > 1:
          return "%s (%dp), %d effects" % (self._name, self._pointsCost, len(self._effects))
+      
+   def DisplayStr(self):
+      s = self._name
+      if self._pointsCost > 0:
+         s += " (%dp)" % self._pointsCost
+      return s
 
 #===============================================================================
 # UnitProfile
@@ -236,11 +242,20 @@ class UnitInstance(object):
    def At(self): return self._StatWithModifiers(stats.ST_ATTACKS)
    def AtStr(self): return "%d" % self.At() if self.At()>0 else "-"
    def CanHaveItem(self): return self._profile.CanHaveItem()
+   def ChooseOption(self, opt):
+      if opt not in self._profile.ListOptions():
+         raise ValueError("Unit %s cannot choose option %s." % (self.Name(), opt.Name()))
+      elif opt in self._chosenOptions:
+         raise ValueError("Unit %s already has option %s." % (self.Name(), opt.Name()))
+      else:
+         self._chosenOptions.append(opt)
+   def ClearChosenOptions(self): self._chosenOptions = []
    def CustomName(self): return self._customName if self._customName is not None else ""
    def De(self): return self._StatWithModifiers(stats.ST_DEFENSE)
    def DeStr(self): return "%d+" % self.De()
    def Detachment(self): return self._detachment
    def Item(self): return self._chosenItem
+   def ListChosenOptions(self): return self._chosenOptions
    def ListSpecialRules(self): return self._profile._specialRules
    def Me(self): return self._StatWithModifiers(stats.ST_MELEE)
    def MeStr(self): return "%d+" % self.Me() if self.Me()>0 else "-"
@@ -259,6 +274,14 @@ class UnitInstance(object):
    
    # Setters
    def SetItem(self, item): self._item = item
+   
+   def HasPointsCostModifier(self):
+      if self.Item() is not None and self.Item().PointsCost() > 0:
+         return True
+      for opt in self._chosenOptions:
+         if opt.PointsCost() > 0:
+            return True
+      return False
    
    def ItemCost(self):
       if self._chosenItem: return self._chosenItem.PointsCost()
