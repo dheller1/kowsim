@@ -283,6 +283,20 @@ class UnitInstance(object):
             return True
       return False
    
+   def HasStatModifier(self, stat):
+      if stat == stats.ST_SPEED:
+         return (self._profile._speed != self._StatWithModifiers(stats.ST_SPEED))
+      elif stat == stats.ST_MELEE:
+         return (self._profile._melee != self._StatWithModifiers(stats.ST_MELEE))
+      elif stat == stats.ST_RANGED:
+         return (self._profile._ranged != self._StatWithModifiers(stats.ST_RANGED))
+      elif stat == stats.ST_DEFENSE:
+         return (self._profile._defense != self._StatWithModifiers(stats.ST_DEFENSE))
+      elif stat == stats.ST_ATTACKS:
+         return (self._profile._attacks != self._StatWithModifiers(stats.ST_ATTACKS))
+      else:
+         raise ValueError("Unknown stat: %s" % stat)
+   
    def ItemCost(self):
       if self._chosenItem: return self._chosenItem.PointsCost()
       else: return 0
@@ -353,6 +367,9 @@ class UnitInstance(object):
       elif stat == stats.ST_NERVE:
          raise ValueError("Nerve modifiers not yet supported!")
          return 0
+      
+      else:
+         raise ValueError("Unknown stat: %s" % stat)
       
       if len(setModifiers)>1:
          print "Warning: Multiple 'Set' modifiers for %s!" % stat.Name()

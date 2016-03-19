@@ -8,6 +8,7 @@ from PySide import QtGui, QtCore
 from PySide.QtCore import Qt
 from command import ChangeUnitCmd, ChangeUnitSizeCmd, ChangeUnitItemCmd
 from kowsim.armybuilder.command import SetUnitOptionsCmd
+import kowsim.kow.stats as st
 
 #===============================================================================
 # UnitTable
@@ -150,6 +151,7 @@ class UnitTable(QtGui.QTableWidget):
       """ Updates each TableWidgetItem where only text is displayed but
       leaves more complex CellWidgets (e.g. combo boxes) untouched. """
       unit = self._model.Unit(row)
+      
       self.item(row, self._columns.index("Type")).setText(unit.UnitType().Name())
       self.item(row, self._columns.index("Sp")).setText("%d" % unit.Sp())
       self.item(row, self._columns.index("Me")).setText(unit.MeStr())
@@ -159,9 +161,17 @@ class UnitTable(QtGui.QTableWidget):
       self.item(row, self._columns.index("Ne")).setText(unit.NeStr())
       self.item(row, self._columns.index("Points")).setText("%d" % unit.PointsCost())
       
-      font = self.item(row, self._columns.index("Points")).font()
-      font.setBold(unit.HasPointsCostModifier())
-      self.item(row, self._columns.index("Points")).setFont(font)
+      # determine font weight
+      normalFont = self.item(row, self._columns.index("Special")).font()
+      boldFont = QtGui.QFont(normalFont)
+      boldFont.setWeight(QtGui.QFont.Bold)
+      
+      self.item(row, self._columns.index("Sp")).setFont( boldFont if unit.HasStatModifier(st.ST_SPEED) else normalFont )
+      self.item(row, self._columns.index("Me")).setFont( boldFont if unit.HasStatModifier(st.ST_MELEE) else normalFont )
+      self.item(row, self._columns.index("Ra")).setFont( boldFont if unit.HasStatModifier(st.ST_RANGED) else normalFont )
+      self.item(row, self._columns.index("De")).setFont( boldFont if unit.HasStatModifier(st.ST_DEFENSE) else normalFont )
+      self.item(row, self._columns.index("At")).setFont( boldFont if unit.HasStatModifier(st.ST_ATTACKS) else normalFont )
+      self.item(row, self._columns.index("Points")).setFont( boldFont if unit.HasPointsCostModifier() else normalFont )
       
       specialText = ", ".join(unit.ListSpecialRules())
       if len(unit.ListChosenOptions())>0:
