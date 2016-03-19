@@ -102,50 +102,56 @@ class UnitTable(QtGui.QTableWidget):
       self.UpdateTextInRow(row)
       
       # unit options
-      self.unitCb = QtGui.QComboBox()
+      unitCb = QtGui.QComboBox()
       for unitgroup in unit.Detachment().Choices().ListGroups():
-         self.unitCb.addItem(unitgroup.Name())
-      self.setCellWidget(row, self._columns.index("Unit"), self.unitCb)
-      self.unitCb.rowForWidget = row
-      self.unitCb.setCurrentIndex(self.unitCb.findText(unit.Profile().Name()))
+         unitCb.addItem(unitgroup.Name())
+      self.setCellWidget(row, self._columns.index("Unit"), unitCb)
+      unitCb.rowForWidget = row
+      unitCb.setCurrentIndex(unitCb.findText(unit.Profile().Name()))
    
       # size type options
-      self.sizeCb = QtGui.QComboBox()
+      sizeCb = QtGui.QComboBox()
       for profile in unit.Detachment().Choices().GroupByName(unit.Profile().Name()).ListOptions():
-         self.sizeCb.addItem(profile.SizeType().Name())
-      self.setCellWidget(row, self._columns.index("Size"), self.sizeCb)
-      self.sizeCb.rowForWidget = row
-      self.sizeCb.setCurrentIndex(self.sizeCb.findText(unit.SizeType().Name()))
+         sizeCb.addItem(profile.SizeType().Name())
+      self.setCellWidget(row, self._columns.index("Size"), sizeCb)
+      sizeCb.rowForWidget = row
+      sizeCb.setCurrentIndex(sizeCb.findText(unit.SizeType().Name()))
       
       # magic item
-      self.itemCb = QtGui.QComboBox()
-      self.itemCb.rowForWidget = row
-      self.itemCb.addItem("-")
+      itemCb = QtGui.QComboBox()
+      itemCb.rowForWidget = row
+      itemCb.addItem("-")
       if unit.CanHaveItem():
-         self.itemCb.addItems(["%s (%dp)" % (itm.Name(), itm.PointsCost()) for itm in QtGui.qApp.DataManager.ListItems()])
-         self.itemCb.setEnabled(True)
+         itemCb.addItems(["%s (%dp)" % (itm.Name(), itm.PointsCost()) for itm in QtGui.qApp.DataManager.ListItems()])
+         itemCb.setEnabled(True)
       else:
-         self.itemCb.setEnabled(False)
-      self.setCellWidget(row, self._columns.index("Magic item"), self.itemCb)
-      if unit.Item(): self.itemCb.setCurrentIndex(self.itemCb.findText(unit.Item().Name()))
+         itemCb.setEnabled(False)
+      self.setCellWidget(row, self._columns.index("Magic item"), itemCb)
+      if unit.Item(): itemCb.setCurrentIndex(itemCb.findText(unit.Item().Name()))
       
       # options
-      self.optPb = QtGui.QPushButton("...")
-      optMenu = QtGui.QMenu(self.optPb)
+      self.UpdateUnitOptions(row)
+      
+      # after everything has been set, register connections
+      unitCb.currentIndexChanged.connect(self.ChangeUnit)
+      sizeCb.currentIndexChanged.connect(self.ChangeSize)
+      itemCb.currentIndexChanged.connect(self.ChangeItem)
+      
+   def UpdateUnitOptions(self, row):
+      unit = self._model.Unit(row)
+      
+      # overwrite old options pb
+      optPb = QtGui.QPushButton("...")
+      optMenu = QtGui.QMenu(optPb)
       optMenu.rowForWidget = row
-      self.optPb.setMenu(optMenu)
-      self.optPb.setStyleSheet("border-style: none;")
-      self.setCellWidget(row, self._columns.index("Options"), self.optPb)
+      optPb.setMenu(optMenu)
+      optPb.setStyleSheet("border-style: none;")
+      self.setCellWidget(row, self._columns.index("Options"), optPb)
       for opt in unit.Profile().ListOptions():
          act = optMenu.addAction(opt.DisplayStr())
          act.setCheckable(True)
          act.option = opt # just save corresponding UnitOption object inside the QAction
       optMenu.triggered.connect(self.ChangeOptions)
-      
-      # after everything has been set, register connections
-      self.unitCb.currentIndexChanged.connect(self.ChangeUnit)
-      self.sizeCb.currentIndexChanged.connect(self.ChangeSize)
-      self.itemCb.currentIndexChanged.connect(self.ChangeItem)
       
    def UpdateTextInRow(self, row):
       """ Updates each TableWidgetItem where only text is displayed but

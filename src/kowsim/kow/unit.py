@@ -9,6 +9,7 @@ from ..util.core import Size
 from modifiers import MOD_ADD, MOD_SET
 from effect import UnitEffect, ModifyStatEffect
 import stats
+from kowsim.kow.effect import GrantSpecialRuleEffect
 
 #===============================================================================
 # KowUnitOption
@@ -171,8 +172,6 @@ class UnitProfile(object):
       # parse options
       options = cols[10] # Options
       opts = UnitProfile.ParseOptionsString(options)
-      print "%d options for unit %s." % (len(opts), name)
-      for o in opts: print (" %s" % o)
       
       points = int(cols[11]) # Points
       baseW, baseH = cols[12].split('x') # Base Size
@@ -256,7 +255,15 @@ class UnitInstance(object):
    def Detachment(self): return self._detachment
    def Item(self): return self._chosenItem
    def ListChosenOptions(self): return self._chosenOptions
-   def ListSpecialRules(self): return self._profile._specialRules
+   def ListSpecialRules(self):
+      specRules = []
+      for o in self._chosenOptions:
+         for e in o._effects:
+            if type(e) == GrantSpecialRuleEffect:
+               specRules.append(e.SpecialRule())
+      specRules.extend(self._profile._specialRules)
+      return specRules
+   
    def Me(self): return self._StatWithModifiers(stats.ST_MELEE)
    def MeStr(self): return "%d+" % self.Me() if self.Me()>0 else "-"
    def Name(self): return self._profile.Name()

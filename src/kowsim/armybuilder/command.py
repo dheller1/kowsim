@@ -92,6 +92,7 @@ class ChangeUnitSizeCmd(ModelViewCommand, ReversibleCommandMixin):
       newProfile = self._model.Choices().GroupByName(unitname).ProfileForSize(newSize)
       self._model.Unit(row).SetProfile(newProfile)
       self._view.UpdateTextInRow(row)
+      self._view.UpdateUnitOptions(row)
       self._view.siPointsChanged.emit()
       
 

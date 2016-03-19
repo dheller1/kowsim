@@ -29,7 +29,7 @@ class UnitEffect(object):
             return None
          
          argsStart = s.index("(")+1
-         argsEnd = s.index(")")
+         argsEnd = s.rindex(")")
          argsStr = s[argsStart:argsEnd]
          
          args = argsStr.split(',') 
@@ -52,7 +52,7 @@ class UnitEffect(object):
             return None
          
          argsStart = s.index("(")+1
-         argsEnd = s.index(")")
+         argsEnd = s.rindex(")")
          argsStr = s[argsStart:argsEnd]
          
          args = argsStr.split(',') 
@@ -68,10 +68,24 @@ class UnitEffect(object):
          effect = ModifyStatEffect(stat=addToWhat, modifier=summand, modifierType=MOD_ADD)
          return effect
       
+      elif s.startswith("Grant"):
+         # syntax: Grant(name_of_special_rule)
+         if not ("(" in s and ")" in s):
+            print "Invalid effect %s! Skipping." % (s)
+            return None
+         
+         argsStart = s.index("(")+1
+         argsEnd = s.rindex(")")
+         argsStr = s[argsStart:argsEnd].strip()
+         
+         effect = GrantSpecialRuleEffect(argsStr) # TODO: Implement proper special rule objects instead of just strings
+         return effect
+      
       else:
          print "Invalid effect %s! Skipping." % s
          return None
-         
+
+
 #===============================================================================
 # UnitEffect which grants a special rule when active.
 #===============================================================================
@@ -81,6 +95,9 @@ class GrantSpecialRuleEffect(UnitEffect):
       
       self._specialRule = specialRule
       
+   def SpecialRule(self): return self._specialRule
+
+
 #===============================================================================
 # UnitOptionEffect which modifies a stat (such as Melee, Defense) either by
 # setting it or by adding to it.
