@@ -18,9 +18,12 @@ class NewArmyListDialog(QtGui.QDialog):
       self._initConnections()
    
    def _initChildren(self):
-      self.primaryForceCb = QtGui.QComboBox()
+      #self.primaryForceCb = QtGui.QComboBox()
+      #for fc in QtGui.qApp.DataManager.ListForceChoices():
+      #   self.primaryForceCb.addItem(fc.Name())
+      self.primaryForceLw = QtGui.QListWidget()
       for fc in QtGui.qApp.DataManager.ListForceChoices():
-         self.primaryForceCb.addItem(fc.Name())
+         self.primaryForceLw.addItem(fc.Name())
       
       # points limit spinbox
       self.pointsLimitSb = QtGui.QSpinBox()
@@ -31,8 +34,9 @@ class NewArmyListDialog(QtGui.QDialog):
       self.cancelBtn = QtGui.QPushButton("Cancel")
       self.acceptBtn = QtGui.QPushButton("Ok")
       self.acceptBtn.setDefault(True)
+      self.acceptBtn.setEnabled(False)
       
-      self.primaryForceCb.setFocus()
+      self.primaryForceLw.setFocus()
       
    def _initLayout(self):
       self.setWindowTitle("New army list...")
@@ -40,8 +44,9 @@ class NewArmyListDialog(QtGui.QDialog):
       contentlay = QtGui.QGridLayout()
       
       row = 0
-      contentlay.addWidget(QtGui.QLabel("Primary force:"), row, 0)
-      contentlay.addWidget(self.primaryForceCb, row, 1)
+      contentlay.addWidget(QtGui.QLabel("Primary force:"), row, 0, 1, 2)
+      row += 1
+      contentlay.addWidget(self.primaryForceLw, row, 0, 1, 2)
       row += 1
       contentlay.addWidget(QtGui.QLabel("Points limit:"), row, 0)
       contentlay.addWidget(self.pointsLimitSb, row, 1)
@@ -57,10 +62,18 @@ class NewArmyListDialog(QtGui.QDialog):
       self.setLayout(mainlay)
       
    def _initConnections(self):
+      self.primaryForceLw.itemSelectionChanged.connect(self.SelectionChanged)
+      self.primaryForceLw.itemDoubleClicked.connect(self.accept)
       self.cancelBtn.clicked.connect(self.reject)
       self.acceptBtn.clicked.connect(self.accept)
-
-   def PrimaryForce(self): return QtGui.qApp.DataManager.ForceChoicesByName(self.primaryForceCb.currentText())
+      
+   def SelectionChanged(self):
+      if len(self.primaryForceLw.selectedItems())==0:
+         self.acceptBtn.setEnabled(False)
+      else:
+         self.acceptBtn.setEnabled(True)
+      
+   def PrimaryForce(self): return QtGui.qApp.DataManager.ForceChoicesByName(self.primaryForceLw.currentItem().text())
    def PointsLimit(self): return self.pointsLimitSb.value()
    
 #===============================================================================
