@@ -6,8 +6,7 @@ import os
 
 from PySide import QtGui, QtCore
 from widgets import ValidationWidget
-from command import AddDetachmentCmd
-from kowsim.armybuilder.command import RenameDetachmentCmd, AddDefaultUnitCmd
+from command import AddDetachmentCmd, DeleteUnitCmd, RenameDetachmentCmd, AddDefaultUnitCmd, DuplicateUnitCmd
 from kowsim.armybuilder.widgets import UnitTable
 #from PySide.QtCore import Qt
 
@@ -122,6 +121,7 @@ class DetachmentView(QtGui.QWidget):
       
       self.isPrimaryDetachmentCb = QtGui.QCheckBox()
       if self._model.IsPrimary(): self.isPrimaryDetachmentCb.setChecked(True)
+      self.isPrimaryDetachmentCb.setEnabled(False)
       
       self.unitTable = UnitTable(self._model)
       
@@ -132,8 +132,8 @@ class DetachmentView(QtGui.QWidget):
       self.duplicateUnitPb.setEnabled(False)
       self.deleteUnitPb = QtGui.QPushButton(QtGui.QIcon(os.path.join("..", "data","icons","delete.png")), "&Delete")
       self.deleteUnitPb.setEnabled(False)
-      self.optionsPb = QtGui.QPushButton(QtGui.QIcon(os.path.join("..", "data","icons","options.png")), "&Options")
-      self.optionsPb.setEnabled(False)
+      #self.optionsPb = QtGui.QPushButton(QtGui.QIcon(os.path.join("..", "data","icons","options.png")), "&Options")
+      #self.optionsPb.setEnabled(False)
       
       #=========================================================================
       # group boxes
@@ -163,7 +163,7 @@ class DetachmentView(QtGui.QWidget):
       unitButtonsLay.addWidget(self.addUnitPb)
       unitButtonsLay.addWidget(self.duplicateUnitPb)
       unitButtonsLay.addWidget(self.deleteUnitPb)
-      unitButtonsLay.addWidget(self.optionsPb)
+      #unitButtonsLay.addWidget(self.optionsPb)
       unitButtonsLay.addStretch(1)
       self.unitGb.layout().addLayout(unitButtonsLay)
       self.unitGb.layout().addWidget(self.unitTable)
@@ -191,15 +191,36 @@ class DetachmentView(QtGui.QWidget):
    def _initConnections(self):
       self.customNameLe.editingFinished.connect(self.RenameDetachment)
       self.addUnitPb.clicked.connect(self.AddUnit)
+      self.deleteUnitPb.clicked.connect(self.DeleteUnit)
+      self.duplicateUnitPb.clicked.connect(self.DuplicateUnit)
+      self.unitTable.itemSelectionChanged.connect(self.UnitSelectionChanged)
       self.unitTable.siPointsChanged.connect(self.UpdatePoints)
    
    def AddUnit(self):
       cmd = AddDefaultUnitCmd(self._model, self)
       cmd.Execute()
+      
+   def DeleteUnit(self):
+      cmd = DeleteUnitCmd(self._model, self)
+      cmd.Execute()
+      
+   def DuplicateUnit(self):
+      cmd = DuplicateUnitCmd(self._model, self)
+      cmd.Execute()
    
    def RenameDetachment(self):
       cmd = RenameDetachmentCmd(self._model, self)
       cmd.Execute(name=self.customNameLe.text())
+      
+   def UnitSelectionChanged(self):
+      rows = self.unitTable.SelectedRows()
+      
+      if len(rows)>0:
+         self.duplicateUnitPb.setEnabled(True)
+         self.deleteUnitPb.setEnabled(True)
+      else:
+         self.duplicateUnitPb.setEnabled(False)
+         self.deleteUnitPb.setEnabled(False)
       
    def UpdatePoints(self):
       pts = self._model.PointsTotal()

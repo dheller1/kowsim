@@ -78,6 +78,13 @@ class UnitTable(QtGui.QTableWidget):
       cmd = ChangeUnitSizeCmd(self._model, self)
       cmd.Execute(row, newSizeStr)
       
+   def SelectedRows(self):
+      rows = []
+      for itm in self.selectedItems():
+         if itm.row() not in rows:
+            rows.append(itm.row())
+      return rows
+      
    def SetRow(self, row, unit):
       if row>=self.rowCount():
          self.insertRow(row)
@@ -142,16 +149,21 @@ class UnitTable(QtGui.QTableWidget):
       
       # overwrite old options pb
       optPb = QtGui.QPushButton("...")
-      optMenu = QtGui.QMenu(optPb)
-      optMenu.rowForWidget = row
-      optPb.setMenu(optMenu)
-      optPb.setStyleSheet("border-style: none;")
       self.setCellWidget(row, self._columns.index("Options"), optPb)
-      for opt in unit.Profile().ListOptions():
-         act = optMenu.addAction(opt.DisplayStr())
-         act.setCheckable(True)
-         act.option = opt # just save corresponding UnitOption object inside the QAction
-      optMenu.triggered.connect(self.ChangeOptions)
+      optPb.setStyleSheet("border-style: none;")
+      
+      if len(unit.Profile().ListOptions())==0:
+         optPb.setEnabled(False)
+         optPb.setText("-")
+      else:
+         optMenu = QtGui.QMenu(optPb)
+         optMenu.rowForWidget = row
+         optPb.setMenu(optMenu)
+         for opt in unit.Profile().ListOptions():
+            act = optMenu.addAction(opt.DisplayStr())
+            act.setCheckable(True)
+            act.option = opt # just save corresponding UnitOption object inside the QAction
+         optMenu.triggered.connect(self.ChangeOptions)
       
    def UpdateTextInRow(self, row):
       """ Updates each TableWidgetItem where only text is displayed but

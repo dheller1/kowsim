@@ -54,7 +54,7 @@ class AddDefaultUnitCmd(ModelViewCommand, ReversibleCommandMixin):
       ReversibleCommandMixin.__init__(self)
    
    def Execute(self):
-      self._model.AddUnit(UnitInstance(self._model.Choices().ListUnits()[0], self._model))
+      self._model.AddUnit(UnitInstance(self._model.Choices().ListUnits()[0], self._model, None, []))
       index = self._model.NumUnits()-1
       self._view.UpdateUnit(index)
       self._view.UpdatePoints()
@@ -125,3 +125,56 @@ class SetUnitOptionsCmd(ModelViewCommand, ReversibleCommandMixin):
       
       self._view.UpdateTextInRow(row)
       self._view.siPointsChanged.emit()
+
+
+#===============================================================================
+# DeleteUnitCmd
+#===============================================================================
+class DeleteUnitCmd(ModelViewCommand, ReversibleCommandMixin):
+   def __init__(self, detachment, unittable):
+      ModelViewCommand.__init__(self, model=detachment, view=unittable, name="DeleteUnitCmd")
+      ReversibleCommandMixin.__init__(self)
+   
+   def Execute(self):
+      rowsToDelete = self._view.unitTable.SelectedRows()
+      
+      if len(rowsToDelete)==1:
+         confirm="This will delete the current unit.<br />Are you sure?"
+      elif len(rowsToDelete)>1:
+         confirm="This will delete %d units.<br />Are you sure?" % len(rowsToDelete)
+      
+      if QtGui.QMessageBox.Yes != QtGui.QMessageBox.warning(self._view, "Delete unit", confirm, QtGui.QMessageBox.Yes | QtGui.QMessageBox.Cancel):
+         return
+      
+      # sort in descending order to not interfere with higher row IDs when popping from list
+      rowsToDelete.sort(reverse=True)
+      #print "Deleting rows: ", rowsToDelete
+
+      for row in rowsToDelete:
+         print "Deleting unit %d (%s)" % (row, self._model.Unit(row))
+         self._model.RemoveUnit(row)
+         self._view.unitTable.removeRow(row)
+      
+      self._view.UpdatePoints()
+      
+
+#===============================================================================
+# DuplicateUnitCmd
+#===============================================================================
+class DuplicateUnitCmd(ModelViewCommand, ReversibleCommandMixin):
+   def __init__(self, detachment, unittable):
+      ModelViewCommand.__init__(self, model=detachment, view=unittable, name="DuplicateUnitCmd")
+      ReversibleCommandMixin.__init__(self)
+   
+   def Execute(self):
+      rows = self._view.unitTable.SelectedRows()
+      
+      for row in rows:
+         oldUnit = self._model.Unit(row)
+         newUnit = oldUnit.Profile().CreateInstance(self._model)
+         for o in oldUnit.ListChosenOptions():
+            newUnit.ChooseOption(o)
+         index = self._model.AddUnit(newUnit)
+         self._view.UpdateUnit(index)
+      
+      self._view.UpdatePoints()
