@@ -11,7 +11,7 @@ import codecs
 #   and up to multiple allied forces).
 #===============================================================================
 class ArmyList(object):
-   def __init__(self, name, points=2000):
+   def __init__(self, name, points):
       self._customName = name
 
       self._detachments = []
@@ -175,7 +175,8 @@ class KowForceChoices(object):
 #   KowForceChoices representing the army (e.g. Elves).
 #===============================================================================
 class Detachment(object):
-   def __init__(self, choices, customName=None, units=[], isPrimary=False):
+   #def __init__(self, choices, customName=None, units=[], isPrimary=False):
+   def __init__(self, choices, customName, units, isPrimary):
       self._choices = choices
       if not customName:
          self._customName = "%s detachment" % choices.Name()
