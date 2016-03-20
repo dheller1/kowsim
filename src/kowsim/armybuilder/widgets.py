@@ -123,6 +123,8 @@ class UnitTable(QtGui.QTableWidget):
       self.setCellWidget(row, self._columns.index("Size"), sizeCb)
       sizeCb.rowForWidget = row
       sizeCb.setCurrentIndex(sizeCb.findText(unit.SizeType().Name()))
+      if sizeCb.count()==1:
+         sizeCb.setEnabled(False)
       
       # magic item
       itemCb = QtGui.QComboBox()
