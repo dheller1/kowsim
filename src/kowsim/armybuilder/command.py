@@ -7,6 +7,7 @@ from kowsim.command.command import ModelViewCommand, ReversibleCommandMixin
 from kowsim.kow.force import Detachment
 from dialogs import AddDetachmentDialog
 from kowsim.kow.unit import UnitInstance
+from kowsim.kow.fileio import ArmyListWriter
 import kowsim.kow.sizetype
 
 #===============================================================================
@@ -178,3 +179,23 @@ class DuplicateUnitCmd(ModelViewCommand, ReversibleCommandMixin):
          self._view.UpdateUnit(index)
       
       self._view.UpdatePoints()
+      
+
+#===============================================================================
+# SaveArmyListCmd
+#===============================================================================
+class SaveArmyListCmd(ModelViewCommand):
+   def __init__(self, armylist, armylistview):
+      ModelViewCommand.__init__(self, model=armylist, view=armylistview, name="SaveArmyListCmd")
+   
+   def Execute(self, saveAs=False):
+      if (not self._view._lastFilename) or saveAs:
+         filename, filter = QtGui.QFileDialog.getSaveFileName(self._view, "Save army list as", "../%s.lst" % self._model.CustomName(), "Army lists (*.lst);;All files (*.*)")
+         if filename == "": return
+         else: self._view._lastFilename = filename
+      else:
+         filename = self._view._lastFilename
+      
+      alw = ArmyListWriter(self._model)
+      alw.SaveToFile(filename)
+      self._view.SetModified(False)

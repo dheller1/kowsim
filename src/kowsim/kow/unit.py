@@ -80,7 +80,7 @@ class UnitProfile(object):
    def ListOptions(self): return self._options
    def ListSpecialRules(self): return self._specialRules
    def PointsCost(self): return self._pointsCost
-   def Ra(self): self._ranged
+   def Ra(self): return self._ranged
    def RaStr(self): return "%d+" % self.Ra() if self.Ra()>0 else "-"
    def SizeType(self): return self._sizeType
    def Sp(self): return self._speed
@@ -254,6 +254,9 @@ class UnitInstance(object):
    def DeStr(self): return "%d+" % self.De()
    def Detachment(self): return self._detachment
    def Item(self): return self._chosenItem
+   def ItemName(self):
+      if self._chosenItem: return self._chosenItem.Name()
+      else: return ""
    def ListChosenOptions(self): return self._chosenOptions
    def ListSpecialRules(self):
       specRules = []

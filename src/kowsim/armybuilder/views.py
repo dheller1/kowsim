@@ -19,10 +19,12 @@ class ArmyListView(QtGui.QWidget):
    def __init__(self, model, parent=None):
       QtGui.QWidget.__init__(self, parent)
       self._model = model
+      self._wasModified = True
       self._lastIndex = 0
       self._initChildren()
       self._initLayout()
       self._initConnections()
+      self._lastFilename = None
       
    def _initChildren(self):
       self.customNameLe = QtGui.QLineEdit(self._model.CustomName())
@@ -95,6 +97,9 @@ class ArmyListView(QtGui.QWidget):
          cmd.Execute()
       else:
          self._lastIndex = tw.currentIndex()
+         
+   def SetModified(self, modified):
+      self._wasModified = modified
       
    def UpdatePoints(self):
       pts = self._model.PointsTotal()

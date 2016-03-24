@@ -91,17 +91,6 @@ class ArmyList(object):
             
       print "Successfully loaded army list %s (%s), %d units." % (self._customName, filename, self._primaryForce.NumUnits())
    
-   def SaveToFile(self, filename):
-      with codecs.open(filename, 'w', encoding='UTF-8') as f:
-         f.write(self._customName + "\n")
-         f.write(str(self._pointsLimit) + "\n")
-         f.write(self._primaryForce.Name() + "\n") # detachment name
-         f.write(self._primaryForce.Choices().Name() + "\n") # detachment army name
-         
-         f.write(str(self._primaryForce.NumUnits()) + "\n")
-         
-         for u in self._primaryForce.ListUnits():
-            f.write(",".join([u.Name(), u.SizeType().Name(), u.ItemName(), str(u.PointsCost())]) + "\n")
 
 #===============================================================================
 # KowUnitGroup

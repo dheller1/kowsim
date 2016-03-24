@@ -12,8 +12,8 @@ from ..kow import unittype as KUT
 from load_data import DataManager
 from ui import UnitOptionsDialog
 from views import ArmyListView
+from command import SaveArmyListCmd
 from dialogs import NewArmyListDialog
-from kowsim.armybuilder.dialogs import NewArmyListDialog
 
 
 #===============================================================================
@@ -84,8 +84,11 @@ class MainWindow(QtGui.QMainWindow):
       # somehow if there's only one subwindow it is not registered as active,
       # so do this as a workaround.
       if l == 0: return
-      elif l == 1: self.mdiArea.subWindowList()[0].widget().SaveArmyList(saveAs)
-      else: self.mdiArea.activeSubWindow().widget().SaveArmyList(saveAs)
+      elif l == 1: view = self.mdiArea.subWindowList()[0].widget()
+      else: view = self.mdiArea.activeSubWindow().widget()
+      
+      cmd = SaveArmyListCmd(view._model, view)
+      cmd.Execute(saveAs)
       
    def SaveArmyListAs(self):
       self.SaveArmyList(saveAs=True)
