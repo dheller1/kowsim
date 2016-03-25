@@ -8,12 +8,15 @@ from PySide import QtGui, QtCore
 from widgets import ValidationWidget
 from command import AddDetachmentCmd, DeleteUnitCmd, RenameDetachmentCmd, AddDefaultUnitCmd, DuplicateUnitCmd
 from kowsim.armybuilder.widgets import UnitTable
+from kowsim.armybuilder.command import SaveArmyListCmd
 #from PySide.QtCore import Qt
 
 
 #===============================================================================
 # ArmyListView(QWidget)
 #   Widget showing a complete kow.ArmyList instance and allowing to edit it.
+#   Will contain one or more DetachmentViews which in turn contain a UnitTable
+#   each.
 #===============================================================================
 class ArmyListView(QtGui.QWidget):
    def __init__(self, model, parent=None):
@@ -50,7 +53,7 @@ class ArmyListView(QtGui.QWidget):
       self.valGb = QtGui.QGroupBox("Validation")
       
    def _initLayout(self):
-      self.setWindowTitle(("*" + self._model.CustomName()))
+      self.setWindowTitle((self._model.CustomName() + "*"))
       genlay = QtGui.QGridLayout()
       
       row = 0
@@ -78,12 +81,28 @@ class ArmyListView(QtGui.QWidget):
    def _initConnections(self):
       self.detachmentsTw.currentChanged.connect(self.DetachmentTabChanged)
       
+   def closeEvent(self, e):
+      if self._wasModified:
+         res = QtGui.QMessageBox.question(self, "Close army list", "You have unsaved changes in this army list.\nDo you want to save before closing?", 
+                                          QtGui.QMessageBox.Yes | QtGui.QMessageBox.No | QtGui.QMessageBox.Cancel, QtGui.QMessageBox.Yes)
+         
+         if res == QtGui.QMessageBox.Cancel:
+            e.ignore()
+            return
+         
+         elif res == QtGui.QMessageBox.Yes:
+            cmd = SaveArmyListCmd(self._model, self)
+            cmd.Execute()
+      
+      super(ArmyListView, self).closeEvent(e)
+      
    def AddDetachmentView(self, detachment):
       dv = DetachmentView(detachment)
       self.detachmentsTw.insertTab(self.detachmentsTw.count()-1, dv, detachment.CustomName())
       self.detachmentsTw.setCurrentIndex(self.detachmentsTw.count()-2) # switch to new tab
       dv.siNameChanged.connect(self.DetachmentNameChanged)
       dv.siPointsChanged.connect(self.UpdatePoints)
+      dv.siModified.connect(self.SetModified)
       
    def DetachmentNameChanged(self, name):
       sender = self.sender()
@@ -105,6 +124,11 @@ class ArmyListView(QtGui.QWidget):
    def SetModified(self, modified):
       self._wasModified = modified
       
+      title = self._model.CustomName()
+      if self._lastFilename: title += " (%s)" % os.path.basename(self._lastFilename)
+      if modified: title += "*"
+      self.setWindowTitle(title)
+      
    def UpdatePoints(self):
       pts = self._model.PointsTotal()
       self.validationWdg.UpdateTotalPoints(pts, self._model.PointsLimit())
@@ -112,9 +136,12 @@ class ArmyListView(QtGui.QWidget):
 
 #===============================================================================
 # DetachmentView(QWidget)
-#   Widget showing a single kow.Detachment instance and allowing to edit it. 
+#   Widget showing a single kow.Detachment instance and allowing to edit it.
+#   Usually used within an ArmyListView, which will show each of its DetachmentViews
+#   in a TabWidget.
 #===============================================================================
 class DetachmentView(QtGui.QWidget):
+   siModified = QtCore.Signal(bool)
    siNameChanged = QtCore.Signal(str)
    siPointsChanged = QtCore.Signal()
    
@@ -205,6 +232,7 @@ class DetachmentView(QtGui.QWidget):
       self.duplicateUnitPb.clicked.connect(self.DuplicateUnit)
       self.unitTable.itemSelectionChanged.connect(self.UnitSelectionChanged)
       self.unitTable.siPointsChanged.connect(self.UpdatePoints)
+      self.unitTable.siModified.connect(self.SetModified)
       
    def _initContent(self):
       for i in range(self._model.NumUnits()):
@@ -226,6 +254,9 @@ class DetachmentView(QtGui.QWidget):
    def RenameDetachment(self):
       cmd = RenameDetachmentCmd(self._model, self)
       cmd.Execute(name=self.customNameLe.text())
+      
+   def SetModified(self, modified=True):
+      self.siModified.emit(modified)
       
    def UnitSelectionChanged(self):
       rows = self.unitTable.SelectedRows()

@@ -28,6 +28,7 @@ class AddDetachmentCmd(ModelViewCommand, ReversibleCommandMixin):
          detachment = Detachment(dlg.Force(), None, [], dlg.MakePrimary())
          self._model.AddDetachment(detachment)
          self._view.AddDetachmentView(detachment)
+         self._view.SetModified(True)
          
          
 #===============================================================================
@@ -44,6 +45,7 @@ class RenameDetachmentCmd(ModelViewCommand, ReversibleCommandMixin):
       if name!=oldname:
          self._model.SetCustomName(name)
          self._view.siNameChanged.emit(name)
+         self._view.SetModified(True)
 
          
 #===============================================================================
@@ -59,6 +61,7 @@ class AddDefaultUnitCmd(ModelViewCommand, ReversibleCommandMixin):
       index = self._model.NumUnits()-1
       self._view.UpdateUnit(index)
       self._view.UpdatePoints()
+      self._view.SetModified(True)
       
       
 #===============================================================================
@@ -76,6 +79,7 @@ class ChangeUnitCmd(ModelViewCommand, ReversibleCommandMixin):
       self._model.ReplaceUnit(row, newUnit)
       self._view.SetRow(row, newUnit)
       self._view.siPointsChanged.emit()
+      self._view.SetModified(True)
       
 
 #===============================================================================
@@ -95,6 +99,7 @@ class ChangeUnitSizeCmd(ModelViewCommand, ReversibleCommandMixin):
       self._view.UpdateTextInRow(row)
       self._view.UpdateUnitOptions(row)
       self._view.siPointsChanged.emit()
+      self._view.SetModified(True)
       
 
 #===============================================================================
@@ -109,6 +114,7 @@ class ChangeUnitItemCmd(ModelViewCommand, ReversibleCommandMixin):
       self._model.SetItem(item)
       self._view.UpdateTextInRow(row)
       self._view.siPointsChanged.emit()
+      self._view.SetModified(True)
       
       
 #===============================================================================
@@ -126,6 +132,7 @@ class SetUnitOptionsCmd(ModelViewCommand, ReversibleCommandMixin):
       
       self._view.UpdateTextInRow(row)
       self._view.siPointsChanged.emit()
+      self._view.SetModified(True)
 
 
 #===============================================================================
@@ -157,6 +164,7 @@ class DeleteUnitCmd(ModelViewCommand, ReversibleCommandMixin):
          self._view.unitTable.removeRow(row)
       
       self._view.UpdatePoints()
+      self._view.SetModified(True)
       
 
 #===============================================================================
@@ -179,6 +187,7 @@ class DuplicateUnitCmd(ModelViewCommand, ReversibleCommandMixin):
          self._view.UpdateUnit(index)
       
       self._view.UpdatePoints()
+      self._view.SetModified(True)
       
 
 #===============================================================================
@@ -189,8 +198,9 @@ class SaveArmyListCmd(ModelViewCommand):
       ModelViewCommand.__init__(self, model=armylist, view=armylistview, name="SaveArmyListCmd")
    
    def Execute(self, saveAs=False):
+      defaultName = self._view._lastFilename if self._view._lastFilename else "%s.lst" % self._model.CustomName()
       if (not self._view._lastFilename) or saveAs:
-         filename, filter = QtGui.QFileDialog.getSaveFileName(self._view, "Save army list as", "../%s.lst" % self._model.CustomName(), "Army lists (*.lst);;All files (*.*)")
+         filename = QtGui.QFileDialog.getSaveFileName(self._view, "Save army list as", "../%s" % defaultName, "Army lists (*.lst);;All files (*.*)")[0]
          if filename == "": return
          else: self._view._lastFilename = filename
       else:
@@ -225,4 +235,5 @@ class LoadArmyListCmd(Command):
          
       view = self._mdiArea.AddArmySubWindow(armylist)
       view.SetLastFilename(filename)
+      view.SetModified(False)
       return True

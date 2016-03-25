@@ -56,9 +56,9 @@ class MainWindow(QtGui.QMainWindow):
       
       self.addToolBar(self.toolBar)
       
-      self.InitConnections()
+      self._InitConnections()
       
-   def InitConnections(self):
+   def _InitConnections(self):
       self.menuBar().newArmyAct.triggered.connect(self.NewArmyList)
       self.menuBar().openAct.triggered.connect(self.OpenArmyList)
       self.menuBar().saveAct.triggered.connect(self.SaveArmyList)

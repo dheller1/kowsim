@@ -15,6 +15,7 @@ import kowsim.kow.stats as st
 #===============================================================================
 class UnitTable(QtGui.QTableWidget):
    siPointsChanged = QtCore.Signal()
+   siModified = QtCore.Signal(bool)
    DefaultRowHeight = 22
    
    def __init__(self, model):
@@ -145,6 +146,9 @@ class UnitTable(QtGui.QTableWidget):
       unitCb.currentIndexChanged.connect(self.ChangeUnit)
       sizeCb.currentIndexChanged.connect(self.ChangeSize)
       itemCb.currentIndexChanged.connect(self.ChangeItem)
+   
+   def SetModified(self, modified=True):
+      self.siModified.emit(modified)
       
    def UpdateUnitOptions(self, row):
       unit = self._model.Unit(row)

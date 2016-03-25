@@ -4,10 +4,13 @@ Armybuilder feature planning:
 
 [x]  Armeelisten speichern
 [x]	 Armeelisten laden
-[ ]  Modifikationsstatus anzeigen, Warnung beim Schließen falls ungespeicherte Änderungen
+[x]  Modifikationsstatus anzeigen, Warnung beim Schließen falls ungespeicherte Änderungen
+[x].... falls direkt das Hauptfenster geschlossen wird, gibt es bisher keine Warnung.
+
 [ ]  Ausgabe als HTML oder PDF
 [ ]  Vorschau (View) und Drucken
 [ ]  Validierung anhand von Strategien
 [ ]  Anzeige alternativ als Tree
 [ ]  Detachments löschen, Primary umschalten
 [ ]  Keine multiplen Detachments gleicher Fraktionen, Verbünden nur wenn kompatibel
+[ ]	 Unit Browser (ListWidget; Doppelklick fügt gleich die richtige Einheit ein)
