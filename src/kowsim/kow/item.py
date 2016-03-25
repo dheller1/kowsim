@@ -19,6 +19,7 @@ class Item(object):
    def Description(self): return self._description   
    def Name(self): return self._name
    def PointsCost(self): return self._pointsCost
+   def StringWithPoints(self): return "%s (%dp)" % (self._name, self._pointsCost)
 
    @staticmethod
    def FromCsv(cols):

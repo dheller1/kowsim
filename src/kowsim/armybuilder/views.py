@@ -21,10 +21,13 @@ class ArmyListView(QtGui.QWidget):
       self._model = model
       self._wasModified = True
       self._lastIndex = 0
+      self._lastFilename = None
+      
       self._initChildren()
       self._initLayout()
       self._initConnections()
-      self._lastFilename = None
+      self.UpdatePoints()
+      self.detachmentsTw.setCurrentIndex(0)
       
    def _initChildren(self):
       self.customNameLe = QtGui.QLineEdit(self._model.CustomName())
@@ -38,10 +41,9 @@ class ArmyListView(QtGui.QWidget):
       self.validationWdg = ValidationWidget(parent=self)
       
       self.detachmentsTw = QtGui.QTabWidget(parent=self)
-      #self.addDetachmentPb = QtGui.QPushButton(QtGui.QIcon(os.path.join("..", "data","icons","plus.png")), "&Add detachment")
+      self.detachmentsTw.addTab(QtGui.QWidget(), "+")
       for det in self._model.ListDetachments():
          self.AddDetachmentView(det)
-      self.detachmentsTw.addTab(QtGui.QWidget(), "+")
       
       self.generalGb = QtGui.QGroupBox("General")
       self.detachmentsGb = QtGui.QGroupBox("Detachments")
@@ -97,7 +99,9 @@ class ArmyListView(QtGui.QWidget):
          cmd.Execute()
       else:
          self._lastIndex = tw.currentIndex()
-         
+   
+   def SetLastFilename(self, name): self._lastFilename = name
+   
    def SetModified(self, modified):
       self._wasModified = modified
       
@@ -120,6 +124,7 @@ class DetachmentView(QtGui.QWidget):
       self._initChildren()
       self._initLayout()
       self._initConnections()
+      self._initContent()
       
    def _initChildren(self):
       self.customNameLe = QtGui.QLineEdit(self._model.CustomName())
@@ -200,6 +205,11 @@ class DetachmentView(QtGui.QWidget):
       self.duplicateUnitPb.clicked.connect(self.DuplicateUnit)
       self.unitTable.itemSelectionChanged.connect(self.UnitSelectionChanged)
       self.unitTable.siPointsChanged.connect(self.UpdatePoints)
+      
+   def _initContent(self):
+      for i in range(self._model.NumUnits()):
+         self.UpdateUnit(i)
+      self.UpdatePoints()
    
    def AddUnit(self):
       cmd = AddDefaultUnitCmd(self._model, self)

@@ -32,65 +32,6 @@ class ArmyList(object):
    def AddDetachment(self, detachment):
       self._detachments.append(detachment)
    
-   def LoadFromFile(self, filename, dataMgr): # dataMgr needed for access to force lists and units by name
-      with codecs.open(filename, "r", encoding='UTF-8') as f:
-         self._customName = f.readline().strip()
-         try: self._pointsLimit = int(f.readline().strip())
-         except ValueError:
-            raise IOError("Invalid file %s. (Can't convert total points cost to int)" % filename)
-            return
-         
-         pfName = f.readline().strip() # e.g. 'My Elf detachment'
-         pfArmy = f.readline().strip() # e.g. 'Elves'
-         del self._primaryForce
-         # somehow, if you don't explicitly set units=[] here, it causes a giant bug where units is a non-empty
-         # list of units in the previous army list. should now be fixed.
-         self._primaryForce = Detachment(dataMgr.ForceChoicesByName(pfArmy), pfName, units=[])
-         
-         try: numUnits = int(f.readline().strip())
-         except ValueError:
-            raise IOError("Invalid file %s. (Can't convert number of units to int)" % filename)
-            return
-         
-         for i in range(numUnits):
-            cols = [col.strip() for col in f.readline().strip().split(',')]
-            
-            unitName = cols[0]
-            unitSizeType = cols[1]
-            unitItem = cols[2]
-            try: unitCost = int(cols[3])
-            except ValueError:
-               raise IOError("Invalid file %s. (Can't convert unit points cost to int)" % filename)
-               return
-            
-            try: unitGroup = self._primaryForce.Choices().GroupByName(unitName)
-            except KeyError:
-               print "Warning: Invalid unit %s! Skipping unit in army list." % unitName
-               print "Groups:", [g.Name() for g in self._primaryForce.Choices().ListGroups()]
-               continue
-            
-            try: unitSizeOpt = unitGroup.OptionByName(unitSizeType)
-            except KeyError:
-               print "Warning: Unit %s has invalid size %s! Skipping unit in army list." % (unitName, unitSizeType)
-               continue
-            
-            if len(unitItem)>0:
-               try: item = dataMgr.ItemByName(unitItem)
-               except KeyError:
-                  print "Warning: Item %s for unit %s not found. Unit will have no item." % (unitItem, unitName)
-                  item = None
-            else: item = None
-            
-            unit = unitSizeOpt.Clone()
-            unit.SetItem(item)
-            
-            if unit.PointsCost() != unitCost:
-               print "Warning: Unit %s seems to have invalid points cost (%d should be %d)." % (unitName, unitCost, unit.PointsCost())
-               
-            self._primaryForce.AddUnit(unit)
-            
-      print "Successfully loaded army list %s (%s), %d units." % (self._customName, filename, self._primaryForce.NumUnits())
-   
 
 #===============================================================================
 # KowUnitGroup

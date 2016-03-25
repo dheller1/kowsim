@@ -136,7 +136,7 @@ class UnitTable(QtGui.QTableWidget):
       else:
          itemCb.setEnabled(False)
       self.setCellWidget(row, self._columns.index("Magic item"), itemCb)
-      if unit.Item(): itemCb.setCurrentIndex(itemCb.findText(unit.Item().Name()))
+      if unit.Item(): itemCb.setCurrentIndex(itemCb.findText(unit.Item().StringWithPoints()))
       
       # options
       self.UpdateUnitOptions(row)
@@ -165,6 +165,8 @@ class UnitTable(QtGui.QTableWidget):
             act = optMenu.addAction(opt.DisplayStr())
             act.setCheckable(True)
             act.option = opt # just save corresponding UnitOption object inside the QAction
+            if opt in unit.ListChosenOptions():
+               act.setChecked(True)
          optMenu.triggered.connect(self.ChangeOptions)
       
    def UpdateTextInRow(self, row):

@@ -3,11 +3,11 @@
 # armybuilder/command.py
 #===============================================================================
 from PySide import QtGui#, QtCore
-from kowsim.command.command import ModelViewCommand, ReversibleCommandMixin
+from kowsim.command.command import Command, ModelViewCommand, ReversibleCommandMixin
 from kowsim.kow.force import Detachment
 from dialogs import AddDetachmentDialog
 from kowsim.kow.unit import UnitInstance
-from kowsim.kow.fileio import ArmyListWriter
+from kowsim.kow.fileio import ArmyListWriter, ArmyListReader
 import kowsim.kow.sizetype
 
 #===============================================================================
@@ -199,3 +199,30 @@ class SaveArmyListCmd(ModelViewCommand):
       alw = ArmyListWriter(self._model)
       alw.SaveToFile(filename)
       self._view.SetModified(False)
+      
+
+#===============================================================================
+# LoadArmyListCmd
+#===============================================================================
+class LoadArmyListCmd(Command):
+   def __init__(self, mdiArea):
+      Command.__init__(self, name="SaveArmyListCmd")
+      self._mdiArea = mdiArea
+   
+   def Execute(self, filename):
+      alr = ArmyListReader(QtGui.qApp.DataManager)
+      
+      try: armylist, warnings = alr.LoadFromFile(filename)
+      except IOError as e:
+         QtGui.QMessageBox.critical(self._mdiArea, "Error loading %s" % filename, "We're sorry, the file could not be loaded.\nError message:\n  %s" % (e))
+         return False
+      except Exception as e:
+         QtGui.QMessageBox.critical(self._mdiArea, "Error loading %s" % filename, "We're sorry, the file could not be loaded.\nAn unknown error occurred. Error message:\n  %s" % (e))
+         return False
+      
+      if warnings != []:
+         QtGui.QMessageBox.warning(self._mdiArea, "Warning", "File %s was successfully loaded, but there were warnings:\n" + "\n".join(warnings))
+         
+      view = self._mdiArea.AddArmySubWindow(armylist)
+      view.SetLastFilename(filename)
+      return True

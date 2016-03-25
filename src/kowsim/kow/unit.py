@@ -235,8 +235,6 @@ class UnitInstance(object):
    def __repr__(self):
       return "UnitInstance(%s)" % self.Name()
       
-   def ListOptions(self): return self._chosenOptions
-
    # Getters
    def At(self): return self._StatWithModifiers(stats.ST_ATTACKS)
    def AtStr(self): return "%d" % self.At() if self.At()>0 else "-"
@@ -246,17 +244,14 @@ class UnitInstance(object):
          raise ValueError("Unit %s cannot choose option %s." % (self.Name(), opt.Name()))
       elif opt in self._chosenOptions:
          raise ValueError("Unit %s already has option %s." % (self.Name(), opt.Name()))
-      else:
-         self._chosenOptions.append(opt)
+      else: self._chosenOptions.append(opt)
+         
    def ClearChosenOptions(self): self._chosenOptions = []
    def CustomName(self): return self._customName if self._customName is not None else ""
    def De(self): return self._StatWithModifiers(stats.ST_DEFENSE)
    def DeStr(self): return "%d+" % self.De()
    def Detachment(self): return self._detachment
    def Item(self): return self._chosenItem
-   def ItemName(self):
-      if self._chosenItem: return self._chosenItem.Name()
-      else: return ""
    def ListChosenOptions(self): return self._chosenOptions
    def ListSpecialRules(self):
       specRules = []
@@ -278,6 +273,7 @@ class UnitInstance(object):
    def SetProfile(self, profile):
       self._profile = profile
       self.Validate()
+      
    def SizeType(self): return self._profile.SizeType()
    def Sp(self): return self._StatWithModifiers(stats.ST_SPEED)
    def UnitType(self): return self._profile.UnitType()
@@ -294,25 +290,21 @@ class UnitInstance(object):
       return False
    
    def HasStatModifier(self, stat):
-      if stat == stats.ST_SPEED:
-         return (self._profile._speed != self._StatWithModifiers(stats.ST_SPEED))
-      elif stat == stats.ST_MELEE:
-         return (self._profile._melee != self._StatWithModifiers(stats.ST_MELEE))
-      elif stat == stats.ST_RANGED:
-         return (self._profile._ranged != self._StatWithModifiers(stats.ST_RANGED))
-      elif stat == stats.ST_DEFENSE:
-         return (self._profile._defense != self._StatWithModifiers(stats.ST_DEFENSE))
-      elif stat == stats.ST_ATTACKS:
-         return (self._profile._attacks != self._StatWithModifiers(stats.ST_ATTACKS))
-      else:
-         raise ValueError("Unknown stat: %s" % stat)
+      if stat == stats.ST_SPEED: return (self._profile._speed != self._StatWithModifiers(stats.ST_SPEED))
+      elif stat == stats.ST_MELEE: return (self._profile._melee != self._StatWithModifiers(stats.ST_MELEE))
+      elif stat == stats.ST_RANGED: return (self._profile._ranged != self._StatWithModifiers(stats.ST_RANGED))
+      elif stat == stats.ST_DEFENSE: return (self._profile._defense != self._StatWithModifiers(stats.ST_DEFENSE))
+      elif stat == stats.ST_ATTACKS: return (self._profile._attacks != self._StatWithModifiers(stats.ST_ATTACKS))
+      else: raise ValueError("Unknown stat: %s" % stat)
    
    def ItemCost(self):
       if self._chosenItem: return self._chosenItem.PointsCost()
       else: return 0
+      
    def ItemName(self):
       if self._chosenItem: return self._chosenItem.Name()
       else: return ""
+      
    def PointsCost(self):
       pc = self._profile.PointsCost()
       if self.Item():
@@ -324,7 +316,6 @@ class UnitInstance(object):
    def Validate(self):
       if self.Item() is not None and (not self._profile.CanHaveItem()):
          raise ValueError("Unit %s has an item but isn't allowed to have one." % self.Name())
-      
       for opt in self._chosenOptions:
          if opt not in self._profile.ListOptions():
             raise ValueError("Unit %s has chosen option %s which should not be available." % (self.Name(), opt.Name()))
@@ -340,8 +331,7 @@ class UnitInstance(object):
             for e in o._effects:
                if type(e) == ModifyStatEffect and e.Stat()==stats.ST_SPEED:
                   if e.ModType()==MOD_ADD: addModifiers.append(e)
-                  elif e.ModType()==MOD_SET: setModifiers.append(e)
-      
+                  elif e.ModType()==MOD_SET: setModifiers.append(e)   
       elif stat == stats.ST_MELEE:
          val = self._profile._melee
          for o in self._chosenOptions:
@@ -349,7 +339,6 @@ class UnitInstance(object):
                if type(e) == ModifyStatEffect and e.Stat()==stats.ST_MELEE:
                   if e.ModType()==MOD_ADD: addModifiers.append(e)
                   elif e.ModType()==MOD_SET: setModifiers.append(e)
-               
       elif stat == stats.ST_RANGED:
          val = self._profile._ranged
          for o in self._chosenOptions:
@@ -357,7 +346,6 @@ class UnitInstance(object):
                if type(e) == ModifyStatEffect and e.Stat()==stats.ST_RANGED:
                   if e.ModType()==MOD_ADD: addModifiers.append(e)
                   elif e.ModType()==MOD_SET: setModifiers.append(e)
-               
       elif stat == stats.ST_DEFENSE:
          val = self._profile._defense
          for o in self._chosenOptions:
@@ -365,7 +353,6 @@ class UnitInstance(object):
                if type(e) == ModifyStatEffect and e.Stat()==stats.ST_DEFENSE:
                   if e.ModType()==MOD_ADD: addModifiers.append(e)
                   elif e.ModType()==MOD_SET: setModifiers.append(e)
-               
       elif stat == stats.ST_ATTACKS:
          val = self._profile._attacks
          for o in self._chosenOptions:
@@ -373,11 +360,9 @@ class UnitInstance(object):
                if type(e) == ModifyStatEffect and e.Stat()==stats.ST_ATTACKS:
                   if e.ModType()==MOD_ADD: addModifiers.append(e)
                   elif e.ModType()==MOD_SET: setModifiers.append(e)
-               
       elif stat == stats.ST_NERVE:
          raise ValueError("Nerve modifiers not yet supported!")
          return 0
-      
       else:
          raise ValueError("Unknown stat: %s" % stat)
       
