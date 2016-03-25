@@ -66,6 +66,20 @@ class MainWindow(QtGui.QMainWindow):
       self.menuBar().exitAct.triggered.connect(self.close)
       self.mdiArea.subWindowActivated.connect(self.CurrentWindowChanged)
       
+   def closeEvent(self, e):
+      abortClose = False
+      
+      while len(self.mdiArea.subWindowList())>0:
+         view = self.mdiArea.subWindowList()[0]
+         if not view.close():
+            abortClose = True
+            break
+      if abortClose:
+         e.ignore()
+      else:
+         super(MainWindow, self).closeEvent(e)
+         
+      
    def CurrentWindowChanged(self, wnd):
       if wnd: self.saveAction.setEnabled(True)
       else: self.saveAction.setEnabled(False)

@@ -5,8 +5,6 @@ Armybuilder feature planning:
 [x]  Armeelisten speichern
 [x]	 Armeelisten laden
 [x]  Modifikationsstatus anzeigen, Warnung beim Schließen falls ungespeicherte Änderungen
-[x].... falls direkt das Hauptfenster geschlossen wird, gibt es bisher keine Warnung.
-
 [ ]  Ausgabe als HTML oder PDF
 [ ]  Vorschau (View) und Drucken
 [ ]  Validierung anhand von Strategien
