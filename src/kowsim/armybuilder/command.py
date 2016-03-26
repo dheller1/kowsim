@@ -2,10 +2,12 @@
 
 # armybuilder/command.py
 #===============================================================================
-from PySide import QtGui#, QtCore
+import os
+from PySide import QtGui
+from PySide.QtCore import QSettings
+from dialogs import AddDetachmentDialog
 from kowsim.command.command import Command, ModelViewCommand, ReversibleCommandMixin
 from kowsim.kow.force import Detachment
-from dialogs import AddDetachmentDialog
 from kowsim.kow.unit import UnitInstance
 from kowsim.kow.fileio import ArmyListWriter, ArmyListReader
 import kowsim.kow.sizetype
@@ -200,10 +202,16 @@ class SaveArmyListCmd(ModelViewCommand):
    def Execute(self, saveAs=False):
       defaultName = self._view._lastFilename if self._view._lastFilename else "%s.lst" % self._model.CustomName()
       if (not self._view._lastFilename) or saveAs:
-         filename = QtGui.QFileDialog.getSaveFileName(self._view, "Save army list as", "../%s" % defaultName, "Army lists (*.lst);;All files (*.*)")[0]
+         settings = QSettings("NoCompany", "KowArmyBuilder")
+         preferredFolder = settings.value("preferred_folder")
+         if preferredFolder is None: preferredFolder = ".."
+         
+         filename = QtGui.QFileDialog.getSaveFileName(self._view, "Save army list as", "%s" % (os.path.join(preferredFolder, defaultName)),
+                                                      "Army lists (*.lst);;All files (*.*)")[0]
          if filename == "": return
          else: self._view._lastFilename = filename
          QtGui.qApp.DataManager.AddRecentFile(filename)
+         settings.setValue("preferred_folder", os.path.dirname(filename))
          self._view.siRecentFilesChanged.emit()
       else:
          filename = self._view._lastFilename
@@ -221,7 +229,15 @@ class LoadArmyListCmd(Command):
       Command.__init__(self, name="SaveArmyListCmd")
       self._mdiArea = mdiArea
    
-   def Execute(self, filename):
+   def Execute(self, filename=None):
+      if filename is None:
+         settings = QSettings("NoCompany", "KowArmyBuilder")
+         preferredFolder = settings.value("preferred_folder")
+         if preferredFolder is None: preferredFolder = ".."
+         filename, filter = QtGui.QFileDialog.getOpenFileName(self._mdiArea, "Open army list", preferredFolder, "Army lists (*.lst);;All files (*.*)")
+         if len(filename)==0: return
+         else: settings.setValue("preferred_folder", os.path.dirname(filename))
+      
       # check if the file is already open
       for wnd in self._mdiArea.subWindowList():
          if wnd.widget()._lastFilename == filename:

@@ -5,7 +5,7 @@ Armybuilder feature planning:
 [x]  Armeelisten speichern
 [x]	 Armeelisten laden
 [x]  Modifikationsstatus anzeigen, Warnung beim Schließen falls ungespeicherte Änderungen
-[.]  QSettings benutzen für z.B. recent files, Ordner in dem Armeelisten gespeichert/geöffnet werden, etc.
+[x]  QSettings benutzen für z.B. recent files, Ordner in dem Armeelisten gespeichert/geöffnet werden, etc.
 [ ]  MdiWindow Titel aktualisieren wenn sich Army name ändert
 [ ]  Ausgabe als HTML oder PDF
 [ ]  Vorschau (View) und Drucken
@@ -14,3 +14,4 @@ Armybuilder feature planning:
 [ ]  Detachments löschen, Primary umschalten
 [ ]  Keine multiplen Detachments gleicher Fraktionen, Verbünden nur wenn kompatibel
 [ ]	 Unit Browser (ListWidget; Doppelklick fügt gleich die richtige Einheit ein)
+[ ]  Optionseffekte um Sonderregeln (z.B. Ausrüstung) wegzunehmen, wenn z.B. Schusswaffen gewechselt werden

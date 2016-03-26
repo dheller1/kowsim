@@ -83,11 +83,8 @@ class MainWindow(QtGui.QMainWindow):
       self.mdiArea.AddArmySubWindow()
       
    def OpenArmyList(self):
-      filenames, filter = QtGui.QFileDialog.getOpenFileNames(self, "Open army list(s)", "..", "Army lists (*.lst);;All files (*.*)")
-      
-      for f in filenames:
-         cmd = LoadArmyListCmd(self.mdiArea)
-         cmd.Execute(f)
+      cmd = LoadArmyListCmd(self.mdiArea)
+      cmd.Execute()
       
    def SaveArmyList(self, saveAs=False):
       l = len(self.mdiArea.subWindowList())
