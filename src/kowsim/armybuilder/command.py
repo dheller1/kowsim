@@ -255,7 +255,7 @@ class LoadArmyListCmd(Command):
          return False
       
       if warnings != []:
-         QtGui.QMessageBox.warning(self._mdiArea, "Warning", "File %s was successfully loaded, but there were warnings:\n" + "\n".join(warnings))
+         QtGui.QMessageBox.warning(self._mdiArea, "Warning", "File %s was successfully loaded, but there were warnings:\n" % os.path.basename(filename) + "\n".join(warnings))
          
       view = self._mdiArea.AddArmySubWindow(armylist)
       view.SetLastFilename(filename)

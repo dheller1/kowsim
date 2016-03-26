@@ -1,43 +1,41 @@
-# name,description,points
-Fire-oil,"This unit gains an additional Piercing (1) on normal ranged attacks, and Crushing Strength (1) against units with the Regeneration rule.",5
-Mace of Crushing,"Whenever the unit rolls to damage in melee, it can re-roll one of the dice that failed to damage.",5
-War-bow of Kaba,"The unit has a ranged attack for which you roll a single die, regardless of the Attacks value of the unit. This attack has a range of 24” and, when rolling to hit, the unit uses a basic Ra value of 4+, regardless of its actual Ra value. The roll to hit is affected as normal by to-hit modifiers, and if a hit is scored, it is resolved at Piercing (1).",5
-Kevinar’s Flying Hammer,"The unit has a ranged attack for which you roll a single die, regardless of the Attacks value of the unit. This attack has a range of 12” and always hits on 4+, regardless of modifiers, and if a hit is scored, it is resolved at Piercing (2).",5
-Blade of Slashing,"Whenever the unit rolls to hit in Melee, it can re-roll one of the dice that failed to hit.",5
-Piercing Arrow,"Whenever the unit rolls to damage with a ranged attack, it can re-roll one of the dice that failed to damage.",5
-Quicksilver Rapier,This unit has +1 to hit when attacking individuals in melee.,10
-Myrddin’s Amulet of the Fire-heart,"Once per game, after using a ranged attack or spell, this unit may immediately use another different ranged attack or spell, against the same or a different target.",10
-Dwarven Ale,The unit has the Headstrong special rule.,10
-Brew of Haste,The unit has +1 Speed.,15
-Pipes of Terror,The unit has the Brutal special rule.,15
-Brew of Courage,"When testing Nerve against this unit, the enemies suffer an additional -1 to their total.",15
-Talisman of Inspiration,This artefact can only be used by Heroes. The Hero has the Inspiring special rule.,20
-Maccwar’s Potion of the Caterpillar,The unit has the Pathfinder special rule.,20
-Helm of Confidence,You must always reroll a rout result for this unit even if they are not in range of a unit with inspiring.,20
-Blade of the Beast Slayer,"This artefact can only be used by Heroes. The Hero has Crushing Strength (2) when attacking large infantry, large cavalry, monsters or heroes who do not have the Individual special rule. If the Hero already has Crushing Strength, it is increased by 2 when attacking those same targets.",20
-Darklord’s Onyx Ring,"This artefact can only be used by Heroes with the Regeneration rule. The units Regeneration value is increased by 1. For example, a unit with Regeneration (5+) now has Regeneration (4+).",20
-Blessing of the Gods,The unit has the Elite special rule.,25
-Chant of Hate,The unit has the Vicious special rule.,25
-Jar of the Four Winds,The unit’s ‘normal’ ranged attacks gain 12” to their maximum range.,35
-Scarletmaw’s Fenulian Amulet,"Units with the Lightning Bolt spell only. This item increases the unit’s Lightning Bolt (n) value by 2. For example, Lightning Bolt (3) becomes Lightning Bolt (5).",25
-Kaba’s Holy Hand Grenades,"The unit has a ranged attack for which you roll a single die, regardless of the Attacks value of the unit. This attack has a range of 12” and always hits on 4+, regardless of modifiers. The attack also has the Blast (D6) and Piercing (2) special rule.",25
-Crepognon’s Scrying Gem of Zellak,"When starting to deploy their units, your opponent must deploy D3+1 units instead of a single one.",30
-Boots of Levitation,This artefact can only be used by Heroes. The Hero can Advance and then shoot as if it had Halted that turn. It can also move At the Double and shoot as if it had Advanced that turn.,30
-Brew of Strength,"The unit has Crushing Strength (1), or if the unit already has Crushing Strength, it is increased by 1.",30
-Healing Charm,This artefact can only be used by Heroes. The Hero has the Heal (3) special rule.,30
-The Boomstick,This artefact can only be used by Heroes. The Hero has the Lightning Bolt (3) special rule.,30
-Mreb’s Grimoire of Unspeakable Darkness,"Units with the Surge spell only. This item increases the unit’s Surge (n) value by 4. For example, Surge (8) becomes Surge (12).",30
-Diadem of Dragon-kind,The unit has the Breath Attack (10) special rule.,30
-Heart-seeking Chant,"The unit’s ranged attacks and spells have the Piercing
-(1) special rule, or if the unit already has Piercing, it is increased by 1.",30
-Orcsbain’s Amulet of Thorns,The unit has the Ensnare special rule.,35
-Ensorcelled Armour,"This artefact can only be used by Heroes. The Hero's Defence is improved by 1, to a maximum of 6+.",35
-Boots of the Seven Leagues,The unit has the Stealthy special rule.,35
-The Fog,The unit has the Stealthy special rule.,35
-Medallion of Life,This artefact can only be used by Heroes. The Hero has the Regeneration(5+) special rule.,35
-Wine of Elvenkind,The unit has the Nimble special rule.,40
-Wings of Honeymaze,"This artefact can only be used by a Hero with the
-Individual special rule. The Hero has the Fly special rule and increases his speed to 10.",40
-Brew of Sharpness,The unit has +1 to hit in melee.,45
-Brew of Keen-eyeness,The unit has +1 to hit with ‘normal’ ranged attacks.,45
-Crystal Pendant of Retribution,"When the unit is Routed, all units in base contact with it suffer 2D6 hits at Piercing (3). These hits are resolved by the player that Routed the unit with the Crystal, which now has to (grudgingly, we’re sure) resolve the hits against his own unit(s). After the damage has been resolved, no Nerve test is taken by the damaged units – they proceed to Regroup, but cannot move directly forward D6” for their Regroup action, deterred by the huge explosion.",50
+# name,description,effect,points
+Blade of Slashing,"Whenever the unit rolls to hit in Melee, it can re-roll one of the dice that failed to hit.",,5
+Fire-Oil,"Against units with the Regeneration rule this unit gains an additional Piercing (1) on 'normal' ranged attacks, and Crushing Strength (1) in melee.",,5
+Kevinar’s Flying Hammer,"The unit has a ranged attack for which you roll a single die, regardless of the Attacks value of the unit. This attack has a range of 12” and always hits on 4+, regardless of modifiers, and if a hit is scored, it is resolved at Piercing (2).",,5
+Mace of Crushing,"Whenever the unit rolls to damage in melee, it can re-roll one of the dice that failed to damage.",,5
+War-bow of Kaba,"The unit has a ranged attack for which you roll a single die, regardless of the Attacks value of the unit. This attack has a range of 24” and, when rolling to hit, the unit uses a basic Ra value of 4+, regardless of its actual Ra value. The roll to hit is affected as normal by to-hit modifiers, and if a hit is scored, it is resolved at Piercing (1).",,5
+Dwarven Ale,The unit has the Headstrong special rule.,Grant(Headstrong),10
+Myrddin’s Amulet of the Fire-heart,"Once per game, after using a ranged attack or spell, this unit may immediately use another different ranged attack or spell, against the same or a different target.",,10
+Piercing Arrow,"Whenever the unit rolls to damage with a 'normal' ranged attack, it can re-roll one of the dice that failed to damage.",,10
+Quicksilver Rapier,This unit has +1 to hit when attacking individuals in melee.,,10
+Brew of Courage,"When testing Nerve against this unit, the enemies suffer an additional -1 to their total.",,15
+Brew of Haste,The unit has +1 Speed.,"Add(Speed,1)",15
+Pipes of Terror,The unit has the Brutal special rule.,Grant(Brutal),15
+Blade of the Beast Slayer,"This artefact can only be used by Heroes. The Hero has Crushing Strength (2) when attacking large infantry, large cavalry, monsters or heroes who do not have the Individual special rule. If the Hero already has Crushing Strength, it is increased by 2 when attacking those same targets.",,20
+Darklord’s Onyx Ring,"This artefact can only be used by Heroes with the Regeneration rule. The unit's Regeneration value is increased by 1. For example, a unit with Regeneration (5+) now has Regeneration (4+).",,20
+Helm of Confidence,You must always re-roll a rout result for this unit even if they are not in range of a unit with inspiring.,,20
+Inspiring Talisman,This artefact can only be used by Heroes. The Hero has the Inspiring special rule.,Grant(Inspiring),20
+Maccwar’s Potion of the Caterpillar,The unit has the Pathfinder special rule.,Grant(Pathfinder),20
+Blessing of the Gods,The unit has the Elite special rule.,Grant(Elite),25
+Chant of Hate,The unit has the Vicious special rule.,Grant(Vicious),25
+Kaba’s Holy Hand Grenades,"The unit has a ranged attack for which you roll a single die, regardless of the Attacks value of the unit. This attack has a range of 12” and always hits on 4+, regardless of modifiers. The attack also has the Blast (D6) and Piercing (2) special rule.",,25
+Scarletmaw’s Fenulian Amulet,"Units with the Lightning Bolt spell only. This item increases the unit’s Lightning Bolt (n) value by 2. For example, Lightning Bolt (3) becomes Lightning Bolt (5).",,25
+Boots of Levitation,This artefact can only be used by Heroes. The Hero can Advance and then shoot as if it had Halted that turn. It can also move At the Double and shoot as if it had Advanced that turn.,,30
+Brew of Strength,"The unit has Crushing Strength (1), or if the unit already has Crushing Strength, it is increased by 1.","Grant(CS (1),Cumulative)",30
+Crepognon’s Scrying Gem of Zellak,"When starting to deploy their units, your opponent must deploy D3+1 units instead of a single one.",,30
+Diadem of Dragon-kind,The unit has the Breath Attack (10) special rule.,Grant(Breath Attack (10)),30
+Healing Charm,This artefact can only be used by Heroes. The Hero has the Heal (3) special rule.,Grant(Heal (3)),30
+Heart-seeking Chant,"The unit’s ranged attacks and spells have the Piercing (1) special rule, or if the unit already has Piercing, it is increased by 1.","Grant(Piercing (1), Cumulative)",30
+Mreb’s Grimoire of Unspeakable Darkness,"Units with the Surge spell only. This item increases the unit’s Surge (n) value by 4. For example, Surge (8) becomes Surge (12).",,30
+The Boomstick,This artefact can only be used by Heroes. The Hero has the Lightning Bolt (3) special rule.,Grant(Lightning Bolt (3)),30
+Boots of the Seven Leagues,This artefact can only be used by a Hero with the Individual special rule. The Hero has the Vanguard special rule.,Grant(Vanguard),35
+Ensorcelled Armour,"This artefact can only be used by Heroes. The Hero's Defence is improved by 1, to a maximum of 6+.","Add(Defense,1)",35
+Jar of the Four Winds,The unit’s ‘normal’ ranged attacks gain 12” to their range.,,35
+Medallion of Life,This artefact can only be used by Heroes. The Hero has the Regeneration (5+) special rule.,Grant(Regeneration (5+)),35
+Orcsbain’s Amulet of Thorns,The unit has the Phalanx special rule.,Grant(Phalanx),35
+The Fog,The unit has the Stealthy special rule.,Grant(Stealthy),35
+Wine of Elvenkind,The unit has the Nimble special rule.,Grant(Nimble),40
+Wings of Honeymaze,This artefact can only be used by a Hero with the Individual special rule. The Hero has the Fly special rule and increases their speed to 10.,"Grant(Fly), Set(Speed,10)",40
+Brew of Keen-eyeness,The unit has +1 to hit with ‘normal’ ranged attacks.,,45
+Brew of Sharpness,The unit has +1 to hit in melee.,,45
+Crystal Pendant of Retribution,"When the unit is Routed, all units in base contact with it suffer 2D6 hits at Piercing (3). These hits are resolved by the player that Routed the unit with the Crystal, which now has to (grudgingly, we’re sure) resolve the hits against his own unit(s). After the damage has been resolved, no Nerve test is taken by the damaged units – they proceed to Regroup, but cannot move directly forward D6” for their Regroup action, deterred by the huge explosion.",,50
