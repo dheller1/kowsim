@@ -3,13 +3,17 @@
 # armybuilder/load_data.py
 #===============================================================================
 import os
+from collections import deque
 from parsers import ForceListCsvParser as Flcp
 from parsers import ItemCsvParser as Icp
+from PySide.QtCore import QSettings 
 
 #===============================================================================
 # DataManager
 #===============================================================================
 class DataManager(object):
+   DefaultNumRecentFiles = 5
+   
    def __init__(self):
       self._forceChoices = []
       self._forceChoicesByName = {}
@@ -45,3 +49,22 @@ class DataManager(object):
    def ItemByName(self, name): return self._itemsByName[name]
    def ListForceChoices(self): return self._forceChoices
    def ListItems(self): return self._items
+   
+   def AddRecentFile(self, filename):
+      settings = QSettings("NoCompany", "KowArmyBuilder")
+      recent = deque()
+      
+      numRecent = int( settings.value("Recent/NumRecent") )
+      for i in range(numRecent):
+         val = settings.value("Recent/%d" % (i+1))
+         if not val: break
+         recent.append(val)
+
+      if filename in recent: recent.remove(filename)
+      elif len(recent)==numRecent: recent.pop()
+      recent.appendleft(filename)
+
+      i = 0
+      for filename in recent:
+         settings.setValue("Recent/%d" % (i+1), filename)
+         i+=1

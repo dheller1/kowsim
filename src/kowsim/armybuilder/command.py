@@ -203,6 +203,8 @@ class SaveArmyListCmd(ModelViewCommand):
          filename = QtGui.QFileDialog.getSaveFileName(self._view, "Save army list as", "../%s" % defaultName, "Army lists (*.lst);;All files (*.*)")[0]
          if filename == "": return
          else: self._view._lastFilename = filename
+         QtGui.qApp.DataManager.AddRecentFile(filename)
+         self._view.siRecentFilesChanged.emit()
       else:
          filename = self._view._lastFilename
       
@@ -220,6 +222,12 @@ class LoadArmyListCmd(Command):
       self._mdiArea = mdiArea
    
    def Execute(self, filename):
+      # check if the file is already open
+      for wnd in self._mdiArea.subWindowList():
+         if wnd.widget()._lastFilename == filename:
+            self._mdiArea.setActiveSubWindow(wnd)
+            return
+      
       alr = ArmyListReader(QtGui.qApp.DataManager)
       
       try: armylist, warnings = alr.LoadFromFile(filename)
@@ -235,5 +243,7 @@ class LoadArmyListCmd(Command):
          
       view = self._mdiArea.AddArmySubWindow(armylist)
       view.SetLastFilename(filename)
+      QtGui.qApp.DataManager.AddRecentFile(filename)
+      view.siRecentFilesChanged.emit()
       view.SetModified(False)
       return True

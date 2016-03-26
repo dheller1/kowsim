@@ -7,14 +7,10 @@ from PySide import QtGui, QtCore
 from PySide.QtCore import Qt
 
 from ..kow.force import ArmyList, Detachment
-from ..kow.unit import UnitProfile
-from ..kow import unittype as KUT
 from load_data import DataManager
-from ui import UnitOptionsDialog
 from views import ArmyListView
-from command import SaveArmyListCmd
+from command import SaveArmyListCmd, LoadArmyListCmd
 from dialogs import NewArmyListDialog
-from kowsim.armybuilder.command import LoadArmyListCmd
 
 
 #===============================================================================
@@ -23,6 +19,7 @@ from kowsim.armybuilder.command import LoadArmyListCmd
 class MainWindow(QtGui.QMainWindow):
    def __init__(self):
       super(MainWindow, self).__init__()
+      QtGui.qApp.MainWindow = self # this is dirty .. make a proper singleton or don't be so lazy ..
       
       #=========================================================================
       # Load data
@@ -68,7 +65,6 @@ class MainWindow(QtGui.QMainWindow):
       
    def closeEvent(self, e):
       abortClose = False
-      
       while len(self.mdiArea.subWindowList())>0:
          view = self.mdiArea.subWindowList()[0]
          if not view.close():
@@ -78,7 +74,6 @@ class MainWindow(QtGui.QMainWindow):
          e.ignore()
       else:
          super(MainWindow, self).closeEvent(e)
-         
       
    def CurrentWindowChanged(self, wnd):
       if wnd: self.saveAction.setEnabled(True)
@@ -108,6 +103,7 @@ class MainWindow(QtGui.QMainWindow):
    def SaveArmyListAs(self):
       self.SaveArmyList(saveAs=True)
    
+   
 #===============================================================================
 # MainMenu
 #===============================================================================
@@ -115,18 +111,50 @@ class MainMenu(QtGui.QMenuBar):
    def __init__(self, *args):
       super(MainMenu, self).__init__(*args)
       
+      QtGui.qApp.MainMenu = self # this is dirty .. make a proper singleton or don't be so lazy ..
+      self.recentActs = []
+      
       self.fileMenu = self.addMenu("&File")
       self.newArmyAct = self.fileMenu.addAction("&New army")
       self.newArmyAct.setShortcut("Ctrl+N")
-      self.openAct = self.fileMenu.addAction("&Open file")
+      self.openAct = self.fileMenu.addAction("&Open file...")
       self.fileMenu.addSeparator()
       self.openAct.setShortcut("Ctrl+O")
       self.saveAct = self.fileMenu.addAction("&Save")
       self.saveAct.setShortcut("Ctrl+S")
-      self.saveAsAct = self.fileMenu.addAction("Save &as")
+      self.saveAsAct = self.fileMenu.addAction("Save &as...")
       self.saveAsAct.setShortcut("Ctrl+Shift+S")
       self.fileMenu.addSeparator()
+      self.recentSep = self.fileMenu.addSeparator()
+      self.UpdateRecent()
       self.exitAct = self.fileMenu.addAction("&Exit")
+      
+   def OpenRecent(self):
+      sender = self.sender()
+      filename = sender.filename
+      cmd = LoadArmyListCmd(QtGui.qApp.MainWindow.mdiArea)
+      cmd.Execute(filename)
+      
+   def UpdateRecent(self):
+      settings = QtCore.QSettings("NoCompany", "KowArmyBuilder")
+      numRecent = int(settings.value("Recent/NumRecent"))
+      
+      for act in self.recentActs:
+         if act in self.fileMenu.actions():
+            self.fileMenu.removeAction(act)
+      
+      self.recentActs = []
+      for i in range(numRecent):
+         filename = settings.value("Recent/%d" % (i+1))
+         if filename is None:
+            break
+         basename = os.path.basename(filename)
+         act = QtGui.QAction("%s" % (basename), self.fileMenu)
+         act.setToolTip(filename)
+         act.filename = filename
+         act.triggered.connect(self.OpenRecent)
+         self.fileMenu.insertAction(self.recentSep, act)
+         self.recentActs.append(act)
       
       
 #===============================================================================
@@ -156,7 +184,23 @@ class MdiArea(QtGui.QMdiArea):
       self.addSubWindow(sub)
       sub.show() # important!
       sub.showMaximized()
+      
+      # connect
+      sub.siRecentFilesChanged.connect(QtGui.qApp.MainMenu.UpdateRecent)
       return sub
+
+
+#===============================================================================
+# initDefaultSettings
+#===============================================================================
+def initDefaultSettings():
+   defaultSettings = [ ("Recent/NumRecent", 5)
+                      ]
+   
+   settings = QtCore.QSettings("NoCompany", "KowArmyBuilder")
+   for name, value in defaultSettings:
+      if not settings.value(name):
+         settings.setValue(name, value)
       
          
 #===============================================================================
@@ -164,6 +208,7 @@ class MdiArea(QtGui.QMdiArea):
 #===============================================================================
 def main():
    app = QtGui.QApplication(sys.argv)
+   initDefaultSettings()
 
    w = MainWindow()
    w.show()

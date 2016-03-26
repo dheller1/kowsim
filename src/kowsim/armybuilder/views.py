@@ -19,6 +19,8 @@ from kowsim.armybuilder.command import SaveArmyListCmd
 #   each.
 #===============================================================================
 class ArmyListView(QtGui.QWidget):
+   siRecentFilesChanged = QtCore.Signal()
+   
    def __init__(self, model, parent=None):
       QtGui.QWidget.__init__(self, parent)
       self._model = model
