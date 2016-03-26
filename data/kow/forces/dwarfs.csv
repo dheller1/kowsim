@@ -1,0 +1,46 @@
+# name,alignment,,,,,,,,,,,
+Dwarfs,Good,,,,,,,,,,,
+# type,unit,size,Sp,Me,Ra,De,At,Ne,Special,Options,Points,Base
+Infantry,Ironclad,Troop (10),4,4,-,5,10,10/12,Headstrong,Dwarven Throwing Mastiff|+10,75,20x20
+Infantry,Ironclad,Regiment (20),4,4,-,5,12,14/16,Headstrong,Dwarven Throwing Mastiff|+10,110,20x20
+Infantry,Ironclad,Horde (40),4,4,-,5,25,21/23,Headstrong,Dwarven Throwing Mastiff|+10,180,20x20
+Infantry,Shieldbreakers,Troop (10),4,4,-,4,10,10/12,"CS (2), Headstrong",Dwarven Throwing Mastiff|+10,90,20x20
+Infantry,Shieldbreakers,Regiment (20),4,4,-,4,12,14/16,"CS (2), Headstrong",Dwarven Throwing Mastiff|+10,130,20x20
+Infantry,Shieldbreakers,Horde (40),4,4,-,4,25,21/23,"CS (2), Headstrong",Dwarven Throwing Mastiff|+10,215,20x20
+Infantry,Ironguard,Troop (10),4,3,-,6,10,11/13,Headstrong,"Two-handed weapons|+0|Set(Defense,5)|Grant(CS(1));Dwarven Throwing Mastiff|+10",110,20x20
+Infantry,Ironguard,Regiment (20),4,3,-,6,12,15/17,Headstrong,"Two-handed weapons|+0|Set(Defense,5)|Grant(CS(1));Dwarven Throwing Mastiff|+10",160,20x20
+Infantry,Bulwarkers,Troop (10),4,4,-,5,10,10/12,"Phalanx, Headstrong",Dwarven Throwing Mastiff|+10,105,20x20
+Infantry,Bulwarkers,Regiment (20),4,4,-,5,15,14/16,"Phalanx, Headstrong",Dwarven Throwing Mastiff|+10,150,20x20
+Infantry,Bulwarkers,Horde (40),4,4,-,5,30,21/23,"Phalanx, Headstrong",Dwarven Throwing Mastiff|+10,250,20x20
+Infantry,Ironwatch Crossbows,Troop (10),4,5,5,4,8,10/12,"Crossbows, Piercing (1), Reload!, Headstrong",,100,20x20
+Infantry,Ironwatch Crossbows,Regiment (20),4,5,5,4,10,14/16,"Crossbows, Piercing (1), Reload!, Headstrong",,135,20x20
+Infantry,Ironwatch Crossbows,Horde (40),4,5,5,4,20,21/23,"Crossbows, Piercing (1), Reload!, Headstrong",,225,20x20
+Infantry,Ironwatch Rifles,Troop (10),4,5,5,4,8,10/12,"Rifles, Piercing (2), Reload!, Headstrong",,115,20x20
+Infantry,Ironwatch Rifles,Regiment (20),4,5,5,4,10,14/16,"Rifles, Piercing (2), Reload!, Headstrong",,155,20x20
+Infantry,Ironwatch Rifles,Horde (40),4,5,5,4,20,21/23,"Rifles, Piercing (2), Reload!, Headstrong",,255,20x20
+Infantry,Rangers,Troop (10),5,4,4,4,10,10/12,"Light crossbows, CS (1), Pathfinder, Vanguard, Headstrong",Dwarven Throwing Mastiff|+10;Herneas' Ranger Patrol|+20|Grant(Elite)|Grant(Stealthy),135,20x20
+Infantry,Rangers,Regiment (20),5,4,4,4,12,14/16,"Light crossbows, CS (1), Pathfinder, Vanguard, Headstrong",Dwarven Throwing Mastiff|+10;Herneas' Ranger Patrol|+20|Grant(Elite)|Grant(Stealthy),180,20x20
+Infantry,Sharpshooters,Troop (5),4,5,4,5,5,9/11,"Long rifles, Piercing (2), Reload!, Headstrong",,100,25x50
+Infantry,Berserkers,Troop (10),5,4,-,3,20,-/16,,,125,20x20
+Infantry,Berserkers,Regiment (20),5,4,-,3,25,-/22,,,180,20x20
+Cavalry,Berserker Brock Riders,Troop (5),8,4,-,4,13,-/16,"TC (1), Vicious",,135,25x50
+Cavalry,Berserker Brock Riders,Regiment (10),8,4,-,4,26,-/22,"TC (1), Vicious",,210,25x50
+Large Infantry,Earth Elementals,Regiment (3),5,4,-,6,9,-/14,"CS (1), Pathfinder, Shambling",,130,40x40
+Large Infantry,Earth Elementals,Horde (6),5,4,-,6,18,-/17,"CS (1), Pathfinder, Shambling",,200,40x40
+Monster,Greater Earth Elemental,Individual,5,4,-,6,8,-/18,"CS (3), Pathfinder, Shambling",,160,50x50
+War Engine,Ironbelcher Cannon,Individual,4,-,5,5,1,10/12,"Blast (D6+2), Piercing (4), Reload!, Headstrong, Warsmith (Blast (D6+3))",,110,50x50
+War Engine,Ironbelcher Organ Gun,Individual,4,-,5,5,15,10/12,"Range 24“, Piercing (2), Reload!, Headstrong, Warsmith (Elite)",,85,50x50
+War Engine,Flame Belcher,Individual,4,-,-,5,18,10/12,"Breath Attack (Att), Headstrong, Warsmith (Elite)",,85,50x50
+War Engine,Jarrun Bombard,Individual,4,-,5,5,1,10/12,"Blast (D6+3), Lob it!, Piercing (2), Reload!, Headstrong",,110,50x50
+Monster,Battle Driller,Individual,4,4,-,5,0,10/12,"Random Attacks (D6+6), Height 1, Brutal, CS (1), Headstrong, Individual",,70,25x50
+Monster,Steel Behemoth,Individual,4,5,-,6,0,18/20,"Random Attacks (D6+20), Breath Attack (10), CS (3), Headstrong",,250,50x100
+Hero,King,Individual,4,3,-,6,5,13/15,"CS (1), Individual, Inspiring, Headstrong",,120,20x20
+Hero,King on Large Beast,Individual,7,3,-,6,7,13/15,"CS (1), TC (2), Inspiring, Headstrong",,170,50x50
+Hero,Warsmith,Individual,4,4,4,5,2,11/13,"Pistol, CS (1), Individual, Inspiring (War Engines only), Piercing (1), Headstrong",,85,20x20
+Hero,Army Standard Bearer,Individual,4,5,-,5,1,10/12,"Individual, Inspiring, Headstrong",,50,20x20
+Hero,Ranger Captain,Individual,5,3,4,5,3,11/13,"Light crossbow, CS (1), Individual, Inspiring (Rangers only), Pathfinder, Vanguard, Headstrong",,90,20x20
+Hero,Berserker Lord,Individual,5,3,-,4,8,-/17,"CS (1), Individual, Inspiring (Berserkers only)","Mount on Brock|+30|Set(Speed,8)|Grant(Vicious)",120,20x20
+Hero,Stone Priest,Individual,4,4,-,5,2,11/13,"Individual, Inspiring (Earth Elementals only), Surge (8), Headstrong",Bane Chant (2)|+15,105,20x20
+Hero,Sveri Egilax [1],Individual,8,3,-,4,10,-/19,"CS (1), Elite, Inspiring, TC (1), Vicious, Headstrong",,240,50x50
+Hero,Herneas the Hunter [1],Individual,5,3,3,5,3,12/14,"Skewerer, CS (2), Individual, Inspiring (Rangers only), Pathfinder, Stealthy, Vanguard, Headstrong",,140,20x20
+Hero,Garrek Heavyhand [1],Individual,4,3,-,6,5,14/16,"Warp Hammer, Shield of Miph, Individual, Inspiring, Headstrong",,150,20x20
