@@ -3,6 +3,7 @@
 # armybuilder/command.py
 #===============================================================================
 import os
+import kowsim.kow.sizetype
 from PySide import QtGui
 from PySide.QtCore import QSettings
 from dialogs import AddDetachmentDialog
@@ -10,7 +11,6 @@ from kowsim.command.command import Command, ModelViewCommand, ReversibleCommandM
 from kowsim.kow.force import Detachment
 from kowsim.kow.unit import UnitInstance
 from kowsim.kow.fileio import ArmyListWriter, ArmyListReader
-import kowsim.kow.sizetype
 
 #===============================================================================
 # AddDetachmentCmd
@@ -263,3 +263,16 @@ class LoadArmyListCmd(Command):
       view.siRecentFilesChanged.emit()
       view.SetModified(False)
       return True
+   
+   
+#===============================================================================
+# PreviewArmyListCmd
+#===============================================================================
+class PreviewArmyListCmd(Command):
+   def __init__(self, mdiArea):
+      Command.__init__(self, name="PreviewArmyListCmd")
+      self._mdiArea = mdiArea
+      
+   def Execute(self, armylist):
+      sub = self._mdiArea.AddPreviewSubWindow(armylist)
+      

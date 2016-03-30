@@ -8,10 +8,14 @@ Armybuilder feature planning:
 [x]  QSettings benutzen für z.B. recent files, Ordner in dem Armeelisten gespeichert/geöffnet werden, etc.
 [ ]  MdiWindow Titel aktualisieren wenn sich Army name ändert
 [ ]  Ausgabe als HTML oder PDF
-[ ]  Vorschau (View) und Drucken
-[ ]  Validierung anhand von Strategien
+[.]  Vorschau (View) und Drucken
+[ ]  Validierung anhand von Strategien/Regeln
 [ ]  Anzeige alternativ als Tree
 [ ]  Detachments löschen, Primary umschalten
 [ ]  Keine multiplen Detachments gleicher Fraktionen, Verbünden nur wenn kompatibel
-[ ]	 Unit Browser (ListWidget; Doppelklick fügt gleich die richtige Einheit ein)
+[.]	 Unit Browser (ListWidget; Doppelklick fügt gleich die richtige Einheit ein)
 [ ]  Optionseffekte um Sonderregeln (z.B. Ausrüstung) wegzunehmen, wenn z.B. Schusswaffen gewechselt werden
+
+
+Langfristig:
+[ ]  Stat overhaul. Alle Stats sind Objekte, z.B. abgeleitet von D6Stat (Me/Ra/De z.b. 5+), IntStat (Sp, At), CompositeStat (Ne)

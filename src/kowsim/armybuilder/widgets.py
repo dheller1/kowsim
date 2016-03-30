@@ -8,6 +8,7 @@ from PySide import QtGui, QtCore
 from PySide.QtCore import Qt
 from command import ChangeUnitCmd, ChangeUnitSizeCmd, ChangeUnitItemCmd
 from kowsim.armybuilder.command import SetUnitOptionsCmd
+from kowsim.kow.unittype import ALL_UNITTYPES
 import kowsim.kow.stats as st
 
 #===============================================================================
@@ -229,3 +230,27 @@ class ValidationWidget(QtGui.QWidget):
          self.pointsTotalLbl.setText("Total points: <b>%d</b>/%d" % (points, pointsLimit))
       else:
          self.pointsTotalLbl.setText("Total points: <b><span style='color:#ff0000;'>%d</span></b>/%d" % (points, pointsLimit))
+         
+         
+#===============================================================================
+# UnitChoicesWidget
+#===============================================================================
+class UnitChoicesWidget(QtGui.QDockWidget):
+   def __init__(self, choices, parent=None):
+      super(UnitChoicesWidget, self).__init__("Unit browser", parent)
+      
+      self._choices = choices
+      self.listWdg = QtGui.QTreeWidget(self)
+      self.listWdg.setColumnCount(1)
+      self.listWdg.setHeaderLabel(choices.Name())
+      self.setWidget(self.listWdg)
+      
+      for ut in ALL_UNITTYPES:
+         units = choices.ListUnitsForType(ut)
+         if len(units)>0:
+            tli = QtGui.QTreeWidgetItem(self.listWdg, [ut.PluralName()])
+            self.listWdg.addTopLevelItem(tli)
+            for u in units:
+               tli.addChild(QtGui.QTreeWidgetItem(tli, [u.Name()]))
+               
+      self.listWdg.expandAll()

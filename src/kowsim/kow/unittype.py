@@ -3,18 +3,22 @@
 # kow/unittype.py
 #===============================================================================
 class KowUnitType(object):
-   def __init__(self, name):
-      self._customName = name
+   def __init__(self, name, plural=None):
+      self._name = name
+      self._plural = plural if plural is not None else name
    
-   def Name(self): return self._customName
+   def __repr__(self): return "KowUnitType(%s)" % self._name
+   
+   def Name(self): return self._name
+   def PluralName(self): return self._plural
 
 UT_INF = KowUnitType("Infantry")
 UT_CAV = KowUnitType("Cavalry")
 UT_LINF = KowUnitType("Large Infantry")
 UT_LCAV = KowUnitType("Large Cavalry")
-UT_WENG = KowUnitType("War Engine")
-UT_MON = KowUnitType("Monster")
-UT_HERO = KowUnitType("Hero")
+UT_WENG = KowUnitType("War Engine", "War Engines")
+UT_MON = KowUnitType("Monster", "Monsters")
+UT_HERO = KowUnitType("Hero", "Heroes")
 
 ALL_UNITTYPES = (UT_INF, UT_CAV, UT_LINF, UT_LCAV, UT_WENG, UT_MON, UT_HERO)
 

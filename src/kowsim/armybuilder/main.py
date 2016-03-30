@@ -11,6 +11,9 @@ from load_data import DataManager
 from views import ArmyListView
 from command import SaveArmyListCmd, LoadArmyListCmd
 from dialogs import NewArmyListDialog
+from kowsim.armybuilder.command import PreviewArmyListCmd
+from kowsim.armybuilder.views import ArmyListOutputView
+from kowsim.armybuilder.widgets import UnitChoicesWidget
 
 
 #===============================================================================
@@ -39,6 +42,7 @@ class MainWindow(QtGui.QMainWindow):
       #=========================================================================
       self.mdiArea = MdiArea()
       self.setCentralWidget(self.mdiArea)
+      self.unitChoiceWidget = None
       
       #self.setStatusBar(QtGui.QStatusBar())
       #self.statusBar().showMessage("Ready.")
@@ -61,6 +65,7 @@ class MainWindow(QtGui.QMainWindow):
       self.menuBar().saveAct.triggered.connect(self.SaveArmyList)
       self.menuBar().saveAsAct.triggered.connect(self.SaveArmyListAs)
       self.menuBar().exitAct.triggered.connect(self.close)
+      self.menuBar().previewAct.triggered.connect(self.PreviewArmyList)
       self.mdiArea.subWindowActivated.connect(self.CurrentWindowChanged)
       
    def closeEvent(self, e):
@@ -86,6 +91,24 @@ class MainWindow(QtGui.QMainWindow):
       cmd = LoadArmyListCmd(self.mdiArea)
       cmd.Execute()
       
+   def PreviewArmyList(self):
+      sub = self.mdiArea.currentSubWindow()
+      if not sub: return
+      if type(sub.widget()) != ArmyListView: return
+      
+      armylist = sub.widget()._model
+      cmd = PreviewArmyListCmd(self.mdiArea)
+      cmd.Execute(armylist)
+   
+   def ReplaceUnitBrowser(self, choices):
+      if self.unitChoiceWidget:
+         loc = self.dockWidgetArea(self.unitChoiceWidget)
+         self.removeDockWidget(self.unitChoiceWidget)
+      else:
+         loc = Qt.LeftDockWidgetArea
+      self.unitChoiceWidget = UnitChoicesWidget(choices)
+      self.addDockWidget(loc, QtGui.qApp.MainWindow.unitChoiceWidget)
+   
    def SaveArmyList(self, saveAs=False):
       l = len(self.mdiArea.subWindowList())
       # somehow if there's only one subwindow it is not registered as active,
@@ -111,6 +134,7 @@ class MainMenu(QtGui.QMenuBar):
       QtGui.qApp.MainMenu = self # this is dirty .. make a proper singleton or don't be so lazy ..
       self.recentActs = []
       
+      # file menu
       self.fileMenu = self.addMenu("&File")
       self.newArmyAct = self.fileMenu.addAction("&New army")
       self.newArmyAct.setShortcut("Ctrl+N")
@@ -125,6 +149,10 @@ class MainMenu(QtGui.QMenuBar):
       self.recentSep = self.fileMenu.addSeparator()
       self.UpdateRecent()
       self.exitAct = self.fileMenu.addAction("&Exit")
+      
+      # army list menu
+      self.armyMenu = self.addMenu("&Army list")
+      self.previewAct = self.armyMenu.addAction("&Preview")
       
    def OpenRecent(self):
       sender = self.sender()
@@ -184,6 +212,18 @@ class MdiArea(QtGui.QMdiArea):
       
       # connect
       sub.siRecentFilesChanged.connect(QtGui.qApp.MainMenu.UpdateRecent)
+      
+      # show unit choices
+      QtGui.qApp.MainWindow.ReplaceUnitBrowser(armyList.ListDetachments()[0].Choices())
+      return sub
+   
+   
+   def AddPreviewSubWindow(self, armyList):
+      #sub = ArmyMainWidget(name)
+      sub = ArmyListOutputView(armyList)
+      self.addSubWindow(sub)
+      sub.show() # important!
+      sub.showMaximized()
       return sub
 
 

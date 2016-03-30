@@ -4,6 +4,7 @@
 #===============================================================================
 import codecs
 #from unit import UnitProfile
+from unittype import *
 
 #===============================================================================
 # ArmyList
@@ -19,6 +20,7 @@ class ArmyList(object):
    
    # getters/setters
    def CustomName(self): return self._customName
+   def NumDetachments(self): return len(self._detachments)
    def ListDetachments(self): return self._detachments
    def PointsLimit(self): return self._pointsLimit
    def PointsTotal(self):
@@ -38,7 +40,7 @@ class ArmyList(object):
 #===============================================================================
 class KowUnitGroup(object):
    def __init__(self, name, default=None):
-      self._customName = name
+      self._name = name
       self._defaultOption = default
       self._sizeOptions = [] # list of KowUnitProfiles
       self._optionsByName = {}
@@ -47,7 +49,7 @@ class KowUnitGroup(object):
          
    def Default(self): return self._defaultOption
    def ListOptions(self): return self._sizeOptions
-   def Name(self): return self._customName
+   def Name(self): return self._name
    def ProfileForSize(self, size): return self._optionsByName[size]
       
    def AddSizeOption(self, opt):
@@ -70,6 +72,7 @@ class KowForceChoices(object):
       self._units = units
       self._groups = []
       self._groupsByName = {}
+      self._groupsByType = {}
    
    def AlignmentName(self): return self._alignment.Name()
    def GroupUnits(self):
@@ -86,6 +89,14 @@ class KowForceChoices(object):
          else:
             grp = self._groupsByName[u.name]
             grp.AddSizeOption(u)
+            
+   def GroupTypes(self):
+      if len(self._groups)==0:
+         self.GroupUnits()
+      
+      self._groupsByType = { ut:[] for ut in ALL_UNITTYPES }
+      for g in self._groups:
+         self._groupsByType[g.Default().UnitType()].append(g)
    
    def GroupByName(self, name):
       if len(self._groups)==0: self.GroupUnits()
@@ -93,9 +104,16 @@ class KowForceChoices(object):
    def ListGroups(self):
       if len(self._groups)==0: self.GroupUnits()
       return self._groups
+   def ListTypes(self):
+      if len(self._groupsByType)==0: self.GroupTypes()
+      return self._groupsByType.keys()
+   
    def ListUnits(self): return self._units   
+   def ListUnitsForType(self, utype):
+      if len(self._groupsByType)==0: self.GroupTypes()
+      return self._groupsByType[utype]
    def Name(self): return self._customName
-   def NumUnits(self): return len(self._units)   
+   def NumUnits(self): return len(self._units)
 
 
 #===============================================================================
