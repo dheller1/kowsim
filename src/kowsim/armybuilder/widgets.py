@@ -233,24 +233,32 @@ class ValidationWidget(QtGui.QWidget):
          
          
 #===============================================================================
-# UnitChoicesWidget
+# UnitBrowserWidget
 #===============================================================================
-class UnitChoicesWidget(QtGui.QDockWidget):
+class UnitBrowserWidget(QtGui.QDockWidget):
    def __init__(self, choices, parent=None):
-      super(UnitChoicesWidget, self).__init__("Unit browser", parent)
-      
-      self._choices = choices
+      super(UnitBrowserWidget, self).__init__("Unit browser", parent)
       self.listWdg = QtGui.QTreeWidget(self)
       self.listWdg.setColumnCount(1)
-      self.listWdg.setHeaderLabel(choices.Name())
       self.setWidget(self.listWdg)
+      self.Update(choices)
       
-      for ut in ALL_UNITTYPES:
-         units = choices.ListUnitsForType(ut)
-         if len(units)>0:
-            tli = QtGui.QTreeWidgetItem(self.listWdg, [ut.PluralName()])
-            self.listWdg.addTopLevelItem(tli)
-            for u in units:
-               tli.addChild(QtGui.QTreeWidgetItem(tli, [u.Name()]))
-               
-      self.listWdg.expandAll()
+   def closeEvent(self, e):
+      # TODO: Update options and menu action
+      return super(UnitBrowserWidget, self).closeEvent(e)
+   
+   def Update(self, choices):
+      self._choices = choices
+      self.listWdg.clear()
+      if choices is None:
+         self.listWdg.setHeaderLabel("No detachment chosen")
+      else:
+         self.listWdg.setHeaderLabel(choices.Name())
+         for ut in ALL_UNITTYPES:
+            units = choices.ListUnitsForType(ut)
+            if len(units)>0:
+               tli = QtGui.QTreeWidgetItem(self.listWdg, [ut.PluralName()])
+               self.listWdg.addTopLevelItem(tli)
+               for u in units:
+                  tli.addChild(QtGui.QTreeWidgetItem(tli, [u.Name()]))
+         self.listWdg.expandAll()

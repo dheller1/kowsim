@@ -20,6 +20,7 @@ from kowsim.armybuilder.command import SaveArmyListCmd
 #===============================================================================
 class ArmyListView(QtGui.QWidget):
    siRecentFilesChanged = QtCore.Signal()
+   siCurrentDetachmentChanged = QtCore.Signal()
    
    def __init__(self, model, parent=None):
       QtGui.QWidget.__init__(self, parent)
@@ -120,6 +121,7 @@ class ArmyListView(QtGui.QWidget):
          cmd.Execute()
       else:
          self._lastIndex = tw.currentIndex()
+         self.siCurrentDetachmentChanged.emit()
    
    def SetLastFilename(self, name): self._lastFilename = name
    

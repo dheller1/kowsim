@@ -13,7 +13,7 @@ from command import SaveArmyListCmd, LoadArmyListCmd
 from dialogs import NewArmyListDialog
 from kowsim.armybuilder.command import PreviewArmyListCmd
 from kowsim.armybuilder.views import ArmyListOutputView
-from kowsim.armybuilder.widgets import UnitChoicesWidget
+from kowsim.armybuilder.widgets import UnitBrowserWidget
 
 
 #===============================================================================
@@ -40,6 +40,10 @@ class MainWindow(QtGui.QMainWindow):
       #=========================================================================
       # Init child widgets and menus
       #=========================================================================
+      self.unitBrowser = UnitBrowserWidget(None)
+      self.addDockWidget(Qt.LeftDockWidgetArea, self.unitBrowser)
+      self.unitBrowser.hide()
+      
       self.mdiArea = MdiArea()
       self.setCentralWidget(self.mdiArea)
       self.unitChoiceWidget = None
@@ -48,7 +52,6 @@ class MainWindow(QtGui.QMainWindow):
       #self.statusBar().showMessage("Ready.")
       self.setMenuBar(MainMenu())
       
-      
       self.toolBar = QtGui.QToolBar(self)
       self.toolBar.addAction(QtGui.QIcon(os.path.join("..","data","icons","new.png")), "New army list", self.NewArmyList)
       self.openAction = self.toolBar.addAction(QtGui.QIcon(os.path.join("..","data","icons","open.png")), "Open", self.OpenArmyList)
@@ -56,6 +59,7 @@ class MainWindow(QtGui.QMainWindow):
       self.saveAction.setEnabled(False)
       
       self.addToolBar(self.toolBar)
+      
       
       self._InitConnections()
       
@@ -79,6 +83,20 @@ class MainWindow(QtGui.QMainWindow):
          e.ignore()
       else:
          super(MainWindow, self).closeEvent(e)
+         
+   def CurrentDetachmentChanged(self):
+      sub = self.mdiArea.currentSubWindow()
+      if sub:
+         if type(sub.widget()) != ArmyListView:
+            return # just ignore when non-armylist view windows are select (such as previews)
+         detView = sub.widget().detachmentsTw.currentWidget()
+         if detView:
+            choices = detView._model.Choices()
+            self.unitBrowser.Update(choices)
+         else:
+            self.unitBrowser.Update(None)
+      else:
+         self.unitBrowser.Update(None)
       
    def CurrentWindowChanged(self, wnd):
       if wnd: self.saveAction.setEnabled(True)
@@ -99,15 +117,6 @@ class MainWindow(QtGui.QMainWindow):
       armylist = sub.widget()._model
       cmd = PreviewArmyListCmd(self.mdiArea)
       cmd.Execute(armylist)
-   
-   def ReplaceUnitBrowser(self, choices):
-      if self.unitChoiceWidget:
-         loc = self.dockWidgetArea(self.unitChoiceWidget)
-         self.removeDockWidget(self.unitChoiceWidget)
-      else:
-         loc = Qt.LeftDockWidgetArea
-      self.unitChoiceWidget = UnitChoicesWidget(choices)
-      self.addDockWidget(loc, QtGui.qApp.MainWindow.unitChoiceWidget)
    
    def SaveArmyList(self, saveAs=False):
       l = len(self.mdiArea.subWindowList())
@@ -154,6 +163,23 @@ class MainMenu(QtGui.QMenuBar):
       self.armyMenu = self.addMenu("&Army list")
       self.previewAct = self.armyMenu.addAction("&Preview")
       
+      # view menu
+      self.viewMenu = self.addMenu("&View")
+      self.viewUnitBrowserAct = self.viewMenu.addAction("&Unit browser")
+      self.viewUnitBrowserAct.setCheckable(True)
+      
+      # init from settings
+      settings = QtCore.QSettings("NoCompany", "KowArmyBuilder")
+      showUnitBrowser = bool(settings.value("View/UnitBrowser"))
+      if showUnitBrowser:
+         self.viewUnitBrowserAct.setChecked(True)
+         QtGui.qApp.MainWindow.unitBrowser.show()
+      
+      self._initConnections()
+   
+   def _initConnections(self):
+      self.viewUnitBrowserAct.triggered[bool].connect(self.ViewUnitBrowserTriggered)
+   
    def OpenRecent(self):
       sender = self.sender()
       filename = sender.filename
@@ -180,6 +206,12 @@ class MainMenu(QtGui.QMenuBar):
          act.triggered.connect(self.OpenRecent)
          self.fileMenu.insertAction(self.recentSep, act)
          self.recentActs.append(act)
+         
+   def ViewUnitBrowserTriggered(self, checked):
+      settings = QtCore.QSettings("NoCompany", "KowArmyBuilder")
+      settings.setValue("View/UnitBrowser", int(checked))
+      if checked: QtGui.qApp.MainWindow.unitBrowser.show()
+      else: QtGui.qApp.MainWindow.unitBrowser.hide()
       
       
 #===============================================================================
@@ -192,6 +224,7 @@ class MdiArea(QtGui.QMdiArea):
       self.setTabsClosable(True)
       self.setTabsMovable(True)
       #self.AddArmySubWindow()
+      self.subWindowActivated.connect(QtGui.qApp.MainWindow.CurrentDetachmentChanged)
       
    def AddArmySubWindow(self, armyList=None):
       if armyList is None:
@@ -212,11 +245,10 @@ class MdiArea(QtGui.QMdiArea):
       
       # connect
       sub.siRecentFilesChanged.connect(QtGui.qApp.MainMenu.UpdateRecent)
+      sub.siCurrentDetachmentChanged.connect(QtGui.qApp.MainWindow.CurrentDetachmentChanged)
       
-      # show unit choices
-      QtGui.qApp.MainWindow.ReplaceUnitBrowser(armyList.ListDetachments()[0].Choices())
+      QtGui.qApp.MainWindow.CurrentDetachmentChanged()
       return sub
-   
    
    def AddPreviewSubWindow(self, armyList):
       #sub = ArmyMainWidget(name)
