@@ -71,6 +71,7 @@ class MainWindow(QtGui.QMainWindow):
       self.menuBar().exitAct.triggered.connect(self.close)
       self.menuBar().previewAct.triggered.connect(self.PreviewArmyList)
       self.mdiArea.subWindowActivated.connect(self.CurrentWindowChanged)
+      self.unitBrowser.siWasClosed.connect(self.UnitBrowserClosed)
       
    def closeEvent(self, e):
       abortClose = False
@@ -131,6 +132,10 @@ class MainWindow(QtGui.QMainWindow):
       
    def SaveArmyListAs(self):
       self.SaveArmyList(saveAs=True)
+      
+   def UnitBrowserClosed(self):
+      self.menuBar().viewUnitBrowserAct.setChecked(False)
+      self.menuBar().ViewUnitBrowser(False)
    
    
 #===============================================================================
@@ -178,7 +183,7 @@ class MainMenu(QtGui.QMenuBar):
       self._initConnections()
    
    def _initConnections(self):
-      self.viewUnitBrowserAct.triggered[bool].connect(self.ViewUnitBrowserTriggered)
+      self.viewUnitBrowserAct.triggered[bool].connect(self.ViewUnitBrowser)
    
    def OpenRecent(self):
       sender = self.sender()
@@ -207,7 +212,7 @@ class MainMenu(QtGui.QMenuBar):
          self.fileMenu.insertAction(self.recentSep, act)
          self.recentActs.append(act)
          
-   def ViewUnitBrowserTriggered(self, checked):
+   def ViewUnitBrowser(self, checked):
       settings = QtCore.QSettings("NoCompany", "KowArmyBuilder")
       settings.setValue("View/UnitBrowser", int(checked))
       if checked: QtGui.qApp.MainWindow.unitBrowser.show()

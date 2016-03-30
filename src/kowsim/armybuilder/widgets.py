@@ -236,6 +236,8 @@ class ValidationWidget(QtGui.QWidget):
 # UnitBrowserWidget
 #===============================================================================
 class UnitBrowserWidget(QtGui.QDockWidget):
+   siWasClosed = QtCore.Signal()
+   
    def __init__(self, choices, parent=None):
       super(UnitBrowserWidget, self).__init__("Unit browser", parent)
       self.listWdg = QtGui.QTreeWidget(self)
@@ -244,7 +246,7 @@ class UnitBrowserWidget(QtGui.QDockWidget):
       self.Update(choices)
       
    def closeEvent(self, e):
-      # TODO: Update options and menu action
+      self.siWasClosed.emit()
       return super(UnitBrowserWidget, self).closeEvent(e)
    
    def Update(self, choices):
