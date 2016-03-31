@@ -165,12 +165,10 @@ class MainMenu(QtGui.QMenuBar):
       self.UpdateRecent()
       self.exitAct = self.fileMenu.addAction("&Exit")
       
-      # army list menu
-      self.armyMenu = self.addMenu("&Army list")
-      self.previewAct = self.armyMenu.addAction("&Preview")
-      
       # view menu
       self.viewMenu = self.addMenu("&View")
+      self.previewAct = self.viewMenu.addAction("&Preview")
+      self.viewMenu.addSeparator()
       self.viewUnitBrowserAct = self.viewMenu.addAction("&Unit browser")
       self.viewUnitBrowserAct.setCheckable(True)
       
