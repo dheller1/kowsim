@@ -40,7 +40,7 @@ class MainWindow(QtGui.QMainWindow):
       #=========================================================================
       # Init child widgets and menus
       #=========================================================================
-      self.unitBrowser = UnitBrowserWidget(None)
+      self.unitBrowser = UnitBrowserWidget()
       self.addDockWidget(Qt.LeftDockWidgetArea, self.unitBrowser)
       self.unitBrowser.hide()
       
@@ -90,14 +90,15 @@ class MainWindow(QtGui.QMainWindow):
       if sub:
          if type(sub.widget()) != ArmyListView:
             return # just ignore when non-armylist view windows are select (such as previews)
-         detView = sub.widget().detachmentsTw.currentWidget()
+         alView = sub.widget()
+         alCtrl = alView._ctrl
+         detView = alView.detachmentsTw.currentWidget()
          if detView:
-            choices = detView._model.Choices()
-            self.unitBrowser.Update(choices)
+            self.unitBrowser.Update(detView._model, alCtrl)
          else:
-            self.unitBrowser.Update(None)
+            self.unitBrowser.Update(None, None)
       else:
-         self.unitBrowser.Update(None)
+         self.unitBrowser.Update(None, None)
       
    def CurrentWindowChanged(self, wnd):
       if wnd: self.saveAction.setEnabled(True)

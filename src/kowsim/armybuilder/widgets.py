@@ -236,25 +236,40 @@ class ValidationWidget(QtGui.QWidget):
 # UnitBrowserWidget
 #===============================================================================
 class UnitBrowserWidget(QtGui.QDockWidget):
-   siWasClosed = QtCore.Signal()
+   siWasClosed = QtCore.Signal() # emitted to sync with 'View unit browser' menu option/setting
    
-   def __init__(self, choices, parent=None):
+   def __init__(self, parent=None):
       super(UnitBrowserWidget, self).__init__("Unit browser", parent)
+      self._ctrlContext = None # points to the army list control to which the unit browser was linked, such that if a unit shall be added it will be added to the right army list
+      self._detContext = None  # points to the detachment model which is linked with the unit browser so that a unit can be added to the right detachment
+      
       self.listWdg = QtGui.QTreeWidget(self)
       self.listWdg.setColumnCount(1)
+      self.listWdg.setHeaderLabel("No detachment active")
       self.setWidget(self.listWdg)
-      self.Update(choices)
+      self.listWdg.itemDoubleClicked[QtGui.QTreeWidgetItem, int].connect(self.AddUnitTriggered)
       
    def closeEvent(self, e):
       self.siWasClosed.emit()
       return super(UnitBrowserWidget, self).closeEvent(e)
    
-   def Update(self, choices):
-      self._choices = choices
+   def AddUnitTriggered(self, item, col):
+      if not item: return
+      unitname = item.text(col)
+      self._ctrlContext.AddUnitToDetachment(unitname, self._detContext)
+   
+   def Update(self, detContext=None, ctrlContext=None):
+      if detContext is self._detContext:
+         return # do nothing to not waste performance
       self.listWdg.clear()
-      if choices is None:
-         self.listWdg.setHeaderLabel("No detachment chosen")
+      if detContext is None:
+         self.listWdg.setHeaderLabel("No detachment active")
+         self._ctrlContext = None
+         self._detContext = None
       else:
+         self._ctrlContext = ctrlContext
+         self._detContext = detContext
+         choices = detContext.Choices()
          self.listWdg.setHeaderLabel(choices.Name())
          for ut in ALL_UNITTYPES:
             units = choices.ListUnitsForType(ut)

@@ -5,12 +5,10 @@
 import os
 
 from PySide import QtGui, QtCore
-from widgets import ValidationWidget
-from command import AddDetachmentCmd, DeleteUnitCmd, RenameDetachmentCmd, AddDefaultUnitCmd, DuplicateUnitCmd
-from kowsim.armybuilder.widgets import UnitTable
-from kowsim.armybuilder.command import SaveArmyListCmd
+from widgets import UnitTable, ValidationWidget
+from command import AddDetachmentCmd, DeleteUnitCmd, RenameDetachmentCmd, AddDefaultUnitCmd, DuplicateUnitCmd, SaveArmyListCmd
+from control import ArmyListCtrl
 #from PySide.QtCore import Qt
-
 
 #===============================================================================
 # ArmyListView(QWidget)
@@ -24,7 +22,8 @@ class ArmyListView(QtGui.QWidget):
    
    def __init__(self, model, parent=None):
       QtGui.QWidget.__init__(self, parent)
-      self._model = model
+      self._model = model # ArmyList
+      self._ctrl = ArmyListCtrl(model, self)
       self._wasModified = False
       self._lastIndex = 0
       self._lastFilename = None
@@ -132,6 +131,10 @@ class ArmyListView(QtGui.QWidget):
       if self._lastFilename: title += " (%s)" % os.path.basename(self._lastFilename)
       if modified: title += "*"
       self.setWindowTitle(title)
+
+   def UpdateDetachment(self, index):
+      # detachment index is always the tab index in self.detachmentsTw
+      self.detachmentsTw.widget(index).Update()
       
    def UpdatePoints(self):
       pts = self._model.PointsTotal()
@@ -151,11 +154,11 @@ class DetachmentView(QtGui.QWidget):
    
    def __init__(self, model, parent=None):
       QtGui.QWidget.__init__(self, parent)
-      self._model = model
+      self._model = model # Detachment
       self._initChildren()
       self._initLayout()
       self._initConnections()
-      self._initContent()
+      self.Update()
       
    def _initChildren(self):
       self.customNameLe = QtGui.QLineEdit(self._model.CustomName())
@@ -238,11 +241,6 @@ class DetachmentView(QtGui.QWidget):
       self.unitTable.siPointsChanged.connect(self.UpdatePoints)
       self.unitTable.siModified.connect(self.SetModified)
       
-   def _initContent(self):
-      for i in range(self._model.NumUnits()):
-         self.UpdateUnit(i)
-      self.UpdatePoints()
-   
    def AddUnit(self):
       cmd = AddDefaultUnitCmd(self._model, self)
       cmd.Execute()
@@ -271,6 +269,11 @@ class DetachmentView(QtGui.QWidget):
       else:
          self.duplicateUnitPb.setEnabled(False)
          self.deleteUnitPb.setEnabled(False)
+         
+   def Update(self):
+      for i in range(self._model.NumUnits()):
+         self.UpdateUnit(i)
+      self.UpdatePoints()
       
    def UpdatePoints(self):
       pts = self._model.PointsTotal()

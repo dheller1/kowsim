@@ -64,6 +64,21 @@ class AddDefaultUnitCmd(ModelViewCommand, ReversibleCommandMixin):
       self._view.UpdateUnit(index)
       self._view.UpdatePoints()
       self._view.SetModified(True)
+
+
+#===============================================================================
+# AddSpecificUnitCmd
+#===============================================================================
+class AddSpecificUnitCmd(Command, ReversibleCommandMixin):
+   def __init__(self, armyCtrl):
+      Command.__init__(self, name="AddSpecificUnitCmd")
+      ReversibleCommandMixin.__init__(self)
+      self._armyCtrl = armyCtrl
+   
+   def Execute(self, unitname, detachment):
+      al = self._armyCtrl._model
+      profile = al.Choices().GroupByName(unitname).Default()
+      self._armyCtrl.AddUnitToDetachment(UnitInstance(profile, self._model, None, []), detachment)
       
       
 #===============================================================================
