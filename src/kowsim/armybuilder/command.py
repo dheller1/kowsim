@@ -255,7 +255,7 @@ class LoadArmyListCmd(Command):
       
       # check if the file is already open
       for wnd in self._mdiArea.subWindowList():
-         if wnd.widget()._lastFilename == filename:
+         if hasattr(wnd.widget(), '_lastFilename') and wnd.widget()._lastFilename == filename: # be sure not to check preview or other windows, this is ugly. TODO: Better solution
             self._mdiArea.setActiveSubWindow(wnd)
             return
       
