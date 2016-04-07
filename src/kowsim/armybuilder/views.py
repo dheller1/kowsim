@@ -6,7 +6,7 @@ import os
 
 from PySide import QtGui, QtCore
 from widgets import UnitTable, ValidationWidget
-from command import AddDetachmentCmd, DeleteUnitCmd, RenameDetachmentCmd, AddDefaultUnitCmd, DuplicateUnitCmd, SaveArmyListCmd
+from command import AddDetachmentCmd, DeleteUnitCmd, RenameDetachmentCmd, AddDefaultUnitCmd, DuplicateUnitCmd, SaveArmyListCmd, SetPrimaryDetachmentCmd, RenameArmyListCmd
 from control import ArmyListCtrl
 #from PySide.QtCore import Qt
 
@@ -25,14 +25,15 @@ class ArmyListView(QtGui.QWidget):
       self._model = model # ArmyList
       self._ctrl = ArmyListCtrl(model, self)
       self._wasModified = False
+      self._attachedPreview = None
       self._lastIndex = 0
       self._lastFilename = None
       
       self._initChildren()
       self._initLayout()
       self._initConnections()
-      self.UpdatePoints()
       self.detachmentsTw.setCurrentIndex(0)
+      self._ctrl.Revalidate()
       
    def _initChildren(self):
       self.customNameLe = QtGui.QLineEdit(self._model.CustomName())
@@ -43,7 +44,7 @@ class ArmyListView(QtGui.QWidget):
       self.pointsLimitSb.setValue(self._model.PointsLimit())
       self.pointsLimitSb.setSingleStep(50)
       
-      self.validationWdg = ValidationWidget(parent=self)
+      self.validationWdg = ValidationWidget(self._model, parent=self)
       
       self.detachmentsTw = QtGui.QTabWidget(parent=self)
       self.detachmentsTw.addTab(QtGui.QWidget(), "+")
@@ -82,6 +83,7 @@ class ArmyListView(QtGui.QWidget):
    
    def _initConnections(self):
       self.detachmentsTw.currentChanged.connect(self.DetachmentTabChanged)
+      self.customNameLe.editingFinished.connect(self.ArmyNameChanged)
       
    def closeEvent(self, e):
       if self._wasModified:
@@ -103,8 +105,17 @@ class ArmyListView(QtGui.QWidget):
       self.detachmentsTw.insertTab(self.detachmentsTw.count()-1, dv, detachment.CustomName())
       self.detachmentsTw.setCurrentIndex(self.detachmentsTw.count()-2) # switch to new tab
       dv.siNameChanged.connect(self.DetachmentNameChanged)
-      dv.siPointsChanged.connect(self.UpdatePoints)
+      dv.siPointsChanged.connect(self._ctrl.Revalidate)
       dv.siModified.connect(self.SetModified)
+      dv.siPrimaryToggled.connect(self.TogglePrimaryDetachment)
+      
+   def ArmyNameChanged(self):
+      newName = self.customNameLe.text()
+      if len(newName.strip())==0: # don't accept, revert
+         self.customNameLe.setText(self._model.CustomName())
+      elif newName != self._model.CustomName():
+         cmd = RenameArmyListCmd(self._model, self._ctrl)
+         cmd.Execute(newName)
       
    def DetachmentNameChanged(self, name):
       sender = self.sender()
@@ -121,24 +132,35 @@ class ArmyListView(QtGui.QWidget):
       else:
          self._lastIndex = tw.currentIndex()
          self.siCurrentDetachmentChanged.emit()
-   
-   def SetLastFilename(self, name): self._lastFilename = name
+         
+   def SetLastFilename(self, name):
+      self._lastFilename = name
+      self.UpdateTitle()
    
    def SetModified(self, modified):
       self._wasModified = modified
-      
-      title = self._model.CustomName()
-      if self._lastFilename: title += " (%s)" % os.path.basename(self._lastFilename)
-      if modified: title += "*"
-      self.setWindowTitle(title)
+      self.UpdateTitle()
 
+   def TogglePrimaryDetachment(self, makePrimary):
+      sender = self.sender()
+      det = sender._model
+      cmd = SetPrimaryDetachmentCmd(det, self)
+      cmd.Execute(makePrimary)
+      
+   def Update(self):
+      self.UpdateTitle()
+      for i in range(self._model.NumDetachments()):
+         self.UpdateDetachment(i)
+      
    def UpdateDetachment(self, index):
       # detachment index is always the tab index in self.detachmentsTw
       self.detachmentsTw.widget(index).Update()
       
-   def UpdatePoints(self):
-      pts = self._model.PointsTotal()
-      self.validationWdg.UpdateTotalPoints(pts, self._model.PointsLimit())
+   def UpdateTitle(self):
+      title = self._model.CustomName()
+      if self._lastFilename: title += " (%s)" % os.path.basename(self._lastFilename)
+      if self._wasModified: title += "*"
+      self.setWindowTitle(title)
          
 
 #===============================================================================
@@ -151,6 +173,7 @@ class DetachmentView(QtGui.QWidget):
    siModified = QtCore.Signal(bool)
    siNameChanged = QtCore.Signal(str)
    siPointsChanged = QtCore.Signal()
+   siPrimaryToggled = QtCore.Signal(bool)
    
    def __init__(self, model, parent=None):
       QtGui.QWidget.__init__(self, parent)
@@ -165,10 +188,8 @@ class DetachmentView(QtGui.QWidget):
       
       self.isPrimaryDetachmentCb = QtGui.QCheckBox()
       if self._model.IsPrimary(): self.isPrimaryDetachmentCb.setChecked(True)
-      self.isPrimaryDetachmentCb.setEnabled(False)
       
       self.unitTable = UnitTable(self._model)
-      
       self.pointsLbl = QtGui.QLabel("<b>0</b>")
             
       self.addUnitPb = QtGui.QPushButton(QtGui.QIcon(os.path.join("..", "data","icons","plus.png")), "&Add")
@@ -176,8 +197,6 @@ class DetachmentView(QtGui.QWidget):
       self.duplicateUnitPb.setEnabled(False)
       self.deleteUnitPb = QtGui.QPushButton(QtGui.QIcon(os.path.join("..", "data","icons","delete.png")), "&Delete")
       self.deleteUnitPb.setEnabled(False)
-      #self.optionsPb = QtGui.QPushButton(QtGui.QIcon(os.path.join("..", "data","icons","options.png")), "&Options")
-      #self.optionsPb.setEnabled(False)
       
       #=========================================================================
       # group boxes
@@ -186,6 +205,7 @@ class DetachmentView(QtGui.QWidget):
       self.detailsGb = QtGui.QGroupBox("Details")
       self.detailsGb.setMinimumWidth(400)
       self.unitGb = QtGui.QGroupBox("Units")
+      
       
    def _initLayout(self):
       #self.setWindowTitle(("*" + name))
@@ -230,6 +250,11 @@ class DetachmentView(QtGui.QWidget):
       mainlay.addWidget(self.generalGb, 0, 0)
       mainlay.addWidget(self.detailsGb, 0, 1)
       mainlay.addWidget(self.unitGb, 1, 0, 1, 2)
+      self.generalGb.setFixedHeight(150)
+      self.detailsGb.setFixedHeight(150)
+      mainlay.setRowStretch(0, 0)
+      mainlay.setRowStretch(1, 1)
+      mainlay.setRowMinimumHeight(1, 400)
       self.setLayout(mainlay)
    
    def _initConnections(self):
@@ -240,6 +265,7 @@ class DetachmentView(QtGui.QWidget):
       self.unitTable.itemSelectionChanged.connect(self.UnitSelectionChanged)
       self.unitTable.siPointsChanged.connect(self.UpdatePoints)
       self.unitTable.siModified.connect(self.SetModified)
+      self.isPrimaryDetachmentCb.stateChanged.connect(self.TogglePrimary)
       
    def AddUnit(self):
       cmd = AddDefaultUnitCmd(self._model, self)
@@ -260,6 +286,9 @@ class DetachmentView(QtGui.QWidget):
    def SetModified(self, modified=True):
       self.siModified.emit(modified)
       
+   def TogglePrimary(self):
+      self.siPrimaryToggled.emit(self.isPrimaryDetachmentCb.isChecked())
+            
    def UnitSelectionChanged(self):
       rows = self.unitTable.SelectedRows()
       
@@ -271,6 +300,7 @@ class DetachmentView(QtGui.QWidget):
          self.deleteUnitPb.setEnabled(False)
          
    def Update(self):
+      self.isPrimaryDetachmentCb.setChecked(self._model.IsPrimary())
       for i in range(self._model.NumUnits()):
          self.UpdateUnit(i)
       self.UpdatePoints()

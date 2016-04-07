@@ -53,6 +53,7 @@ class MainWindow(QtGui.QMainWindow):
       self.setMenuBar(MainMenu())
       
       self.toolBar = QtGui.QToolBar(self)
+      self.toolBar.setObjectName("ToolBar")
       self.toolBar.addAction(QtGui.QIcon(os.path.join("..","data","icons","new.png")), "New army list", self.NewArmyList)
       self.openAction = self.toolBar.addAction(QtGui.QIcon(os.path.join("..","data","icons","open.png")), "Open", self.OpenArmyList)
       self.saveAction = self.toolBar.addAction(QtGui.QIcon(os.path.join("..","data","icons","save.png")), "Save", self.SaveArmyList)
@@ -60,6 +61,16 @@ class MainWindow(QtGui.QMainWindow):
       
       self.addToolBar(self.toolBar)
       
+      #=========================================================================
+      # Try to restore state from settings
+      #=========================================================================
+      settings = QtCore.QSettings("NoCompany", "KowArmyBuilder")
+      geom = settings.value("Geometry")
+      if geom: self.restoreGeometry(geom)
+      
+      state = settings.value("WindowState")
+      if state: self.restoreState(state)
+         
       
       self._InitConnections()
       
@@ -74,6 +85,7 @@ class MainWindow(QtGui.QMainWindow):
       self.unitBrowser.siWasClosed.connect(self.UnitBrowserClosed)
       
    def closeEvent(self, e):
+      # give each subwindow the chance to close, they might want to save first
       abortClose = False
       while len(self.mdiArea.subWindowList())>0:
          view = self.mdiArea.subWindowList()[0]
@@ -83,6 +95,10 @@ class MainWindow(QtGui.QMainWindow):
       if abortClose:
          e.ignore()
       else:
+         # save mainwindow settings
+         settings = QtCore.QSettings("NoCompany", "KowArmyBuilder")
+         settings.setValue("Geometry", self.saveGeometry())
+         settings.setValue("WindowState", self.saveState())
          super(MainWindow, self).closeEvent(e)
          
    def CurrentDetachmentChanged(self):
@@ -116,9 +132,9 @@ class MainWindow(QtGui.QMainWindow):
       if not sub: return
       if type(sub.widget()) != ArmyListView: return
       
-      armylist = sub.widget()._model
+      alview = sub.widget()
       cmd = PreviewArmyListCmd(self.mdiArea)
-      cmd.Execute(armylist)
+      cmd.Execute(alview)
    
    def SaveArmyList(self, saveAs=False):
       l = len(self.mdiArea.subWindowList())

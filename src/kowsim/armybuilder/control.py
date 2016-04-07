@@ -32,6 +32,19 @@ class ArmyListCtrl(QtCore.QObject):
       self.SetModified(True)
       self.siDetachmentModified.emit(index)
       
+   def ArmyNameChanged(self):
+      self._view.UpdateTitle()
+      
+   def Revalidate(self):
+      self._view.validationWdg.Update()
+      
    def SetModified(self, modified=True):
       self._modified = modified
       
+   def SetPrimaryDetachment(self, detachment, makePrimary):
+      try: self._model.ListDetachments().index(detachment)
+      except ValueError:
+         raise ValueError("Can't modify a detachment not belonging to my armylist!")
+      
+      detachment._isPrimary = makePrimary
+      self.Revalidate()

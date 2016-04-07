@@ -74,6 +74,7 @@ class KowForceChoices(object):
       self._groupsByName = {}
       self._groupsByType = {}
    
+   def Alignment(self): return self._alignment
    def AlignmentName(self): return self._alignment.Name()
    def GroupUnits(self):
       """ Group units by their type (e.g. Sea Guard) which might have multiple size options

@@ -22,6 +22,10 @@ class UnitEffect(object):
    @staticmethod
    def ParseFromString(s):
       s = s.strip()
+      
+      #=========================================================================
+      # Set
+      #=========================================================================
       if s.startswith("Set"):
          # syntax: Set( stat, value )
          if not ("(" in s and ")" in s and "," in s):
@@ -45,6 +49,9 @@ class UnitEffect(object):
          effect = ModifyStatEffect(stat=setWhat, modifier=setTo, modifierType=MOD_SET)
          return effect
       
+      #=========================================================================
+      # Add
+      #=========================================================================
       elif s.startswith("Add"):
          # syntax: Add( stat, value )
          if not ("(" in s and ")" in s and "," in s):
@@ -68,6 +75,9 @@ class UnitEffect(object):
          effect = ModifyStatEffect(stat=addToWhat, modifier=summand, modifierType=MOD_ADD)
          return effect
       
+      #=========================================================================
+      # Grant
+      #=========================================================================
       elif s.startswith("Grant"):
          # syntax: Grant(name_of_special_rule)
          if not ("(" in s and ")" in s):
@@ -81,6 +91,23 @@ class UnitEffect(object):
          effect = GrantSpecialRuleEffect(argsStr) # TODO: Implement proper special rule objects instead of just strings
          return effect
       
+      #=========================================================================
+      # Remove
+      #=========================================================================
+      elif s.startswith("Remove"):
+         # syntax: Remove(name_of_special_rule)
+         if not ("(" in s and ")" in s):
+            print "Invalid effect %s! Skipping." % (s)
+            return None
+         
+         argsStart = s.index("(")+1
+         argsEnd = s.rindex(")")
+         argsStr = s[argsStart:argsEnd].strip()
+         
+         effect = RemoveSpecialRuleEffect(argsStr)
+         return effect
+      
+      
       else:
          print "Invalid effect %s! Skipping." % s
          return None
@@ -92,7 +119,17 @@ class UnitEffect(object):
 class GrantSpecialRuleEffect(UnitEffect):
    def __init__(self, specialRule=None):
       super(GrantSpecialRuleEffect, self).__init__()
+      self._specialRule = specialRule
       
+   def SpecialRule(self): return self._specialRule
+
+
+#===============================================================================
+# UnitEffect which removes a normally active special rule.
+#===============================================================================
+class RemoveSpecialRuleEffect(UnitEffect):
+   def __init__(self, specialRule=None):
+      super(RemoveSpecialRuleEffect, self).__init__()
       self._specialRule = specialRule
       
    def SpecialRule(self): return self._specialRule

@@ -31,6 +31,7 @@ class AddDetachmentCmd(ModelViewCommand, ReversibleCommandMixin):
          self._model.AddDetachment(detachment)
          self._view.AddDetachmentView(detachment)
          self._view.SetModified(True)
+         self._view._ctrl.Revalidate()
          
          
 #===============================================================================
@@ -49,6 +50,21 @@ class RenameDetachmentCmd(ModelViewCommand, ReversibleCommandMixin):
          self._view.siNameChanged.emit(name)
          self._view.SetModified(True)
 
+         
+#===============================================================================
+# RenameArmyListCmd
+#===============================================================================
+class RenameArmyListCmd(Command, ReversibleCommandMixin):
+   def __init__(self, armylist, ctrl):
+      Command.__init__(self, name="RenameArmyListCmd")
+      ReversibleCommandMixin.__init__(self)
+      self._model = armylist
+      self._ctrl = ctrl
+      
+   def Execute(self, name):
+      self._model.SetCustomName(name)
+      self._ctrl.ArmyNameChanged()
+         
          
 #===============================================================================
 # AddDefaultUnitCmd
@@ -135,6 +151,38 @@ class ChangeUnitItemCmd(ModelViewCommand, ReversibleCommandMixin):
       
       
 #===============================================================================
+# SetPrimaryDetachmentCmd
+#===============================================================================
+class SetPrimaryDetachmentCmd(ModelViewCommand, ReversibleCommandMixin):
+   def __init__(self, detachment, alview):
+      ModelViewCommand.__init__(self, model=detachment, view=alview, name="SetPrimaryDetachmentCmd")
+      ReversibleCommandMixin.__init__(self)
+   
+   def Execute(self, makePrimary):
+      dets = self._view._model.ListDetachments()
+      ctrl = self._view._ctrl
+      numPrimary = 0
+      for det in dets:
+         if det.IsPrimary(): numPrimary += 1
+      if makePrimary and numPrimary > 0:
+         res = QtGui.QMessageBox.warning(self._view, "Set primary detachment", "You already have a primary detachment.\nDo you want to make %s primary instead?" % self._model.CustomName(),
+                                         QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)
+         if res != QtGui.QMessageBox.Ok:
+            return
+         for det in self._view._model.ListDetachments():
+            ctrl.SetPrimaryDetachment(det, False)
+
+      elif not makePrimary and numPrimary == 1:
+         res = QtGui.QMessageBox.warning(self._view, "Set primary detachment", "You are about to remove the primary detachment, invalidating your army list.\nDo you want to proceed?",
+                                         QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)
+         if res != QtGui.QMessageBox.Ok:
+            return
+
+      ctrl.SetPrimaryDetachment(self._model, makePrimary)
+      self._view.Update()
+      
+      
+#===============================================================================
 # SetUnitOptionsCmd
 #===============================================================================
 class SetUnitOptionsCmd(ModelViewCommand, ReversibleCommandMixin):
@@ -156,8 +204,8 @@ class SetUnitOptionsCmd(ModelViewCommand, ReversibleCommandMixin):
 # DeleteUnitCmd
 #===============================================================================
 class DeleteUnitCmd(ModelViewCommand, ReversibleCommandMixin):
-   def __init__(self, detachment, unittable):
-      ModelViewCommand.__init__(self, model=detachment, view=unittable, name="DeleteUnitCmd")
+   def __init__(self, detachment, detview):
+      ModelViewCommand.__init__(self, model=detachment, view=detview, name="DeleteUnitCmd")
       ReversibleCommandMixin.__init__(self)
    
    def Execute(self):
@@ -173,10 +221,8 @@ class DeleteUnitCmd(ModelViewCommand, ReversibleCommandMixin):
       
       # sort in descending order to not interfere with higher row IDs when popping from list
       rowsToDelete.sort(reverse=True)
-      #print "Deleting rows: ", rowsToDelete
-
+      
       for row in rowsToDelete:
-         print "Deleting unit %d (%s)" % (row, self._model.Unit(row))
          self._model.RemoveUnit(row)
          self._view.unitTable.removeRow(row)
       
@@ -249,13 +295,13 @@ class LoadArmyListCmd(Command):
          settings = QSettings("NoCompany", "KowArmyBuilder")
          preferredFolder = settings.value("preferred_folder")
          if preferredFolder is None: preferredFolder = ".."
-         filename, filter = QtGui.QFileDialog.getOpenFileName(self._mdiArea, "Open army list", preferredFolder, "Army lists (*.lst);;All files (*.*)")
+         filename, fil = QtGui.QFileDialog.getOpenFileName(self._mdiArea, "Open army list", preferredFolder, "Army lists (*.lst);;All files (*.*)")
          if len(filename)==0: return
          else: settings.setValue("preferred_folder", os.path.dirname(filename))
       
       # check if the file is already open
       for wnd in self._mdiArea.subWindowList():
-         if hasattr(wnd.widget(), '_lastFilename') and wnd.widget()._lastFilename == filename: # be sure not to check preview or other windows, this is ugly. TODO: Better solution
+         if hasattr(wnd.widget(), '_lastFilename') and wnd.widget()._lastFilename == filename: # be sure not to check preview or other windows --- this is ugly. TODO: Better solution
             self._mdiArea.setActiveSubWindow(wnd)
             return
       
@@ -288,6 +334,15 @@ class PreviewArmyListCmd(Command):
       Command.__init__(self, name="PreviewArmyListCmd")
       self._mdiArea = mdiArea
       
-   def Execute(self, armylist):
-      sub = self._mdiArea.AddPreviewSubWindow(armylist)
-      
+   def Execute(self, alview):
+      oldPrv = alview._attachedPreview
+      if oldPrv: # try to find mdi subwindow for the old preview and switch to it
+         for wnd in self._mdiArea.subWindowList():
+            if wnd.widget() is oldPrv:
+               self._mdiArea.setActiveSubWindow(wnd)
+               return
+         # if we're still here, the preview is still linked but has been closed already.
+         # thus, just add a new one as if no old one was present.
+      al = alview._model
+      sub = self._mdiArea.AddPreviewSubWindow(al)
+      alview._attachedPreview = sub

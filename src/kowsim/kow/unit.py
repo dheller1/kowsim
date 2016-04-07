@@ -9,7 +9,7 @@ from ..util.core import Size
 from modifiers import MOD_ADD, MOD_SET
 from effect import UnitEffect, ModifyStatEffect
 import stats
-from kowsim.kow.effect import GrantSpecialRuleEffect
+from kowsim.kow.effect import GrantSpecialRuleEffect, RemoveSpecialRuleEffect
 
 #===============================================================================
 # KowUnitOption
@@ -255,11 +255,16 @@ class UnitInstance(object):
    def ListChosenOptions(self): return self._chosenOptions
    def ListSpecialRules(self):
       specRules = []
+      specRules.extend(self._profile._specialRules)
       for o in self._chosenOptions:
          for e in o._effects:
             if type(e) == GrantSpecialRuleEffect:
                specRules.append(e.SpecialRule())
-      specRules.extend(self._profile._specialRules)
+            elif type(e) == RemoveSpecialRuleEffect:
+               if e.SpecialRule() in specRules:
+                  specRules.remove(e.SpecialRule())
+               else:
+                  print "Warning: Unit %s has RemoveSpecialRuleEffect(%s), but it does not have that special rule!" % (self.Name(), e.SpecialRule())
       return specRules
    
    def Me(self): return self._StatWithModifiers(stats.ST_MELEE)

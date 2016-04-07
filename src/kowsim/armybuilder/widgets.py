@@ -2,13 +2,12 @@
 
 # kow/widgets.py
 #===============================================================================
-#import os
-
+import os
 from PySide import QtGui, QtCore
 from PySide.QtCore import Qt
-from command import ChangeUnitCmd, ChangeUnitSizeCmd, ChangeUnitItemCmd
-from kowsim.armybuilder.command import SetUnitOptionsCmd
+from command import ChangeUnitCmd, ChangeUnitSizeCmd, ChangeUnitItemCmd, SetUnitOptionsCmd
 from kowsim.kow.unittype import ALL_UNITTYPES
+from kowsim.kow.validation import ArmyListValidator, ValidationMessage, ALL_VALIDATIONRULES 
 import kowsim.kow.stats as st
 
 #===============================================================================
@@ -212,25 +211,52 @@ class UnitTable(QtGui.QTableWidget):
 # ValidationWidget
 #===============================================================================
 class ValidationWidget(QtGui.QWidget):
-   def __init__(self, parent=None):
+   def __init__(self, army, parent=None):
       super(ValidationWidget, self).__init__(parent)
       
+      self._army = army
+      self._validator = ArmyListValidator(army, ALL_VALIDATIONRULES)
       self.setMinimumWidth(300)
+      self.setFixedHeight(150)
       
       # child widgets
-      self.pointsTotalLbl = QtGui.QLabel("Total points: <b>0</b>/2000")
+      self._messageLw = QtGui.QListWidget()
+      #self._messageLw.setFixedHeight(130)
+      #self.pointsTotalLbl = QtGui.QLabel("Total points: <b>0</b>/2000")
       
       # layout
       lay = QtGui.QGridLayout()
-      lay.addWidget(self.pointsTotalLbl)
+      lay.addWidget(self._messageLw)
       self.setLayout(lay)
       
-   def UpdateTotalPoints(self, points, pointsLimit):
-      if points <= pointsLimit:
-         self.pointsTotalLbl.setText("Total points: <b>%d</b>/%d" % (points, pointsLimit))
+      self.Update()
+      
+   @staticmethod
+   def ListWidgetItemForMessage(message):
+      ICN_ERROR16 = QtGui.QIcon(os.path.join("..", "data", "icons", "no16.png"))
+      ICN_INFO16 = QtGui.QIcon(os.path.join("..", "data", "icons", "info16.png"))
+      icnForMsgType = {ValidationMessage.VM_INFO : ICN_INFO16, ValidationMessage.VM_CRITICAL : ICN_ERROR16, ValidationMessage.VM_WARNING : QtGui.QIcon() }
+      lwi = QtGui.QListWidgetItem(icnForMsgType[message._msgType], message._shortDesc)
+      lwi.setToolTip(message._longDesc)
+      return lwi
+      
+   def Update(self):
+      messages = self._validator.Check()
+      self._messageLw.clear()
+      valid = True
+      warnings = False
+      for msg in messages:
+         self._messageLw.addItem(ValidationWidget.ListWidgetItemForMessage(msg))
+         if msg._msgType == ValidationMessage.VM_CRITICAL: valid = False
+         if msg._msgType == ValidationMessage.VM_WARNING: warnings = True
+      
+      if not valid:
+         self._messageLw.addItem("Errors occured - army list is invalid.")
+      elif warnings:
+         self._messageLw.addItem("Army list is valid, but warnings occured.")
       else:
-         self.pointsTotalLbl.setText("Total points: <b><span style='color:#ff0000;'>%d</span></b>/%d" % (points, pointsLimit))
-         
+         self._messageLw.addItem("Army list is valid.")
+   
          
 #===============================================================================
 # UnitBrowserWidget
@@ -240,6 +266,7 @@ class UnitBrowserWidget(QtGui.QDockWidget):
    
    def __init__(self, parent=None):
       super(UnitBrowserWidget, self).__init__("Unit browser", parent)
+      self.setObjectName("UnitBrowser")
       self._ctrlContext = None # points to the army list control to which the unit browser was linked, such that if a unit shall be added it will be added to the right army list
       self._detContext = None  # points to the detachment model which is linked with the unit browser so that a unit can be added to the right detachment
       

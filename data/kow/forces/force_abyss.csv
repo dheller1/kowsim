@@ -1,0 +1,36 @@
+# name,alignment,,,,,,,,,,,
+Forces of the Abyss,Evil,,,,,,,,,,,
+# type,unit,size,Sp,Me,Ra,De,At,Ne,Special,Options,Points,Base
+Infantry,Abyssal Guard,Troop(10),5,3,0,5,10,11/13,"Fury, Regeneration(5+) ","Two-handed weapons|+0|Set(Defense,4)|Grant(CS(1))",110,20x20
+Infantry,Abyssal Guard,Regiment(20),5,3,0,5,12,15/17,"Fury, Regeneration(5+) ","Two-handed weapons|+0|Set(Defense,4)|Grant(CS(1))",160,20x20
+Infantry,Larvae*,Horde(40),5,6,0,4,25,-/22,"Ensnare, Fury, Shambling ",,130,20x20
+Infantry,Larvae*,Legion(60),5,6,0,4,30,-/28,"Ensnare, Fury, Shambling ",,190,20x20
+Infantry,Flamebearers,Troop(10),5,5,4,3,8,10/12,"Firebolts, Fury, Piercing(1), Regeneration(5+) ",,105,20x20
+Infantry,Flamebearers,Regiment(20),5,5,4,3,10,14/16,"Firebolts, Fury, Piercing(1), Regeneration(5+) ",,140,20x20
+Infantry,Lower Abbysals,Troop(10),5,4,0,4,10,10/12,"Fury, Regeneration(5+) ","Two-handed weapons|+0|Set(Defense,3)|Grant(CS(1))",85,20x20
+Infantry,Lower Abbysals,Regiment(20),5,4,0,4,12,14/16,"Fury, Regeneration(5+) ","Two-handed weapons|+0|Set(Defense,3)|Grant(CS(1))",120,20x20
+Infantry,Lower Abbysals,Horde(40),5,4,0,4,25,21/23,"Fury, Regeneration(5+) ","Two-handed weapons|+0|Set(Defense,3)|Grant(CS(1))",200,20x20
+Infantry,Gargoyles*,Troop(10),10,4,0,3,8,9/11,"Fly, Regeneration(3+), Vicious ","Ba'su'su's Flock|+20|Set(Defense,4)|Grant(CS(1))",80,25x25
+Infantry,Succubi,Troop(10),6,3,0,3,20,10/12,"Ensnare, Fury, Stealthy ",,135,20x20
+Infantry,Succubi,Regiment(20),6,3,0,3,25,14/16,"Ensnare, Fury, Stealthy ",,190,20x20
+Infantry,Fleshlings,Troop(10),5,5,0,4,10,10/12,Fury ,"Two-handed weapons|+0|Set(Defense,3)|Grant(CS(1))",65,20x20
+Infantry,Fleshlings,Regiment(20),5,5,0,4,12,14/16,Fury ,"Two-handed weapons|+0|Set(Defense,3)|Grant(CS(1))",90,20x20
+Infantry,Fleshlings,Horde(40),5,5,0,4,25,21/23,Fury ,"Two-handed weapons|+0|Set(Defense,3)|Grant(CS(1))",150,20x20
+Cavalry,Hellhounds,Troop(5),9,4,0,4,15,10/12,"Fury, Height(1), Nimble, TC(1)",,125,25x50
+Cavalry,Abyssal Horseman,Troop(5),8,3,0,5,9,11/13,"CS(1), TC(1), Fury",,140,25x50
+Cavalry,Abyssal Horseman,Regiment(10),8,3,0,5,18,14/16,"CS(1), TC(1), Fury",,215,25x50
+Large Infantry,Imps*,Regiment(3),5,5,0,3,12,11/13,"Fury, Height(0), Vicious",,70,40x40
+Large Infantry,Imps*,Horde(6),5,5,0,3,24,14/16,"Fury, Height(0), Vicious",,105,40x40
+Large Infantry,Tortured Souls,Regiment(3),10,4,0,4,9,-/15,"CS(2), Fly, Fury, Lifeleech(2), Shambling ",,145,40x40
+Large Infantry,Tortured Souls,Horde(6),10,4,0,4,18,-/18,"CS(2), Fly, Fury, Lifeleech(2), Shambling ",,220,40x40
+Large Infantry,Molochs,Regiment(3),5,4,0,4,12,12/15,"Brutal, CS(2), Fury ",,130,50x50
+Large Infantry,Molochs,Horde(6),5,4,0,4,24,15/18,"Brutal, CS(2), Fury ",,200,50x50
+Monster,Chroneas[1],Individual,5,0,0,5,0,16/18,"Breath Attack(20), Fury, Pathfinder, Piercing(1), Tempus",,210,50x50
+Hero,Abbysal Champion,Individual,5,3,0,5,5,13/15,"CS(1), Fury, Individual, Inspiring, Regeneration(5+)","Wings|+40|Grant(Fly)|Set(Speed,10);Lightning Bolt (5)|+40;Abyssal Mount|+20|Set(Speed,8)",135,20x20
+Hero,Abyssal Temptress,Individual,6,3,0,4,5,11/13,"Ensnare, Fury, Individual, Inspiring (Succubi only), Stealthy","Bane Chant (2)|+15;Wind Blast (6)|+30;Wings|+30|Grant(Fly)|Set(Speed,10)",90,20x20
+Hero,Efreet,Individual,7,4,0,4,1,11/13,"Fireball(20), Fury, Individual, Pathfinder",,135,20x20
+Hero,Abyssal Harbinger,Individual,5,5,4,4,1,10/12,"Firebolts, Fury, Individual, Inspiring, Piercing(1), Regeneration(5+)","Abyssal Mount|+15|Set(Speed,8)",60,20x20
+Hero,Archfiend of the Abyss,Individual,7,3,0,5,9,16/18,"Brutal, CS(2), Fury, Inspiring, TC(2), Vicious","Wings|+50|Grant(Fly)|Set(Speed,10);Lightning Bolt (5)|+25",250,50x50
+Hero,Ba'su'su the Vile[1],Individual,10,3,0,5,8,15/17,"CS(2), Fly, Fury, Individual, Inspiring (Gargoyles only), Regeneration(5+), Vicious",,220,25x25
+Hero,The Lord of Lies[1],Individual,10,3,0,5,5,15/20,"CS(2), Ensnare, Fly, Fury, Inspiring, Lightning Bolt(7), Stealthy, TC(2)",,300,50x50
+Hero,The Well of Souls[1],Individual,10,4,0,5,10,-/20,"CS(2), Fly, Fury, Inspiring, Lifeleech(5), Shambling, Soul Drain",,275,50x50
