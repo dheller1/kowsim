@@ -1,37 +1,32 @@
 #name,alignment,,,,,,,,,,,
 Orcs,Evil,,,,,,,,,,,
 # type,unit,size,Sp,Me,Ra,De,At,Ne,Special,Options,Points,Base
-Infantry,Ax,Troop(10),5,4,-,5,10,9/11,,,90,25x25
-Infantry,Ax,Regiment(20),5,4,-,5,12,13/15,,,125,25x25
-Infantry,Ax,Horde(40),5,4,-,5,25,20/22,,,205,25x25
-Infantry,Greatax,Troop(10),5,3,-,4,10,10/12,CS(2),,100,25x25
-Infantry,Greatax,Regiment(20),5,3,-,4,12,14/16,CS(2),,145,25x25
-Infantry,Greatax,Horde(40),5,3,-,4,25,21/23,CS(2),,240,25x25
-Infantry,Skulks,Troop(10),6,5,5,3,8,9/11,"Bows, Vanguard",,75,25x25
-Infantry,Morax,Troop(10),5,3,-,4,20,10/12,,,140,25x25
-Infantry,Morax,Regiment(20),5,3,-,4,25,14/16,,,200,25x25
+Infantry,Ax,Troop(10),5,4,-,5,10,9/11,Crushing Strength (1),,90,25x25
+Infantry,Ax,Regiment(20),5,4,-,5,12,13/15,Crushing Strength (1),,125,25x25
+Infantry,Ax,Horde(40),5,4,-,5,25,20/22,Crushing Strength (1),,205,25x25
+Infantry,Greatax,Troop(10),5,3,-,4,10,10/12,Crushing Strength (2),,100,25x25
+Infantry,Greatax,Regiment(20),5,3,-,4,12,14/16,Crushing Strength (2),,145,25x25
+Infantry,Greatax,Horde(40),5,3,-,4,25,21/23,Crushing Strength (2),,240,25x25
+Infantry,Skulks,Troop(10),6,5,5,3,8,9/11,"Crushing Strength (1), Bows, Vanguard",,75,25x25
+Infantry,Morax,Troop(10),5,3,-,4,20,10/12,Crushing Strength (1),,140,25x25
+Infantry,Morax,Regiment(20),5,3,-,4,25,14/16,Crushing Strength (1),,200,25x25
 Large Infantry,Trolls*,Regiment(3),6,4,-,5,9,11/14,"CS(2), Regeneration (5+)",,125,40x40
 Large Infantry,Trolls*,Horde(6),6,4,-,5,18,14/17,"CS(2), Regeneration (5+)",,190,40x40
-Large Infantry,Orclings*,Regiment(3),5,5,-,3,12,10/12,"Vicious, Height 0, Orclings do not have Crushing Strength.",,60,40x40
-Large Infantry,Orclings*,Horde(6),5,5,-,3,24,13/15,"Vicious, Height 0, Orclings do not have Crushing Strength.",,90,40x40
-Cavalry,Gore Riders,Troop(5),8,3,-,5,8,10/12,TC(1),,120,25x50
-Cavalry,Gore Riders,Regiment(10),8,3,-,5,16,13/15,TC(1),,185,25x50
-Large Cavalry,Gore Chariots,Regiment(3),7,3,-,5,9,11/13,"TC(2), 50x100mm Base Size",,140,50x100
-Large Cavalry,Gore Chariots,Horde(6),7,3,-,5,18,14/16,"TC(2), 50x100mm Base Size",,215,50x100
-Large Cavalry,Fight Wagons,Regiment(3),7,3,-,5,15,11/13,50x100mm Base Size,,170,50x100
-Large Cavalry,Fight Wagons,Horde(6),7,3,-,5,30,14/16,50x100mm Base Size,,260,50x100
-Monster,Giant,Individual,7,4,-,5,0,17/19,"CS(3), Brutal, Fury, This unit never suffers the penalty for hindered charges.",,190,50x50
-Monster,War Drum,Individual,5,4,-,4,3,-/11,"Height1. When testing the Nerve of friendly, non-allied units within 6"" of one or more war drums, the enemy suffers an additional -2 to their total.",,80,50x50
-Hero,Krudger,Individual,5,3,-,5,5,12/14,"CS(2), Individual, Inspiring","(Gore(8 Sp, 20Pts))(Zappy Sneak (+15)(Stabby Sneak (+15)",130,25x25
-Hero,/w Mount,Individual,8,3,-,5,5,12/14,"CS(2), Individual, Inspiring",,150,25x50
-Hero,Krudger on Slasher,Individual,7,3,-,5,10,16/18,"CS(3), Inspiring","Winged Slasher(Fly & Speed 10, 50 Pts)",235,50x50
-Hero,/w Wings,Individual,10,3,-,5,10,16/18,Gain Fly and speed 10,,285,50x50
-Hero,Krudger on Gore Chariot,Individual,7,3,-,5,7,14/16,"CS(2), TC(2), Inspiring, 50x100mm Base Size",(Zappy Sneak (+15)(Stabby Sneak (+15),185,50x100
-Hero,Godspeaker,Individual,5,3,-,4,2,10/12,"Individual, Breath(9), (For every friendly horde within 6"", Increase the amount of dice rolled for all spells by 1.)","(+15 BaneChant(2))(+10 Heal(2)) Mount on Gore, increasing Sp to 8 (+15)",75,25x25
-Hero,/w Mount,Individual,8,3,-,4,2,10/12,"Individual, Breath(9), (For every friendly horde within 6"", Increase the amount of dice rolled for all spells by 1.)","(+15 BaneChant(2))(+10 Heal(2)) Mount on Gore, increasing Sp to 8 (+15)",90,25x50
-Hero,Flagger,Individual,5,4,-,4,1,9/11,"Individual, Inspiring","Gore(8 Sp, 15Pts)",50,25x25
-Hero,/w Mount,Individual,8,4,-,4,1,9/11,"Individual, Inspiring",,65,25x50
-Hero,Wip the Half-Cast[1],Individual,6,4,-,4,1,11/13,"Elite, Heal(3), Individual, Lightning Bolt(3), Inspiring(Orclings only) Wip's Playmates, Wip the Half-Cast does not have Crushing Strength.",,90,25x25
-Hero,Gakamak[1],Individual,5,2,-,5,7,13/15,"CS(3), Individual, Vicious, Very Inspiring","Gore(8 Sp, 30Pts)",210,25x25
-Hero,/w Mount,Individual,8,2,-,5,7,13/15,"CS(3), Individual, Vicious, Very Inspiring",,240,25x50
+Large Infantry,Orclings*,Regiment(3),5,5,-,3,12,10/12,"Vicious, Height 0",,60,40x40
+Large Infantry,Orclings*,Horde(6),5,5,-,3,24,13/15,"Vicious, Height 0",,90,40x40
+Cavalry,Gore Riders,Troop(5),8,3,-,5,8,10/12,"Crushing Strength (1), TC(1)",,120,25x50
+Cavalry,Gore Riders,Regiment(10),8,3,-,5,16,13/15,Crushing Strength (1),,185,25x50
+Large Cavalry,Gore Chariots,Regiment(3),7,3,-,5,9,11/13,"Crushing Strength (1), TC(2)",,140,50x100
+Large Cavalry,Gore Chariots,Horde(6),7,3,-,5,18,14/16,"Crushing Strength (1), TC(2)",,215,50x100
+Large Cavalry,Fight Wagons,Regiment(3),7,3,-,5,15,11/13,Crushing Strength (1),,170,50x100
+Large Cavalry,Fight Wagons,Horde(6),7,3,-,5,30,14/16,Crushing Strength (1),,260,50x100
+Monster,Giant,Individual,7,4,-,5,0,17/19,"CS(3), Brutal, Fury, Strider",,190,50x50
+Monster,War Drum,Individual,5,4,-,4,3,-/11,"Crushing Strength (1), Height 1, Great Thunder",,80,50x50
+Hero,Krudger,Individual,5,3,-,5,5,12/14,"CS(2), Individual, Inspiring","Gore|+20|Set(Speed,8);Stabby Sneak|+15|Add(Attacks,1);Zappy Sneak|+15|Grant(Lightning Bolt (2))",130,25x25
+Hero,Krudger on Slasher,Individual,7,3,-,5,10,16/18,"CS(3), Inspiring","Winged Slasher|+50|Grant(Fly)|Set(Speed,10)",235,50x50
+Hero,Krudger on Gore Chariot,Individual,7,3,-,5,7,14/16,"CS(2), TC(2), Inspiring","Stabby Sneak|+15|Add(Attacks,1);Zappy Sneak|+15|Grant(Lightning Bolt (2))",185,50x100
+Hero,Flagger,Individual,5,4,-,4,1,9/11,"Individual, Inspiring","Gore|+15|Set(Speed,8)",50,25x25
+Hero,Godspeaker,Individual,5,3,-,4,2,10/12,"Crushing Strength (1), Individual, Fireball (9), Horde Affinity","Bane Chant (2)|+15;Heal (2)|+10;Gore|+15|Set(Speed,8)",75,25x25
 Hero,Troll Bruiser,Individual,6,3,-,5,5,12/15,"CS(3), Inspiring (Trolls Only), Nimble, Regeneration (5+)",,125,40x40
+Hero,Wip the Half-Cast[1],Individual,6,4,-,4,1,11/13,"Elite, Heal(3), Individual, Lightning Bolt(3), Inspiring(Orclings only), Wip's Playmates",,90,25x25
+Hero,Gakamak[1],Individual,5,2,-,5,7,13/15,"CS(3), Individual, Vicious, Very Inspiring","Gore|+30|Set(Speed,8)",210,25x25

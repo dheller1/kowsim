@@ -1,9 +1,9 @@
 # name,alignment,,,,,,,,,,,
 Ogres,Neutral,,,,,,,,,,,
 # type,unit,size,Sp,Me,Ra,De,At,Ne,Special,Options,Points,Base
-Large Infantry,Warriors,Regiment(3),6,3,-,5,9,12/14,"Crushing Strength (1), Brutal",two-handed weapons,130,40x40
-Large Infantry,Warriors,Horde(6),6,3,-,5,9,15/17,"Crushing Strength (1), Brutal",two-handed weapons,200,40x40
-Large Infantry,Warriors,Legion(12),6,3,-,5,9,22/24,"Crushing Strength (1), Brutal",two-handed weapons,350,40x40
+Large Infantry,Warriors,Regiment(3),6,3,-,5,9,12/14,"Crushing Strength (1), Brutal","Two-handed weapons|+0|Set(Defense,4)|Remove(Crushing Strength (1))|Grant(Crushing Strength (2))",130,40x40
+Large Infantry,Warriors,Horde(6),6,3,-,5,9,15/17,"Crushing Strength (1), Brutal","Two-handed weapons|+0|Set(Defense,4)|Remove(Crushing Strength (1))|Grant(Crushing Strength (2))",200,40x40
+Large Infantry,Warriors,Legion(12),6,3,-,5,9,22/24,"Crushing Strength (1), Brutal","Two-handed weapons|+0|Set(Defense,4)|Remove(Crushing Strength (1))|Grant(Crushing Strength (2))",350,40x40
 Large Infantry,Berserker Braves,Regiment(3),6,4,-,4,15,-/15,"Crushing Strength (1), Brutal",,150,40x40
 Large Infantry,Berserker Braves,Horde(6),6,4,-,4,30,-/18,"Crushing Strength (1), Brutal",,230,40x40
 Large Infantry,Siege Breakers,Regiment(3),5,3,-,4,9,12/14,"Big Shield, Crushing Strength (3), Thunderous Charge (1), Brutal",,165,40x40
@@ -14,24 +14,20 @@ Large Infantry,Shooters,Regiment(3),6,4,5,4,9,12/14,"Heavy Crossbows, Crushing S
 Large Infantry,Shooters,Horde(6),6,4,5,4,18,15/17,"Heavy Crossbows, Crushing Strength (1), Piercing (2), Reload!, Brutal",,230,40x40
 Large Infantry,Boomers,Regiment(3),6,4,-,4,27,12/14,"Breath Attack (Att), Crushing Strength (1), Piercing (1), Brutal",,150,40x40
 Large Infantry,Boomers,Horde(6),6,4,-,4,36,15/17,"Breath Attack (Att), Crushing Strength (1), Piercing (1), Brutal",,230,40x40
-Large Cavalry,Chariots,Regiment(3),7,3,-,5,12,12/14,"Crushing Strength (1), Tunderous Charge (2), Brutal",,170,50x100
-Large Cavalry,Chariots,Horde(6),7,3,-,5,24,15/17,"Crushing Strength (1), Tunderous Charge (2), Brutal",,265,50x100
+Large Cavalry,Chariots,Regiment(3),7,3,-,5,12,12/14,"Crushing Strength (1), Thunderous Charge (2), Brutal",,170,50x100
+Large Cavalry,Chariots,Horde(6),7,3,-,5,24,15/17,"Crushing Strength (1), Thunderous Charge (2), Brutal",,265,50x100
 Infantry,Red Goblins*,Regiment(20),5,6,5,3,10,12/14,Bows,,85,20x20
 Infantry,Red Goblins*,Horde(40),5,6,5,3,20,19/21,Bows,,140,20x20
 Cavalry,Red Goblin Scouts*,Troop (10),10,4,-,4,7,9/11,"Thunderous Charge (1), Nimble",,100,25x50
 Cavalry,Red Goblin Scouts*,Regiment(20),10,4,-,4,14,12/14,"Thunderous Charge (1), Nimble",,155,25x50
-War Engine,Red Goblin Blaster,Individual,5,-,-,5,0,8/10,"Height 3, Explosion: D6""/2D6 hits Piercing (4)",,65,50x100
-Monster,Mammoth,Individual,7,4,-,5,12,15/17,"Crushing Strength (2), Thunderous Charge (2), Brutal",Ballista,210,50x100
+War Engine,Red Goblin Blaster,Individual,5,-,-,5,0,8/10,"Height 3, Explosion",,65,50x100
+Monster,Mammoth,Individual,7,4,-,5,12,15/17,"Crushing Strength (2), Thunderous Charge (2), Brutal","Ballista|+10|Set(Ranged,5)|2 Ranged Attacks|Grant(Blast (D3))|Grant(Piercing (2))",210,50x100
 Monster,Giant,Individual,7,4,-,5,0,17/19,"Fury, Crushing Strength (3), Strider, Brutal, Random Attacks (D6+6)",,190,50x50
-Hero,Warlord,Individual,6,3,-,5,7,15/17,"Crushing Strength (2), Inspiring, Nimble, Brutal",,175,40x40
-Hero,Warlord on Chariot,Individual,7,3,-,5,7,15/17,"Crushing Strength (2), Thunderous Charge (2), Inspiring, Brutal",,190,50x100
-Hero,Captain,Individual,6,3,5,5,5,13/15,"Crushing Strength (2), Inspiring, Nimble, Brutal",,135,40x40
-Hero,Captain on Chariot,Individual,7,3,5,5,5,13/15,"Crushing Strength (2), Thunderous Charge (2), Inspiring, Brutal",,150,50x100
+Hero,Warlord,Individual,6,3,-,5,7,15/17,"Crushing Strength (2), Inspiring, Nimble, Brutal","Two-handed weapon|+0|Set(Defense,4)|Remove(Crushing Strength (2))|Grant(Crushing Strength (3));Chariot|+15|Grant(TC (2))|Set(Speed,7)|Remove(Nimble)",175,40x40
+Hero,Captain,Individual,6,3,5,5,5,13/15,"Crushing Strength (2), Inspiring, Nimble, Brutal","Two-handed weapon|+0|Set(Defense,4)|Remove(Crushing Strength (2))|Grant(Crushing Strength (3));Heavy Crossbow|+10|Set(Defense,4)|Grant(Reload!)|Grant(Piercing (2));Chariot|+15|Grant(TC (2))|Set(Speed,7)|Remove(Nimble)",135,40x40
+Hero,Army Standard,Individual,6,3,-,4,3,11/13,"Crushing Strength (1), Inspiring, Nimble, Brutal","Chariot|+15|Grant(TC (2))|Set(Speed,7)|Set(Defense,5)|Remove(Nimble)",70,40x40
 Hero,Warlock,Individual,6,4,-,4,2,12/14,"Crushing Strength (1), Inspiring (Berserker Braves only), Lightning Bolt (3), Nimble, Brutal","Fireball (12), Windblast (5)",100,40x40
 Hero,Boomer Sergeant,Individual,6,4,-,4,4,11/13,"Breatch Attack (Att), Crushing Strength (1), Nimble, Piercing, Brutal",,90,40x40
 Hero,Siege Master,Individual,5,3,-,4,4,12/14,"Big Shield, Crushing Strength (3), Inspiring (Siege Breaker only), Nimble, Thunderous Charge (1), Brutal",,135,40x40
-Hero,Army Standard,Individual,6,3,-,4,3,11/13,"Crushing Strength (1), Inspiring, Nimble, Brutal",,70,40x40
-Hero,Army Standard on Chariot,Individual,7,3,-,5,3,11/13,"Crushing Strength (1), Thunderous Charge (2), Inspiring, Brutal",,85,50x100
-Hero,Red Goblin Biggit,Individual,5,4,4,4,3,9/11,"Bow, Individual, Inspiring (Red Goblin units only)",,60,20x20
-Hero,Red Goblin Biggit on Fleabag,Individual,10,4,4,4,3,9/11,"Bow, Individual, Inspiring (Red Goblin units only)",,75,20x20
+Hero,Red Goblin Biggit,Individual,5,4,4,4,3,9/11,"Bow, Individual, Inspiring (Red Goblin units only)","Fleabag|+15|Set(Speed,10)",60,20x20
 Hero,Grokagamok [1],Individual,6,3,-,5,7,15/17,"The Amputator, Crushing Strength (3), Nimble, Very Inspiring, Brutal",,260,40x40
