@@ -4,24 +4,21 @@
 #===============================================================================
 from PySide import QtCore
 from kowsim.kow.unit import UnitInstance
+import kowsim.mvc.mvcbase as MVC
 
 #===============================================================================
 # ArmyListCtrl
 #===============================================================================
-class ArmyListCtrl(QtCore.QObject):
-   siDetachmentModified = QtCore.Signal(int)
+class ArmyListCtrl(MVC.Controller):
+   #HINTS:
+   REVALIDATE              = 10001
+   CHANGE_NAME             = 10002
    
-   def __init__(self, model, view):
-      super(ArmyListCtrl, self).__init__()
+   def __init__(self, model):
+      MVC.Controller.__init__(self, model)
       self._model = model
-      self._view = view
       self._modified = False
-      
-      self._ConnectToView()
-      
-   def _ConnectToView(self):
-      self.siDetachmentModified[int].connect(self._view.UpdateDetachment)
-      
+            
    def AddUnitToDetachment(self, unitname, detachment):
       try: index = self._model.ListDetachments().index(detachment)
       except ValueError:
@@ -32,12 +29,14 @@ class ArmyListCtrl(QtCore.QObject):
       self.SetModified(True)
       self.siDetachmentModified.emit(index)
       
-   def ArmyNameChanged(self):
-      self._view.UpdateTitle()
-      
    def Revalidate(self):
-      self._view.validationWdg.Update()
-      
+      self.NotifyModelChanged(ArmyListCtrl.REVALIDATE)
+   
+   def SetArmyName(self, name):
+      print "ArmyListCtrl.SetArmyName('%s')" % name
+      self.Model().Data().SetCustomName(name)
+      self.NotifyModelChanged(ArmyListCtrl.CHANGE_NAME)
+   
    def SetModified(self, modified=True):
       self._modified = modified
       

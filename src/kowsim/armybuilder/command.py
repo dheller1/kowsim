@@ -55,15 +55,21 @@ class RenameDetachmentCmd(ModelViewCommand, ReversibleCommandMixin):
 # RenameArmyListCmd
 #===============================================================================
 class RenameArmyListCmd(Command, ReversibleCommandMixin):
-   def __init__(self, armylist, ctrl):
+   def __init__(self, newName, ctrl):
       Command.__init__(self, name="RenameArmyListCmd")
       ReversibleCommandMixin.__init__(self)
-      self._model = armylist
+      self._newName = newName
+      self._previousName = ctrl.Model().Data().CustomName()
       self._ctrl = ctrl
       
-   def Execute(self, name):
-      self._model.SetCustomName(name)
-      self._ctrl.ArmyNameChanged()
+   def Execute(self):
+      self._ctrl.SetArmyName(self._newName)
+   
+   def Redo(self):
+      self.Execute()
+   
+   def Undo(self):
+      self._ctrl.SetArmyName(self._previousName)
          
          
 #===============================================================================

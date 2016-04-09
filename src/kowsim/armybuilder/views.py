@@ -8,6 +8,7 @@ from PySide import QtGui, QtCore
 from widgets import UnitTable, ValidationWidget
 from command import AddDetachmentCmd, DeleteUnitCmd, RenameDetachmentCmd, AddDefaultUnitCmd, DuplicateUnitCmd, SaveArmyListCmd, SetPrimaryDetachmentCmd, RenameArmyListCmd
 from control import ArmyListCtrl
+from kowsim.mvc.mvcbase import View
 #from PySide.QtCore import Qt
 
 #===============================================================================
@@ -16,19 +17,18 @@ from control import ArmyListCtrl
 #   Will contain one or more DetachmentViews which in turn contain a UnitTable
 #   each.
 #===============================================================================
-class ArmyListView(QtGui.QWidget):
+class ArmyListView(QtGui.QWidget, View):
    siRecentFilesChanged = QtCore.Signal()
    siCurrentDetachmentChanged = QtCore.Signal()
    
-   def __init__(self, model, parent=None):
+   def __init__(self, ctrl, parent=None):
       QtGui.QWidget.__init__(self, parent)
-      self._model = model # ArmyList
-      self._ctrl = ArmyListCtrl(model, self)
+      View.__init__(self, ctrl)
       self._wasModified = False
       self._attachedPreview = None
       self._lastIndex = 0
       self._lastFilename = None
-      
+      self.setWindowTitle((self._ctrl.Model().Data().CustomName() + "*"))
       self._initChildren()
       self._initLayout()
       self._initConnections()
@@ -36,19 +36,20 @@ class ArmyListView(QtGui.QWidget):
       self._ctrl.Revalidate()
       
    def _initChildren(self):
-      self.customNameLe = QtGui.QLineEdit(self._model.CustomName())
+      md = self._ctrl.Model().Data()
+      self.customNameLe = QtGui.QLineEdit(md.CustomName())
       
       # points limit spinbox
       self.pointsLimitSb = QtGui.QSpinBox()
       self.pointsLimitSb.setRange(1, 1000000)
-      self.pointsLimitSb.setValue(self._model.PointsLimit())
+      self.pointsLimitSb.setValue(md.PointsLimit())
       self.pointsLimitSb.setSingleStep(50)
       
-      self.validationWdg = ValidationWidget(self._model, parent=self)
+      self.validationWdg = ValidationWidget(self._ctrl, parent=self)
       
       self.detachmentsTw = QtGui.QTabWidget(parent=self)
       self.detachmentsTw.addTab(QtGui.QWidget(), "+")
-      for det in self._model.ListDetachments():
+      for det in md.ListDetachments():
          self.AddDetachmentView(det)
       
       self.generalGb = QtGui.QGroupBox("General")
@@ -56,9 +57,7 @@ class ArmyListView(QtGui.QWidget):
       self.valGb = QtGui.QGroupBox("Validation")
       
    def _initLayout(self):
-      self.setWindowTitle((self._model.CustomName() + "*"))
       genlay = QtGui.QGridLayout()
-      
       row = 0
       genlay.addWidget(QtGui.QLabel("Army name:"), row, 0)
       genlay.addWidget(self.customNameLe, row, 1)
@@ -83,7 +82,18 @@ class ArmyListView(QtGui.QWidget):
    
    def _initConnections(self):
       self.detachmentsTw.currentChanged.connect(self.DetachmentTabChanged)
-      self.customNameLe.editingFinished.connect(self.ArmyNameChanged)
+      self.customNameLe.editingFinished.connect(self._HandleArmyNameEdited)
+   
+   #============================================================================
+   # "SLOTS" ('private' event handlers)
+   #============================================================================
+   def _HandleArmyNameEdited(self):
+      newName = self.customNameLe.text()
+      if len(newName.strip())==0: # don't accept, revert
+         self.customNameLe.setText(self._ctrl.Model().Data().CustomName())
+      elif newName != self._ctrl.Model().Data().CustomName():
+         cmd = RenameArmyListCmd(newName, self._ctrl)
+         cmd.Execute()
       
    def closeEvent(self, e):
       if self._wasModified:
@@ -105,17 +115,9 @@ class ArmyListView(QtGui.QWidget):
       self.detachmentsTw.insertTab(self.detachmentsTw.count()-1, dv, detachment.CustomName())
       self.detachmentsTw.setCurrentIndex(self.detachmentsTw.count()-2) # switch to new tab
       dv.siNameChanged.connect(self.DetachmentNameChanged)
-      dv.siPointsChanged.connect(self._ctrl.Revalidate)
       dv.siModified.connect(self.SetModified)
       dv.siPrimaryToggled.connect(self.TogglePrimaryDetachment)
       
-   def ArmyNameChanged(self):
-      newName = self.customNameLe.text()
-      if len(newName.strip())==0: # don't accept, revert
-         self.customNameLe.setText(self._model.CustomName())
-      elif newName != self._model.CustomName():
-         cmd = RenameArmyListCmd(self._model, self._ctrl)
-         cmd.Execute(newName)
       
    def DetachmentNameChanged(self, name):
       sender = self.sender()
@@ -147,17 +149,30 @@ class ArmyListView(QtGui.QWidget):
       cmd = SetPrimaryDetachmentCmd(det, self)
       cmd.Execute(makePrimary)
       
-   def Update(self):
-      self.UpdateTitle()
-      for i in range(self._model.NumDetachments()):
-         self.UpdateDetachment(i)
+   # Update content after being notified about changes in the model.
+   # A partial update might be sufficient if every hint in 'hints'
+   # can be handled.
+   def UpdateContent(self, *hints):
+      md = self._ctrl.Model().Data()
+      unknownHints = False
+      
+      for hint in hints:
+         if hint == ArmyListCtrl.CHANGE_NAME:
+            self.customNameLe.setText(md.CustomName())
+            continue # successfully processed hint
+         unknownHints = True
+         
+      if unknownHints or len(hints)==0:
+         self.UpdateTitle()
+         for i in range(self._ctrl.Model().Data().NumDetachments()):
+            self.UpdateDetachment(i)
       
    def UpdateDetachment(self, index):
       # detachment index is always the tab index in self.detachmentsTw
-      self.detachmentsTw.widget(index).Update()
+      self.detachmentsTw.widget(index).UpdateContent()
       
    def UpdateTitle(self):
-      title = self._model.CustomName()
+      title = self._ctrl.Model().Data().CustomName()
       if self._lastFilename: title += " (%s)" % os.path.basename(self._lastFilename)
       if self._wasModified: title += "*"
       self.setWindowTitle(title)
@@ -172,7 +187,6 @@ class ArmyListView(QtGui.QWidget):
 class DetachmentView(QtGui.QWidget):
    siModified = QtCore.Signal(bool)
    siNameChanged = QtCore.Signal(str)
-   siPointsChanged = QtCore.Signal()
    siPrimaryToggled = QtCore.Signal(bool)
    
    def __init__(self, model, parent=None):
@@ -181,7 +195,7 @@ class DetachmentView(QtGui.QWidget):
       self._initChildren()
       self._initLayout()
       self._initConnections()
-      self.Update()
+      self.UpdateContent()
       
    def _initChildren(self):
       self.customNameLe = QtGui.QLineEdit(self._model.CustomName())
@@ -263,7 +277,6 @@ class DetachmentView(QtGui.QWidget):
       self.deleteUnitPb.clicked.connect(self.DeleteUnit)
       self.duplicateUnitPb.clicked.connect(self.DuplicateUnit)
       self.unitTable.itemSelectionChanged.connect(self.UnitSelectionChanged)
-      self.unitTable.siPointsChanged.connect(self.UpdatePoints)
       self.unitTable.siModified.connect(self.SetModified)
       self.isPrimaryDetachmentCb.stateChanged.connect(self.TogglePrimary)
       
@@ -299,18 +312,18 @@ class DetachmentView(QtGui.QWidget):
          self.duplicateUnitPb.setEnabled(False)
          self.deleteUnitPb.setEnabled(False)
          
-   def Update(self):
+   def UpdateContent(self):
       self.isPrimaryDetachmentCb.setChecked(self._model.IsPrimary())
       for i in range(self._model.NumUnits()):
-         self.UpdateUnit(i)
-      self.UpdatePoints()
+         self._UpdateUnit(i)
+      self._UpdatePoints()
       
-   def UpdatePoints(self):
+   # "private" functions
+   def _UpdatePoints(self):
       pts = self._model.PointsTotal()
       self.pointsLbl.setText("<b>%d</b>" % pts)
-      self.siPointsChanged.emit()
    
-   def UpdateUnit(self, index):
+   def _UpdateUnit(self, index):
       self.unitTable.SetRow(index, self._model.ListUnits()[index])
       
       

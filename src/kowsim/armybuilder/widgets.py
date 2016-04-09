@@ -211,11 +211,11 @@ class UnitTable(QtGui.QTableWidget):
 # ValidationWidget
 #===============================================================================
 class ValidationWidget(QtGui.QWidget):
-   def __init__(self, army, parent=None):
+   def __init__(self, armyCtrl, parent=None):
       super(ValidationWidget, self).__init__(parent)
       
-      self._army = army
-      self._validator = ArmyListValidator(army, ALL_VALIDATIONRULES)
+      self._ctrl = armyCtrl
+      self._validator = ArmyListValidator(self._ctrl.Model().Data(), ALL_VALIDATIONRULES) # FIXME: Direct data access really necessary?
       self.setMinimumWidth(300)
       self.setFixedHeight(150)
       

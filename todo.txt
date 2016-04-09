@@ -13,12 +13,12 @@
 [x]  Validierung anhand von Strategien/Regeln
 [ ]  Anzeige alternativ als Tree
 [.]  Funktionalität da, aber beides BUGGY! --- Detachments löschen, Primary umschalten
-[ ]  Keine multiplen Detachments gleicher Fraktionen, Verbünden nur wenn kompatibel
+[x]  Keine multiplen Detachments gleicher Fraktionen, Verbünden nur wenn kompatibel
 [x]	 Unit Browser (ListWidget; Doppelklick fügt gleich die richtige Einheit ein)]
 [x]  Optionseffekte um Sonderregeln (z.B. Ausrüstung) wegzunehmen, wenn z.B. Schusswaffen gewechselt werden
 [ ]  Sonderregel-Implementierung um z.B. mit CS-Erhöhungen usw. zurecht zu kommen
 [ ]  Effekte für magische Artefakte analog zu OptionsEffekten.
-[ ]  Einheitentyp als eigene Unit-property (z.B. für Helden)
+[ ]  Zusätzliche Unit-properties: Unit Type (u.a. für Helden), Height, Unique, Irregular
 [ ]  ModifyBaseSizeEffect
 
 

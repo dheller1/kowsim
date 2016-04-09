@@ -6,11 +6,13 @@ import os, sys
 from PySide import QtGui, QtCore
 from PySide.QtCore import Qt
 
-from ..kow.force import ArmyList, Detachment
+from ..kow.force import Detachment
+from mvc.models import ArmyListModel
 from load_data import DataManager
 from views import ArmyListView
 from command import SaveArmyListCmd, LoadArmyListCmd
 from dialogs import NewArmyListDialog
+from control import ArmyListCtrl
 from kowsim.armybuilder.command import PreviewArmyListCmd
 from kowsim.armybuilder.views import ArmyListOutputView
 from kowsim.armybuilder.widgets import UnitBrowserWidget
@@ -254,11 +256,10 @@ class MdiArea(QtGui.QMdiArea):
          num = len(self.subWindowList()) # number of unnamed armies
          if num==0: name = "Unnamed army"
          else: name = "Unnamed army (%d)" % (num+1)
-         armyList = ArmyList(name, dlg.PointsLimit())
+         armyList = ArmyListModel(name, dlg.PointsLimit())
          armyList.AddDetachment( Detachment(dlg.PrimaryForce(), None, [], True) )
       
-      #sub = ArmyMainWidget(name)
-      sub = ArmyListView(armyList)
+      sub = ArmyListView(ArmyListCtrl(armyList))
       self.addSubWindow(sub)
       sub.show() # important!
       sub.showMaximized()

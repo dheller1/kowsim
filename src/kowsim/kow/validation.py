@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-from kowsim.kow.alignment import AL_GOOD, AL_EVIL
 
 # kow/validation.py
 #===============================================================================
-
-
+from kowsim.kow.alignment import AL_GOOD, AL_EVIL
 
 #===============================================================================
 # ValidationMessage
