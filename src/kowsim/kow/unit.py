@@ -18,10 +18,10 @@ from kowsim.kow.effect import GrantSpecialRuleEffect, RemoveSpecialRuleEffect
 #   of effects (e.g. increasing one profile value but lowering another one in turn).
 #===============================================================================
 class KowUnitOption(object):
-   def __init__(self, name, pointsCost=0, effects=[], isActive=False):
+   def __init__(self, name, pointsCost=0, effects=None, isActive=False):
       self._name = name
       self._pointsCost = pointsCost
-      self._effects = effects
+      self._effects = effects if effects is not None else []
       
    def Name(self): return self._name
    def PointsCost(self): return self._pointsCost
@@ -225,11 +225,11 @@ class UnitProfile(object):
 #   originates from (e.g. Shield Guard Horde).
 #===============================================================================
 class UnitInstance(object):
-   def __init__(self, profile, detachment, customName=None, chosenOptions=[], chosenItem=None):
+   def __init__(self, profile, detachment, customName=None, chosenOptions=None, chosenItem=None):
       self._profile = profile
       self._detachment = detachment
       self._customName = customName
-      self._chosenOptions = chosenOptions
+      self._chosenOptions = chosenOptions if chosenOptions is not None else []
       self._chosenItem = chosenItem
       
    def __repr__(self):

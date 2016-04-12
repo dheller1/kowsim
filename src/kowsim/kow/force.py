@@ -66,10 +66,10 @@ class KowUnitGroup(object):
 #   units, use Detachment instead
 #===============================================================================
 class KowForceChoices(object):
-   def __init__(self, name, alignment, units=[]):
+   def __init__(self, name, alignment, units=None):
       self._customName = name
       self._alignment = alignment
-      self._units = units
+      self._units = units if units is not None else []
       self._groups = []
       self._groupsByName = {}
       self._groupsByType = {}
@@ -124,14 +124,13 @@ class KowForceChoices(object):
 #   KowForceChoices representing the army (e.g. Elves).
 #===============================================================================
 class Detachment(object):
-   #def __init__(self, choices, customName=None, units=[], isPrimary=False):
-   def __init__(self, choices, customName, units, isPrimary):
+   def __init__(self, choices, customName=None, units=None, isPrimary=False):
       self._choices = choices
       if not customName:
          self._customName = "%s detachment" % choices.Name()
       else: self._customName = customName
       
-      self._units = units
+      self._units = units if units is not None else []
       self._isPrimary = isPrimary
       
    def AddUnit(self, unit):
