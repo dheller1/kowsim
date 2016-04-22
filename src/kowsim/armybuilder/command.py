@@ -93,15 +93,16 @@ class AddDefaultUnitCmd(ModelViewCommand, ReversibleCommandMixin):
 # AddSpecificUnitCmd
 #===============================================================================
 class AddSpecificUnitCmd(Command, ReversibleCommandMixin):
-   def __init__(self, armyCtrl):
+   def __init__(self, armyCtrl, detachment, unitname):
       Command.__init__(self, name="AddSpecificUnitCmd")
       ReversibleCommandMixin.__init__(self)
+      
       self._armyCtrl = armyCtrl
+      unitProfile = detachment.Choices().GroupByName(unitname).Default()
+      self._unit = UnitInstance(unitProfile, self._detachment)
    
-   def Execute(self, unitname, detachment):
-      al = self._armyCtrl._model
-      profile = al.Choices().GroupByName(unitname).Default()
-      self._armyCtrl.AddUnitToDetachment(UnitInstance(profile, self._model, None, []), detachment)
+   def Execute(self):
+      self._armyCtrl.AddUnitToDetachment(self._unit)
       
       
 #===============================================================================

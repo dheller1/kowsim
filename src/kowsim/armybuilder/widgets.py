@@ -10,8 +10,10 @@ from PySide.QtCore import Qt
 from command import ChangeUnitCmd, ChangeUnitSizeCmd, ChangeUnitItemCmd, SetUnitOptionsCmd
 from kowsim.kow.unittype import ALL_UNITTYPES
 from kowsim.kow.validation import ArmyListValidator, ValidationMessage, ALL_VALIDATIONRULES 
+from kowsim.mvc.mvcbase import View
 import kowsim.kow.stats as st
 import globals
+
 
 #===============================================================================
 # UnitTable
@@ -213,12 +215,12 @@ class UnitTable(QtGui.QTableWidget):
 #===============================================================================
 # ValidationWidget
 #===============================================================================
-class ValidationWidget(QtGui.QWidget):
+class ValidationWidget(QtGui.QWidget, View):
    def __init__(self, armyCtrl, parent=None):
       super(ValidationWidget, self).__init__(parent)
+      View.__init__(self, armyCtrl)
       
-      self._ctrl = armyCtrl
-      self._validator = ArmyListValidator(self._ctrl.Model().Data(), ALL_VALIDATIONRULES) # FIXME: Direct data access really necessary?
+      self._validator = ArmyListValidator(armyCtrl.model.data, ALL_VALIDATIONRULES) # FIXME: Direct data access really necessary?
       self.setMinimumWidth(300)
       self.setFixedHeight(150)
       
@@ -232,7 +234,7 @@ class ValidationWidget(QtGui.QWidget):
       lay.addWidget(self._messageLw)
       self.setLayout(lay)
       
-      self.Update()
+      self.UpdateContent()
       
    @staticmethod
    def ListWidgetItemForMessage(message):
@@ -243,7 +245,8 @@ class ValidationWidget(QtGui.QWidget):
       lwi.setToolTip(message._longDesc)
       return lwi
       
-   def Update(self):
+   def UpdateContent(self, *hints):
+      print "Updating", self
       messages = self._validator.Check()
       self._messageLw.clear()
       valid = True

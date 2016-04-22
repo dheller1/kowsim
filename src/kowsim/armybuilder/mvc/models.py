@@ -9,8 +9,11 @@ from kowsim.mvc.mvcbase import Model
 # ArmyListModel
 #===============================================================================
 class ArmyListModel(Model):
+   REVALIDATE              = 10001
+   CHANGE_NAME             = 10002
+   MODIFY_DETACHMENT       = 10003
+   
    def __init__(self, *args):
-      
       if len(args)==1 and isinstance(args[0], ArmyList):
          armylist = args[0]
          Model.__init__(self, armylist)

@@ -5,11 +5,12 @@
 import os
 
 from PySide import QtGui, QtCore
+
 from widgets import UnitTable, ValidationWidget
-from command import AddDetachmentCmd, DeleteUnitCmd, RenameDetachmentCmd, AddDefaultUnitCmd, DuplicateUnitCmd, SaveArmyListCmd, SetPrimaryDetachmentCmd, RenameArmyListCmd
-from control import ArmyListCtrl
-from kowsim.mvc.mvcbase import View, Controller
-#from PySide.QtCore import Qt
+from command import AddDetachmentCmd, DeleteUnitCmd, RenameDetachmentCmd, AddDefaultUnitCmd, DuplicateUnitCmd, SaveArmyListCmd, SetPrimaryDetachmentCmd
+from kowsim.mvc.mvcbase import View
+from mvc.models import ArmyListModel
+import globals
 
 #===============================================================================
 # ArmyListView(QWidget)
@@ -28,7 +29,7 @@ class ArmyListView(QtGui.QWidget, View):
       self._attachedPreview = None
       self._lastIndex = 0
       self._lastFilename = None
-      self.setWindowTitle((self.ctrl.Model().Data().CustomName() + "*"))
+      self.setWindowTitle((self.ctrl.model.Data().CustomName() + "*"))
       self._initChildren()
       self._initLayout()
       self._initConnections()
@@ -36,7 +37,7 @@ class ArmyListView(QtGui.QWidget, View):
       self.ctrl.Revalidate()
       
    def _initChildren(self):
-      md = self.ctrl.Model().Data()
+      md = self.ctrl.model.Data()
       self.customNameLe = QtGui.QLineEdit(md.CustomName())
       
       # points limit spinbox
@@ -90,8 +91,8 @@ class ArmyListView(QtGui.QWidget, View):
    def _HandleArmyNameEdited(self):
       newName = self.customNameLe.text()
       if len(newName.strip())==0: # don't accept, revert
-         self.customNameLe.setText(self.ctrl.Model().Data().CustomName())
-      elif newName != self.ctrl.Model().Data().CustomName():
+         self.customNameLe.setText(self.ctrl.model.Data().CustomName())
+      elif newName != self.ctrl.model.Data().CustomName():
          self.ctrl.RenameArmyList(newName)
    
    #============================================================================
@@ -155,18 +156,18 @@ class ArmyListView(QtGui.QWidget, View):
    # A partial update might be sufficient if every hint in 'hints'
    # can be handled.
    def UpdateContent(self, *hints):
-      md = self.ctrl.Model().Data()
+      md = self.ctrl.model.Data()
       unknownHints = False
       
       for hint in hints:
-         if hint == ArmyListCtrl.CHANGE_NAME:
+         if hint == ArmyListModel.CHANGE_NAME:
             self.customNameLe.setText(md.CustomName())
             continue # successfully processed hint
          unknownHints = True
          
       if unknownHints or len(hints)==0:
          self.UpdateTitle()
-         for i in range(self.ctrl.Model().Data().NumDetachments()):
+         for i in range(self.ctrl.model.Data().NumDetachments()):
             self.UpdateDetachment(i)
       
    def UpdateDetachment(self, index):
@@ -174,7 +175,7 @@ class ArmyListView(QtGui.QWidget, View):
       self.detachmentsTw.widget(index).UpdateContent()
       
    def UpdateTitle(self):
-      title = self.ctrl.Model().Data().CustomName()
+      title = self.ctrl.model.Data().CustomName()
       if self._lastFilename: title += " (%s)" % os.path.basename(self._lastFilename)
       if self._wasModified: title += "*"
       self.setWindowTitle(title)
@@ -208,10 +209,10 @@ class DetachmentView(QtGui.QWidget):
       self.unitTable = UnitTable(self._model)
       self.pointsLbl = QtGui.QLabel("<b>0</b>")
             
-      self.addUnitPb = QtGui.QPushButton(QtGui.QIcon(os.path.join("..", "data","icons","plus.png")), "&Add")
-      self.duplicateUnitPb = QtGui.QPushButton(QtGui.QIcon(os.path.join("..", "data","icons","copy.png")), "Dupli&cate")
+      self.addUnitPb = QtGui.QPushButton(QtGui.QIcon(os.path.join(globals.BASEDIR, "data","icons","plus.png")), "&Add")
+      self.duplicateUnitPb = QtGui.QPushButton(QtGui.QIcon(os.path.join(globals.BASEDIR, "data","icons","copy.png")), "Dupli&cate")
       self.duplicateUnitPb.setEnabled(False)
-      self.deleteUnitPb = QtGui.QPushButton(QtGui.QIcon(os.path.join("..", "data","icons","delete.png")), "&Delete")
+      self.deleteUnitPb = QtGui.QPushButton(QtGui.QIcon(os.path.join(globals.BASEDIR, "data","icons","delete.png")), "&Delete")
       self.deleteUnitPb.setEnabled(False)
       
       #=========================================================================
@@ -373,7 +374,7 @@ class ArmyListOutputView(QtGui.QTextEdit, View):
       return pre+headRow+labelsRow+profileRow+post
       
    def UpdateContent(self):
-      al = self.ctrl.Model().Data()
+      al = self.ctrl.model.Data()
       self.setWindowTitle("Preview: " + al.CustomName())
       
       header = """<html>\n

@@ -5,6 +5,7 @@
 from PySide import QtCore
 from kowsim.kow.unit import UnitInstance
 from command import RenameArmyListCmd
+from mvc.models import ArmyListModel
 import kowsim.mvc.mvcbase as MVC
 import kowsim.armybuilder.views
 
@@ -12,26 +13,21 @@ import kowsim.armybuilder.views
 # ArmyListCtrl
 #===============================================================================
 class ArmyListCtrl(MVC.Controller):
-   #HINTS:
-   # TODO: move hints to Model instead of Controller?
-   REVALIDATE              = 10001
-   CHANGE_NAME             = 10002
-   
    def __init__(self, model):
       MVC.Controller.__init__(self, model)
-      self._model = model
+      self.model = model
       self._modified = False
       self.attachedPreview = None
             
    def AddUnitToDetachment(self, unitname, detachment):
-      try: index = self._model.ListDetachments().index(detachment)
+      try: self.model.data.ListDetachments().index(detachment)
       except ValueError:
-         raise ValueError("Can't add to a detachment not belonging to my armylist!")
+         raise ValueError("Can't add unit to a detachment not belonging to my armylist!")
       
       profile = detachment.Choices().GroupByName(unitname).Default()
       detachment.AddUnit(UnitInstance(profile, detachment, None, [], None))
       self.SetModified(True)
-      self.siDetachmentModified.emit(index)
+      self.NotifyModelChanged(ArmyListModel.MODIFY_DETACHMENT)
    
    def AttachView(self, view):
       self._views.add(view)
@@ -44,12 +40,12 @@ class ArmyListCtrl(MVC.Controller):
          self.attachedPreview = None
       
    def Revalidate(self):
-      self.NotifyModelChanged(ArmyListCtrl.REVALIDATE)
+      self.NotifyModelChanged(ArmyListModel.REVALIDATE)
    
    def RenameArmyList(self, name):
       print "ArmyListCtrl.RenameArmyList('%s')" % name
-      self.ExecuteCmd(RenameArmyListCmd(name, self.Model().Data()))
-      self.NotifyModelChanged(ArmyListCtrl.CHANGE_NAME)
+      self.ExecuteCmd(RenameArmyListCmd(name, self.model.Data()))
+      self.NotifyModelChanged(ArmyListModel.CHANGE_NAME)
    
    def SetModified(self, modified=True):
       self._modified = modified

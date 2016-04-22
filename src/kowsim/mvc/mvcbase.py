@@ -41,8 +41,8 @@ class Controller(object):
          parameters:
             -model         the model managed by this controller
       """
-      self._model = model
-      self._model.SetCtrl(self)
+      self.model = model
+      self.model.SetCtrl(self)
       self._views = set()
       self._updatesPaused = False
       self._cmdHist = []
@@ -60,6 +60,7 @@ class Controller(object):
    def NotifyModelChanged(self, *hints):
       if self._updatesPaused: return
       for view in self._views:
+         print "Notifying %s" % view
          view.UpdateContent(*hints)
          
    def PauseUpdates(self, pause=True):
@@ -73,7 +74,6 @@ class Controller(object):
    # accessors
    def AttachView(self, view): self._views.add(view)
    def DetachView(self, view): self._views.remove(view)
-   def Model(self): return self._model
    def Views(self): return self._views
    
    
@@ -104,7 +104,10 @@ class Model(object):
    def Data(self): return self._data
    def SetData(self, data):
       self._data = data
-      self._NotifyChanges() 
+      self._NotifyChanges()
+      
+   # properties
+   data = property(Data, SetData)
    
    
 #============================================================================

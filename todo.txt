@@ -20,7 +20,12 @@
 [ ]  Effekte für magische Artefakte analog zu OptionsEffekten.
 [ ]  Zusätzliche Unit-properties: Unit Type (u.a. für Helden), Height, Unique, Irregular
 [ ]  ModifyBaseSizeEffect
+[ ]  Menus updaten wenn MdiWindow wechselt
+[ ]  Icon Registry anstatt mehrfach laden
 
+
+Stil/Design:
+[ ]  "pythonic way": accessors vermeiden, (public) Attribute direkt benutzen
 
 Bugs:
 [ ]  Profilwert der auf '-' steht kann nicht mit Set(...,4) umgesetzt werden (z.B. Naiad Stalker mit Harpoon-gun bei Forces of Nature)
