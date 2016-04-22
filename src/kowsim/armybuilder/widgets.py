@@ -3,12 +3,15 @@
 # kow/widgets.py
 #===============================================================================
 import os
+
 from PySide import QtGui, QtCore
 from PySide.QtCore import Qt
+
 from command import ChangeUnitCmd, ChangeUnitSizeCmd, ChangeUnitItemCmd, SetUnitOptionsCmd
 from kowsim.kow.unittype import ALL_UNITTYPES
 from kowsim.kow.validation import ArmyListValidator, ValidationMessage, ALL_VALIDATIONRULES 
 import kowsim.kow.stats as st
+import globals
 
 #===============================================================================
 # UnitTable
@@ -233,8 +236,8 @@ class ValidationWidget(QtGui.QWidget):
       
    @staticmethod
    def ListWidgetItemForMessage(message):
-      ICN_ERROR16 = QtGui.QIcon(os.path.join("..", "data", "icons", "no16.png"))
-      ICN_INFO16 = QtGui.QIcon(os.path.join("..", "data", "icons", "info16.png"))
+      ICN_ERROR16 = QtGui.QIcon(os.path.join(globals.BASEDIR, "data", "icons", "no16.png"))
+      ICN_INFO16 = QtGui.QIcon(os.path.join(globals.BASEDIR, "data", "icons", "info16.png"))
       icnForMsgType = {ValidationMessage.VM_INFO : ICN_INFO16, ValidationMessage.VM_CRITICAL : ICN_ERROR16, ValidationMessage.VM_WARNING : QtGui.QIcon() }
       lwi = QtGui.QListWidgetItem(icnForMsgType[message._msgType], message._shortDesc)
       lwi.setToolTip(message._longDesc)
@@ -277,7 +280,7 @@ class UnitBrowserWidget(QtGui.QDockWidget):
       self.listWdg.itemDoubleClicked[QtGui.QTreeWidgetItem, int].connect(self.AddUnitTriggered)
       
    def closeEvent(self, e):
-      self.siWasClosed.emit()
+      self.siWasClosed.emit() # notify to allow settings/menus to be updated
       return super(UnitBrowserWidget, self).closeEvent(e)
    
    def AddUnitTriggered(self, item, col):

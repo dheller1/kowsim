@@ -8,7 +8,7 @@ from PySide import QtGui, QtCore
 from widgets import UnitTable, ValidationWidget
 from command import AddDetachmentCmd, DeleteUnitCmd, RenameDetachmentCmd, AddDefaultUnitCmd, DuplicateUnitCmd, SaveArmyListCmd, SetPrimaryDetachmentCmd, RenameArmyListCmd
 from control import ArmyListCtrl
-from kowsim.mvc.mvcbase import View
+from kowsim.mvc.mvcbase import View, Controller
 #from PySide.QtCore import Qt
 
 #===============================================================================
@@ -28,15 +28,15 @@ class ArmyListView(QtGui.QWidget, View):
       self._attachedPreview = None
       self._lastIndex = 0
       self._lastFilename = None
-      self.setWindowTitle((self._ctrl.Model().Data().CustomName() + "*"))
+      self.setWindowTitle((self.ctrl.Model().Data().CustomName() + "*"))
       self._initChildren()
       self._initLayout()
       self._initConnections()
       self.detachmentsTw.setCurrentIndex(0)
-      self._ctrl.Revalidate()
+      self.ctrl.Revalidate()
       
    def _initChildren(self):
-      md = self._ctrl.Model().Data()
+      md = self.ctrl.Model().Data()
       self.customNameLe = QtGui.QLineEdit(md.CustomName())
       
       # points limit spinbox
@@ -45,7 +45,7 @@ class ArmyListView(QtGui.QWidget, View):
       self.pointsLimitSb.setValue(md.PointsLimit())
       self.pointsLimitSb.setSingleStep(50)
       
-      self.validationWdg = ValidationWidget(self._ctrl, parent=self)
+      self.validationWdg = ValidationWidget(self.ctrl, parent=self)
       
       self.detachmentsTw = QtGui.QTabWidget(parent=self)
       self.detachmentsTw.addTab(QtGui.QWidget(), "+")
@@ -90,11 +90,13 @@ class ArmyListView(QtGui.QWidget, View):
    def _HandleArmyNameEdited(self):
       newName = self.customNameLe.text()
       if len(newName.strip())==0: # don't accept, revert
-         self.customNameLe.setText(self._ctrl.Model().Data().CustomName())
-      elif newName != self._ctrl.Model().Data().CustomName():
-         cmd = RenameArmyListCmd(newName, self._ctrl)
-         cmd.Execute()
-      
+         self.customNameLe.setText(self.ctrl.Model().Data().CustomName())
+      elif newName != self.ctrl.Model().Data().CustomName():
+         self.ctrl.RenameArmyList(newName)
+   
+   #============================================================================
+   # Qt event handler overrides
+   #============================================================================
    def closeEvent(self, e):
       if self._wasModified:
          res = QtGui.QMessageBox.question(self, "Close army list", "You have unsaved changes in this army list.\nDo you want to save before closing?", 
@@ -105,8 +107,8 @@ class ArmyListView(QtGui.QWidget, View):
             return
          
          elif res == QtGui.QMessageBox.Yes:
-            cmd = SaveArmyListCmd(self._model, self)
-            cmd.Execute()
+            cmd = SaveArmyListCmd(self._model, self) # TODO: If Save is actually SaveAs and the Dialog is aborted, abort the close event!
+            cmd.Execute()                            # (e.g. check if document is still in modified status after the Save command)
       
       super(ArmyListView, self).closeEvent(e)
       
@@ -153,7 +155,7 @@ class ArmyListView(QtGui.QWidget, View):
    # A partial update might be sufficient if every hint in 'hints'
    # can be handled.
    def UpdateContent(self, *hints):
-      md = self._ctrl.Model().Data()
+      md = self.ctrl.Model().Data()
       unknownHints = False
       
       for hint in hints:
@@ -164,7 +166,7 @@ class ArmyListView(QtGui.QWidget, View):
          
       if unknownHints or len(hints)==0:
          self.UpdateTitle()
-         for i in range(self._ctrl.Model().Data().NumDetachments()):
+         for i in range(self.ctrl.Model().Data().NumDetachments()):
             self.UpdateDetachment(i)
       
    def UpdateDetachment(self, index):
@@ -172,7 +174,7 @@ class ArmyListView(QtGui.QWidget, View):
       self.detachmentsTw.widget(index).UpdateContent()
       
    def UpdateTitle(self):
-      title = self._ctrl.Model().Data().CustomName()
+      title = self.ctrl.Model().Data().CustomName()
       if self._lastFilename: title += " (%s)" % os.path.basename(self._lastFilename)
       if self._wasModified: title += "*"
       self.setWindowTitle(title)
@@ -330,10 +332,10 @@ class DetachmentView(QtGui.QWidget):
 #===============================================================================
 # ArmyListOutputView
 #===============================================================================
-class ArmyListOutputView(QtGui.QTextEdit):      
-   def __init__(self, model, parent=None):
+class ArmyListOutputView(QtGui.QTextEdit, View):      
+   def __init__(self, ctrl, parent=None):
       QtGui.QTextEdit.__init__(self, parent)
-      self._model = model
+      View.__init__(self, ctrl)
       self.setReadOnly(True)
       self.UpdateContent()
       
@@ -371,7 +373,7 @@ class ArmyListOutputView(QtGui.QTextEdit):
       return pre+headRow+labelsRow+profileRow+post
       
    def UpdateContent(self):
-      al = self._model
+      al = self.ctrl.Model().Data()
       self.setWindowTitle("Preview: " + al.CustomName())
       
       header = """<html>\n

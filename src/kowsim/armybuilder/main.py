@@ -6,22 +6,21 @@ import os, sys
 from PySide import QtGui, QtCore
 from PySide.QtCore import Qt
 
-from ..kow.force import Detachment
+from kowsim.kow.force import Detachment
 from mvc.models import ArmyListModel
 from load_data import DataManager
-from views import ArmyListView
-from command import SaveArmyListCmd, LoadArmyListCmd
+from views import ArmyListView, ArmyListOutputView
+from command import SaveArmyListCmd, LoadArmyListCmd, PreviewArmyListCmd
 from dialogs import NewArmyListDialog
 from control import ArmyListCtrl
-from kowsim.armybuilder.command import PreviewArmyListCmd
-from kowsim.armybuilder.views import ArmyListOutputView
-from kowsim.armybuilder.widgets import UnitBrowserWidget
-
+from widgets import UnitBrowserWidget
+import globals
 
 #===============================================================================
 # MainWindow
 #===============================================================================
 class MainWindow(QtGui.QMainWindow):
+   """ Armybuilder application main window """
    def __init__(self):
       super(MainWindow, self).__init__()
       QtGui.qApp.MainWindow = self # this is dirty .. make a proper singleton or don't be so lazy ..
@@ -56,9 +55,9 @@ class MainWindow(QtGui.QMainWindow):
       
       self.toolBar = QtGui.QToolBar(self)
       self.toolBar.setObjectName("ToolBar")
-      self.toolBar.addAction(QtGui.QIcon(os.path.join("..","data","icons","new.png")), "New army list", self.NewArmyList)
-      self.openAction = self.toolBar.addAction(QtGui.QIcon(os.path.join("..","data","icons","open.png")), "Open", self.OpenArmyList)
-      self.saveAction = self.toolBar.addAction(QtGui.QIcon(os.path.join("..","data","icons","save.png")), "Save", self.SaveArmyList)
+      self.toolBar.addAction(QtGui.QIcon(os.path.join(globals.BASEDIR,"data","icons","new.png")), "New army list", self.NewArmyList)
+      self.openAction = self.toolBar.addAction(QtGui.QIcon(os.path.join(globals.BASEDIR,"data","icons","open.png")), "Open", self.OpenArmyList)
+      self.saveAction = self.toolBar.addAction(QtGui.QIcon(os.path.join(globals.BASEDIR,"data","icons","save.png")), "Save", self.SaveArmyList)
       self.saveAction.setEnabled(False)
       
       self.addToolBar(self.toolBar)
@@ -109,7 +108,7 @@ class MainWindow(QtGui.QMainWindow):
          if type(sub.widget()) != ArmyListView:
             return # just ignore when non-armylist view windows are select (such as previews)
          alView = sub.widget()
-         alCtrl = alView._ctrl
+         alCtrl = alView.ctrl
          detView = alView.detachmentsTw.currentWidget()
          if detView:
             self.unitBrowser.Update(detView._model, alCtrl)
@@ -134,9 +133,8 @@ class MainWindow(QtGui.QMainWindow):
       if not sub: return
       if type(sub.widget()) != ArmyListView: return
       
-      alview = sub.widget()
-      cmd = PreviewArmyListCmd(self.mdiArea)
-      cmd.Execute(alview)
+      cmd = PreviewArmyListCmd(sub.widget().ctrl, self.mdiArea)
+      cmd.Execute()
    
    def SaveArmyList(self, saveAs=False):
       l = len(self.mdiArea.subWindowList())
@@ -161,10 +159,11 @@ class MainWindow(QtGui.QMainWindow):
 # MainMenu
 #===============================================================================
 class MainMenu(QtGui.QMenuBar):
+   """ Armybuilder application main menu """
    def __init__(self, *args):
       super(MainMenu, self).__init__(*args)
       
-      QtGui.qApp.MainMenu = self # this is dirty .. make a proper singleton or don't be so lazy ..
+      QtGui.qApp.MainMenu = self # FIXME: .. this is dirty .. make a proper singleton or don't be so lazy ..
       self.recentActs = []
       
       # file menu
@@ -182,6 +181,11 @@ class MainMenu(QtGui.QMenuBar):
       self.recentSep = self.fileMenu.addSeparator()
       self.UpdateRecent()
       self.exitAct = self.fileMenu.addAction("&Exit")
+      
+      # edit menu
+      self.editMenu = self.addMenu("&Edit")
+      self.undoAct = self.editMenu.addAction("&Undo")
+      self.redoAct = self.editMenu.addAction("&Redo")
       
       # view menu
       self.viewMenu = self.addMenu("&View")
@@ -240,6 +244,7 @@ class MainMenu(QtGui.QMenuBar):
 # MdiArea
 #===============================================================================
 class MdiArea(QtGui.QMdiArea):
+   """ Armybuilder application central widget, an MDI area """
    def __init__(self, *args):
       super(MdiArea, self).__init__(*args)
       self.setViewMode(QtGui.QMdiArea.TabbedView)
@@ -248,18 +253,18 @@ class MdiArea(QtGui.QMdiArea):
       #self.AddArmySubWindow()
       self.subWindowActivated.connect(QtGui.qApp.MainWindow.CurrentDetachmentChanged)
       
-   def AddArmySubWindow(self, armyList=None):
-      if armyList is None:
+   def AddArmySubWindow(self, armyListModel=None):
+      if armyListModel is None:
          dlg = NewArmyListDialog()
          if not (QtGui.QDialog.Accepted == dlg.exec_()):
             return
          num = len(self.subWindowList()) # number of unnamed armies
          if num==0: name = "Unnamed army"
          else: name = "Unnamed army (%d)" % (num+1)
-         armyList = ArmyListModel(name, dlg.PointsLimit())
-         armyList.AddDetachment( Detachment(dlg.PrimaryForce(), None, [], True) )
+         armyListModel = ArmyListModel(name, dlg.PointsLimit())
+         armyListModel.AddDetachment( Detachment(dlg.PrimaryForce(), None, [], True) )
       
-      sub = ArmyListView(ArmyListCtrl(armyList))
+      sub = ArmyListView(ArmyListCtrl(armyListModel))
       self.addSubWindow(sub)
       sub.show() # important!
       sub.showMaximized()
@@ -271,9 +276,9 @@ class MdiArea(QtGui.QMdiArea):
       QtGui.qApp.MainWindow.CurrentDetachmentChanged()
       return sub
    
-   def AddPreviewSubWindow(self, armyList):
+   def AddPreviewSubWindow(self, armyListCtrl):
       #sub = ArmyMainWidget(name)
-      sub = ArmyListOutputView(armyList)
+      sub = ArmyListOutputView(armyListCtrl)
       self.addSubWindow(sub)
       sub.show() # important!
       sub.showMaximized()
@@ -284,8 +289,12 @@ class MdiArea(QtGui.QMdiArea):
 # initDefaultSettings
 #===============================================================================
 def initDefaultSettings():
-   defaultSettings = [ ("Recent/NumRecent", 5)
-                      ]
+   """ Initialize default settings possibly needed before the first program start """
+   # this file is in subfolder src/kowsim/armybuilder
+   basedir = os.path.normpath( os.path.join( os.path.dirname(os.path.realpath(__file__)),"..", "..", "..") )
+   print basedir
+   defaultSettings = [ ("Recent/NumRecent", 5),
+                       ("Basedir", basedir) ]
    
    settings = QtCore.QSettings("NoCompany", "KowArmyBuilder")
    for name, value in defaultSettings:
@@ -297,8 +306,11 @@ def initDefaultSettings():
 # main - entry point
 #===============================================================================
 def main():
+   """ Application entry point """
+   print os.path.dirname(os.path.realpath(__file__))
    app = QtGui.QApplication(sys.argv)
    initDefaultSettings()
+   globals.LoadSettings()
 
    w = MainWindow()
    w.show()

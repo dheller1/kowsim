@@ -9,12 +9,15 @@
 class Command(object):
    def __init__(self, name):
       self._name = name
+      self._reversible = False
       
    def __repr__(self):
       return self._name
       
    def Execute(self):
       raise NotImplementedError
+   
+   def IsReversible(self): return self._reversible
    
 #===============================================================================
 # ModelViewCommand
@@ -30,6 +33,7 @@ class ModelViewCommand(Command):
 #===============================================================================
 class ReversibleCommandMixin(object):
    def __init__(self):
+      self._reversible = False
       self._timesExecuted = 0
       self._timesUndone = 0
    

@@ -2,11 +2,11 @@
 
 # armybuilder/parsers.py
 #===============================================================================
-from ..util.csv_util import CsvParser
-from ..kow.unit import UnitProfile
-from ..kow.alignment import KowAlignment, Find
-from ..kow.force import KowForceChoices
-from ..kow.item import Item
+from kowsim.util.csv_util import CsvParser
+from kowsim.kow.unit import UnitProfile
+from kowsim.kow.alignment import KowAlignment, Find
+from kowsim.kow.force import KowForceChoices
+from kowsim.kow.item import Item
 
 
 class ForceListCsvParser(CsvParser):

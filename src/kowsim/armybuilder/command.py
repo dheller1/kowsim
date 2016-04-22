@@ -11,6 +11,7 @@ from kowsim.command.command import Command, ModelViewCommand, ReversibleCommandM
 from kowsim.kow.force import Detachment
 from kowsim.kow.unit import UnitInstance
 from kowsim.kow.fileio import ArmyListWriter, ArmyListReader
+from kowsim.armybuilder.mvc.models import ArmyListModel
 
 #===============================================================================
 # AddDetachmentCmd
@@ -55,21 +56,21 @@ class RenameDetachmentCmd(ModelViewCommand, ReversibleCommandMixin):
 # RenameArmyListCmd
 #===============================================================================
 class RenameArmyListCmd(Command, ReversibleCommandMixin):
-   def __init__(self, newName, ctrl):
+   def __init__(self, newName, al):
       Command.__init__(self, name="RenameArmyListCmd")
       ReversibleCommandMixin.__init__(self)
       self._newName = newName
-      self._previousName = ctrl.Model().Data().CustomName()
-      self._ctrl = ctrl
+      self._armyList = al
+      self._previousName = self._armyList.CustomName()
       
    def Execute(self):
-      self._ctrl.SetArmyName(self._newName)
+      self._armyList.SetCustomName(self._newName)
    
    def Redo(self):
       self.Execute()
    
    def Undo(self):
-      self._ctrl.SetArmyName(self._previousName)
+      self._armyList.SetCustomName(self._previousName)
          
          
 #===============================================================================
@@ -324,7 +325,7 @@ class LoadArmyListCmd(Command):
       if warnings != []:
          QtGui.QMessageBox.warning(self._mdiArea, "Warning", "File %s was successfully loaded, but there were warnings:\n" % os.path.basename(filename) + "\n".join(warnings))
          
-      view = self._mdiArea.AddArmySubWindow(armylist)
+      view = self._mdiArea.AddArmySubWindow(ArmyListModel(armylist))
       view.SetLastFilename(filename)
       QtGui.qApp.DataManager.AddRecentFile(filename)
       view.siRecentFilesChanged.emit()
@@ -336,12 +337,13 @@ class LoadArmyListCmd(Command):
 # PreviewArmyListCmd
 #===============================================================================
 class PreviewArmyListCmd(Command):
-   def __init__(self, mdiArea):
+   def __init__(self, alctrl, mdiArea):
       Command.__init__(self, name="PreviewArmyListCmd")
+      self._ctrl = alctrl
       self._mdiArea = mdiArea
       
-   def Execute(self, alview):
-      oldPrv = alview._attachedPreview
+   def Execute(self):
+      oldPrv = self._ctrl.attachedPreview
       if oldPrv: # try to find mdi subwindow for the old preview and switch to it
          for wnd in self._mdiArea.subWindowList():
             if wnd.widget() is oldPrv:
@@ -349,6 +351,4 @@ class PreviewArmyListCmd(Command):
                return
          # if we're still here, the preview is still linked but has been closed already.
          # thus, just add a new one as if no old one was present.
-      al = alview._model
-      sub = self._mdiArea.AddPreviewSubWindow(al)
-      alview._attachedPreview = sub
+      sub = self._mdiArea.AddPreviewSubWindow(self._ctrl)
