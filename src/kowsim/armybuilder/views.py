@@ -114,7 +114,7 @@ class ArmyListView(QtGui.QWidget, View):
       super(ArmyListView, self).closeEvent(e)
       
    def AddDetachmentView(self, detachment):
-      dv = DetachmentView(detachment)
+      dv = DetachmentView(detachment, self.ctrl)
       self.detachmentsTw.insertTab(self.detachmentsTw.count()-1, dv, detachment.CustomName())
       self.detachmentsTw.setCurrentIndex(self.detachmentsTw.count()-2) # switch to new tab
       dv.siNameChanged.connect(self.DetachmentNameChanged)
@@ -187,13 +187,14 @@ class ArmyListView(QtGui.QWidget, View):
 #   Usually used within an ArmyListView, which will show each of its DetachmentViews
 #   in a TabWidget.
 #===============================================================================
-class DetachmentView(QtGui.QWidget):
+class DetachmentView(QtGui.QWidget, View):
    siModified = QtCore.Signal(bool)
    siNameChanged = QtCore.Signal(str)
    siPrimaryToggled = QtCore.Signal(bool)
    
-   def __init__(self, model, parent=None):
+   def __init__(self, model, ctrl, parent=None):
       QtGui.QWidget.__init__(self, parent)
+      View.__init__(self, ctrl) # ctrl is an ArmyListCtrl
       self._model = model # Detachment
       self._initChildren()
       self._initLayout()
@@ -222,7 +223,6 @@ class DetachmentView(QtGui.QWidget):
       self.detailsGb = QtGui.QGroupBox("Details")
       self.detailsGb.setMinimumWidth(400)
       self.unitGb = QtGui.QGroupBox("Units")
-      
       
    def _initLayout(self):
       #self.setWindowTitle(("*" + name))
@@ -284,7 +284,7 @@ class DetachmentView(QtGui.QWidget):
       self.isPrimaryDetachmentCb.stateChanged.connect(self.TogglePrimary)
       
    def AddUnit(self):
-      cmd = AddDefaultUnitCmd(self._model, self)
+      cmd = AddDefaultUnitCmd(self.ctrl, self._model)
       cmd.Execute()
       
    def DeleteUnit(self):
@@ -315,7 +315,7 @@ class DetachmentView(QtGui.QWidget):
          self.duplicateUnitPb.setEnabled(False)
          self.deleteUnitPb.setEnabled(False)
          
-   def UpdateContent(self):
+   def UpdateContent(self, *hints):
       self.isPrimaryDetachmentCb.setChecked(self._model.IsPrimary())
       for i in range(self._model.NumUnits()):
          self._UpdateUnit(i)

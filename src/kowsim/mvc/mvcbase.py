@@ -60,7 +60,6 @@ class Controller(object):
    def NotifyModelChanged(self, *hints):
       if self._updatesPaused: return
       for view in self._views:
-         print "Notifying %s" % view
          view.UpdateContent(*hints)
          
    def PauseUpdates(self, pause=True):

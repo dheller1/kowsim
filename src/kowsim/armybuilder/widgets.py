@@ -246,7 +246,6 @@ class ValidationWidget(QtGui.QWidget, View):
       return lwi
       
    def UpdateContent(self, *hints):
-      print "Updating", self
       messages = self._validator.Check()
       self._messageLw.clear()
       valid = True

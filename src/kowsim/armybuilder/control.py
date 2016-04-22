@@ -24,8 +24,11 @@ class ArmyListCtrl(MVC.Controller):
       except ValueError:
          raise ValueError("Can't add unit to a detachment not belonging to my armylist!")
       
-      profile = detachment.Choices().GroupByName(unitname).Default()
-      detachment.AddUnit(UnitInstance(profile, detachment, None, [], None))
+      if unitname is None:
+         profile = detachment.Choices().ListUnits()[0]
+      else:
+         profile = detachment.Choices().GroupByName(unitname).Default()
+      detachment.AddUnit(UnitInstance(profile, detachment))
       self.SetModified(True)
       self.NotifyModelChanged(ArmyListModel.MODIFY_DETACHMENT)
    

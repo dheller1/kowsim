@@ -76,21 +76,20 @@ class RenameArmyListCmd(Command, ReversibleCommandMixin):
 #===============================================================================
 # AddDefaultUnitCmd
 #===============================================================================
-class AddDefaultUnitCmd(ModelViewCommand, ReversibleCommandMixin):
-   def __init__(self, detachment, detachmentview):
-      ModelViewCommand.__init__(self, model=detachment, view=detachmentview, name="AddDefaultUnitCmd")
+class AddDefaultUnitCmd(Command, ReversibleCommandMixin):
+   def __init__(self, armyCtrl, detachment):
+      Command.__init__(self, name="AddDefaultUnitCmd")
       ReversibleCommandMixin.__init__(self)
+      
+      self._armyCtrl = armyCtrl
+      self._detachment = detachment
    
    def Execute(self):
-      self._model.AddUnit(UnitInstance(self._model.Choices().ListUnits()[0], self._model, None, []))
-      index = self._model.NumUnits()-1
-      self._view.UpdateUnit(index)
-      self._view.UpdatePoints()
-      self._view.SetModified(True)
+      self._armyCtrl.AddUnitToDetachment(None, self._detachment)
 
 
 #===============================================================================
-# AddSpecificUnitCmd
+# AddSpecificUnitCmd - !!! CURRENTLY NOT USED !!!
 #===============================================================================
 class AddSpecificUnitCmd(Command, ReversibleCommandMixin):
    def __init__(self, armyCtrl, detachment, unitname):
@@ -98,11 +97,11 @@ class AddSpecificUnitCmd(Command, ReversibleCommandMixin):
       ReversibleCommandMixin.__init__(self)
       
       self._armyCtrl = armyCtrl
-      unitProfile = detachment.Choices().GroupByName(unitname).Default()
-      self._unit = UnitInstance(unitProfile, self._detachment)
+      self._unitname = unitname
+      self._detachment = detachment
    
    def Execute(self):
-      self._armyCtrl.AddUnitToDetachment(self._unit)
+      self._armyCtrl.AddUnitToDetachment(self._unitname, self._detachment)
       
       
 #===============================================================================
