@@ -36,6 +36,14 @@ class ArmyListCtrl(MVC.Controller):
       self._views.add(view)
       if isinstance(view, kowsim.armybuilder.views.ArmyListOutputView) and self.attachedPreview is None:
             self.attachedPreview = view
+            
+   def ChangeUnitSize(self, unit, sizeType):
+      unitname = unit.Profile().Name()
+      newProfile = unit.Detachment().Choices().GroupByName(unitname).ProfileForSize(sizeType)
+      
+      unit.SetProfile(newProfile)
+      self.SetModified(True)
+      self.NotifyModelChanged(ArmyListModel.MODIFY_UNIT, unit)
    
    def DetachView(self, view):
       self._views.remove(view)

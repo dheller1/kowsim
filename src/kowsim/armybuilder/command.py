@@ -125,21 +125,19 @@ class ChangeUnitCmd(ModelViewCommand, ReversibleCommandMixin):
 #===============================================================================
 # ChangeUnitSizeCmd
 #===============================================================================
-class ChangeUnitSizeCmd(ModelViewCommand, ReversibleCommandMixin):
-   def __init__(self, detachment, unittable):
-      ModelViewCommand.__init__(self, model=detachment, view=unittable, name="ChangeUnitSizeCmd")
+class ChangeUnitSizeCmd(Command, ReversibleCommandMixin):
+   """ This command is invoked when a units' size is changed, e.g. from Regiment to Horde. """
+   def __init__(self, armyCtrl, unit, newSize):
+      Command.__init__(self, name="ChangeUnitSizeCmd")
       ReversibleCommandMixin.__init__(self)
-   
-   def Execute(self, row, sizeStr):
-      newSize = kowsim.kow.sizetype.Find(sizeStr).Name()
       
-      unitname = self._model.Unit(row).Profile().Name()
-      newProfile = self._model.Choices().GroupByName(unitname).ProfileForSize(newSize)
-      self._model.Unit(row).SetProfile(newProfile)
-      self._view.UpdateTextInRow(row)
-      self._view.UpdateUnitOptions(row)
-      self._view.siPointsChanged.emit()
-      self._view.SetModified(True)
+      self._armyCtrl = armyCtrl
+      self._unit = unit
+      self._newSize = newSize
+   
+   def Execute(self):
+      sizeType = kowsim.kow.sizetype.Find(self._newSize).Name()
+      self._armyCtrl.ChangeUnitSize(self._unit, sizeType)      
       
 
 #===============================================================================

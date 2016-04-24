@@ -23,8 +23,9 @@ class UnitTable(QtGui.QTableWidget):
    siModified = QtCore.Signal(bool)
    DefaultRowHeight = 22
    
-   def __init__(self, model):
+   def __init__(self, model, armyCtrl):
       QtGui.QTableWidget.__init__(self)
+      self._armyCtrl = armyCtrl
       self._model = model # Detachment object
       self._columns = ("Unit", "Type", "Size", "Sp", "Me", "Ra", "De", "At", "Ne", "Points", "Special", "Magic item", "Options")
       self._colWidths = {"Unit": 170, "Type": 90, "Size": 80, "Sp": 30, "Me": 30, "Ra": 30, "De": 30, "At": 30, "Ne": 45, "Points": 45, "Special": 350, "Magic item": 200, "Options": 50}
@@ -80,9 +81,10 @@ class UnitTable(QtGui.QTableWidget):
       row = sender.rowForWidget
       
       newSizeStr = self.cellWidget(row, self._columns.index("Size")).currentText()
+      unit = self._model.ListUnits()[row]
       
-      cmd = ChangeUnitSizeCmd(self._model, self)
-      cmd.Execute(row, newSizeStr)
+      cmd = ChangeUnitSizeCmd(self._armyCtrl, unit, newSizeStr)
+      cmd.Execute()
       
    def SelectedRows(self):
       rows = []

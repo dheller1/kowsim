@@ -207,7 +207,7 @@ class DetachmentView(QtGui.QWidget, View):
       self.isPrimaryDetachmentCb = QtGui.QCheckBox()
       if self._model.IsPrimary(): self.isPrimaryDetachmentCb.setChecked(True)
       
-      self.unitTable = UnitTable(self._model)
+      self.unitTable = UnitTable(self._model, self.ctrl)
       self.pointsLbl = QtGui.QLabel("<b>0</b>")
             
       self.addUnitPb = QtGui.QPushButton(QtGui.QIcon(os.path.join(globals.BASEDIR, "data","icons","plus.png")), "&Add")

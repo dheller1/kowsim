@@ -12,6 +12,7 @@ class ArmyListModel(Model):
    REVALIDATE              = 10001
    CHANGE_NAME             = 10002
    MODIFY_DETACHMENT       = 10003
+   MODIFY_UNIT             = 10004 # additional arg: reference to unit
    
    def __init__(self, *args):
       if len(args)==1 and isinstance(args[0], ArmyList):
