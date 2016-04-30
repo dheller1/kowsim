@@ -143,16 +143,26 @@ class ChangeUnitSizeCmd(Command, ReversibleCommandMixin):
 #===============================================================================
 # ChangeUnitItemCmd
 #===============================================================================
-class ChangeUnitItemCmd(ModelViewCommand, ReversibleCommandMixin):
-   def __init__(self, unit, unittable):
-      ModelViewCommand.__init__(self, model=unit, view=unittable, name="ChangeUnitSizeCmd")
-      ReversibleCommandMixin.__init__(self)
+class ChangeUnitItemCmd(Command, ReversibleCommandMixin):
+   """ This command is invoked when a units' magic artefact is changed.
    
-   def Execute(self, row, item):
-      self._model.SetItem(item)
-      self._view.UpdateTextInRow(row)
-      self._view.siPointsChanged.emit()
-      self._view.SetModified(True)
+   This is a new-style command, changing data directly upon the model and providing
+   any update-hints for views in its 'hints' member variable. It can also be used
+   in the controller's command/undo history.
+   """
+   def __init__(self, unit, item):
+      Command.__init__(self, name="ChangeUnitItemCmd")
+      ReversibleCommandMixin.__init__(self)
+      self._unit = unit
+      self._item = item
+      self.hints = ((ArmyListModel.MODIFY_UNIT, self._unit), )
+   
+   def Execute(self):
+      self._oldItem = self._unit.Item()
+      self._unit.SetItem(self._item)
+      
+   def Undo(self):
+      self._unit.SetItem(self._oldItem)
       
       
 #===============================================================================

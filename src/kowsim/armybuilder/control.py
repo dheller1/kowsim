@@ -49,6 +49,11 @@ class ArmyListCtrl(MVC.Controller):
       self._views.remove(view)
       if self.attachedPreview is view:
          self.attachedPreview = None
+         
+   def ProcessHints(self, hints):
+      # Currently, all hints are forwarded. As soon as commands which do not modify a model
+      # are introduced (e.g. printing), these should be filtered and ignored here.
+      self.NotifyModelChanged(hints)
       
    def Revalidate(self):
       self.NotifyModelChanged(ArmyListModel.REVALIDATE)

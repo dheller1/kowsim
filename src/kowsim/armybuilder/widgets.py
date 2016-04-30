@@ -51,8 +51,8 @@ class UnitTable(QtGui.QTableWidget):
          itemName = itemName[:leftBracket].strip()
          item = QtGui.qApp.DataManager.ItemByName(itemName)
          
-      cmd = ChangeUnitItemCmd(unit, self)
-      cmd.Execute(row, item)
+      cmd = ChangeUnitItemCmd(unit, item)
+      self._armyCtrl.AddAndExecute(cmd)
    
    def ChangeOptions(self):
       optMenu = self.sender()

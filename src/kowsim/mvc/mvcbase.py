@@ -48,13 +48,15 @@ class Controller(object):
       self._cmdHist = []
       self._undoHist = []
       
-   # execute a command and, if it's reversible, add it to the command history
-   def ExecuteCmd(self, cmd):
+   # execute a command and, if it's reversible, add it to the undo history
+   def AddAndExecute(self, cmd):
       cmd.Execute()
       self._cmdHist.append(cmd)
       print "CmdHistory:", self._cmdHist
       if cmd.IsReversible():
          self._undoHist.append(cmd)
+         
+      self.ProcessHints(cmd.hints)
    
    # inform views about changes in the model
    def NotifyModelChanged(self, *hints):
@@ -65,6 +67,9 @@ class Controller(object):
    def PauseUpdates(self, pause=True):
       if pause: self._updatesPaused = True
       else: self.UnpauseUpdates()
+      
+   def ProcessHints(self):
+      pass
       
    def UnpauseUpdates(self):
       self._updatesPaused = False
