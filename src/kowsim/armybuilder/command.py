@@ -12,7 +12,6 @@ from kowsim.kow.force import Detachment
 from kowsim.kow.unit import UnitInstance
 from kowsim.kow.fileio import ArmyListWriter, ArmyListReader
 from kowsim.armybuilder.mvc.models import ArmyListModel
-from _sqlite3 import Row
 
 #===============================================================================
 # AddDetachmentCmd

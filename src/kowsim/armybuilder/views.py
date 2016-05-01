@@ -384,7 +384,7 @@ class ArmyListOutputView(QtGui.QTextEdit, View):
                                                             unit.NeStr(), unit.PointsCost(), specialText)
       return pre+headRow+labelsRow+profileRow+post
       
-   def UpdateContent(self):
+   def UpdateContent(self, *hints):
       al = self.ctrl.model.Data()
       self.setWindowTitle("Preview: " + al.CustomName())
       
