@@ -25,7 +25,6 @@ class ArmyListView(QtGui.QWidget, View):
    def __init__(self, ctrl, parent=None):
       QtGui.QWidget.__init__(self, parent)
       View.__init__(self, ctrl)
-      self._wasModified = False
       self._attachedPreview = None
       self._lastIndex = 0
       self._lastFilename = None
@@ -99,14 +98,13 @@ class ArmyListView(QtGui.QWidget, View):
    # Qt event handler overrides
    #============================================================================
    def closeEvent(self, e):
-      if self._wasModified:
+      if self.ctrl.model.modified:
          res = QtGui.QMessageBox.question(self, "Close army list", "You have unsaved changes in this army list.\nDo you want to save before closing?", 
                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No | QtGui.QMessageBox.Cancel, QtGui.QMessageBox.Yes)
          
          if res == QtGui.QMessageBox.Cancel:
             e.ignore()
             return
-         
          elif res == QtGui.QMessageBox.Yes:
             cmd = SaveArmyListCmd(self._model, self) # TODO: If Save is actually SaveAs and the Dialog is aborted, abort the close event!
             cmd.Execute()                            # (e.g. check if document is still in modified status after the Save command)
@@ -142,8 +140,7 @@ class ArmyListView(QtGui.QWidget, View):
       self._lastFilename = name
       self.UpdateTitle()
    
-   def SetModified(self, modified):
-      self._wasModified = modified
+   def SetModified(self):
       self.UpdateTitle()
 
    def TogglePrimaryDetachment(self, makePrimary):
@@ -177,7 +174,7 @@ class ArmyListView(QtGui.QWidget, View):
    def UpdateTitle(self):
       title = self.ctrl.model.Data().CustomName()
       if self._lastFilename: title += " (%s)" % os.path.basename(self._lastFilename)
-      if self._wasModified: title += "*"
+      if self.ctrl.model.modified: title += "*"
       self.setWindowTitle(title)
          
 
@@ -296,16 +293,16 @@ class DetachmentView(QtGui.QWidget, View):
       if QtGui.QMessageBox.Yes != QtGui.QMessageBox.warning(self, "Delete unit(s)", confirm, QtGui.QMessageBox.Yes | QtGui.QMessageBox.Cancel):
          return
       
-      cmd = DeleteUnitCmd(self._model, delUnits)
+      cmd = DeleteUnitCmd(self.ctrl.model, self._model, delUnits)
       self.ctrl.AddAndExecute(cmd)
       self.unitTable.clearSelection()
       
    def DuplicateUnit(self):
-      cmd = DuplicateUnitCmd(self._model, self.unitTable.SelectedUnits())
+      cmd = DuplicateUnitCmd(self.ctrl.model, self._model, self.unitTable.SelectedUnits())
       self.ctrl.AddAndExecute(cmd)
    
    def RenameDetachment(self):
-      cmd = RenameDetachmentCmd(self._model, self)
+      cmd = RenameDetachmentCmd(self.ctrl.model, self._model, self)
       cmd.Execute(name=self.customNameLe.text())
       
    def SetModified(self, modified=True):

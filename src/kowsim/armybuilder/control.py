@@ -16,7 +16,6 @@ class ArmyListCtrl(MVC.Controller):
    def __init__(self, model):
       MVC.Controller.__init__(self, model)
       self.model = model
-      self._modified = False
       self.attachedPreview = None
             
    def AddUnitToDetachment(self, unitname, detachment):
@@ -29,7 +28,7 @@ class ArmyListCtrl(MVC.Controller):
       else:
          profile = detachment.Choices().GroupByName(unitname).Default()
       detachment.AddUnit(UnitInstance(profile, detachment))
-      self.SetModified(True)
+      self.model.Touch()
       self.NotifyModelChanged(ArmyListModel.MODIFY_DETACHMENT)
    
    def AttachView(self, view):
@@ -42,7 +41,7 @@ class ArmyListCtrl(MVC.Controller):
       newProfile = unit.Detachment().Choices().GroupByName(unitname).ProfileForSize(sizeType)
       
       unit.SetProfile(newProfile)
-      self.SetModified(True)
+      self.model.Touch()
       self.NotifyModelChanged(ArmyListModel.MODIFY_UNIT, unit)
    
    def DetachView(self, view):
@@ -62,9 +61,7 @@ class ArmyListCtrl(MVC.Controller):
       print "ArmyListCtrl.RenameArmyList('%s')" % name
       self.ExecuteCmd(RenameArmyListCmd(name, self.model.Data()))
       self.NotifyModelChanged(ArmyListModel.CHANGE_NAME)
-   
-   def SetModified(self, modified=True):
-      self._modified = modified
+      self.model.Touch()
       
    def SetPrimaryDetachment(self, detachment, makePrimary):
       try: self._model.ListDetachments().index(detachment)

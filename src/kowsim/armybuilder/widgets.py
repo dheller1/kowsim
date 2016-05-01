@@ -65,7 +65,7 @@ class UnitTable(QtGui.QTableWidget):
          if act.isChecked():
             chosenOpts.append(opt)
       
-      cmd = SetUnitOptionsCmd(unit, self)
+      cmd = SetUnitOptionsCmd(self._armyCtrl.model, unit, self)
       cmd.Execute(row, chosenOpts)
       
    def ChangeUnit(self, newindex):
@@ -73,8 +73,8 @@ class UnitTable(QtGui.QTableWidget):
       row = sender.rowForWidget
       
       newUnitName = self.cellWidget(row, self._columns.index("Unit")).currentText()
-      cmd = ChangeUnitCmd(self._model, self)
-      cmd.Execute(row, newUnitName)
+      cmd = ChangeUnitCmd(self._armyCtrl.model, self._model, row, newUnitName)
+      self._armyCtrl.AddAndExecute(cmd)
       
    def ChangeSize(self, newindex):
       sender = self.sender() 

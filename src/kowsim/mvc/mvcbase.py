@@ -95,6 +95,7 @@ class Model(object):
       """Model constructor"""
       self._ctrl = None
       self._data = data
+      self.modified = False # True if model was modified since last save
    
    # notify Controller about changes in the model
    def _NotifyChanges(self, *hints):
@@ -108,6 +109,7 @@ class Model(object):
    def SetData(self, data):
       self._data = data
       self._NotifyChanges()
+   def Touch(self): self.modified = True
       
    # properties
    data = property(Data, SetData)

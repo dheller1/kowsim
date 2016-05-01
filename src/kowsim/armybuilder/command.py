@@ -12,6 +12,7 @@ from kowsim.kow.force import Detachment
 from kowsim.kow.unit import UnitInstance
 from kowsim.kow.fileio import ArmyListWriter, ArmyListReader
 from kowsim.armybuilder.mvc.models import ArmyListModel
+from _sqlite3 import Row
 
 #===============================================================================
 # AddDetachmentCmd
@@ -31,7 +32,7 @@ class AddDetachmentCmd(ModelViewCommand, ReversibleCommandMixin):
          detachment = Detachment(dlg.Force(), None, [], dlg.MakePrimary())
          self._model.AddDetachment(detachment)
          self._view.AddDetachmentView(detachment)
-         self._view.SetModified(True)
+         self._model.Touch()
          self._view._ctrl.Revalidate()
          
          
@@ -39,9 +40,10 @@ class AddDetachmentCmd(ModelViewCommand, ReversibleCommandMixin):
 # RenameDetachmentCmd
 #===============================================================================
 class RenameDetachmentCmd(ModelViewCommand, ReversibleCommandMixin):
-   def __init__(self, detachment, detachmentview):
+   def __init__(self, alModel, detachment, detachmentview):
       ModelViewCommand.__init__(self, model=detachment, view=detachmentview, name="RenameDetachmentCmd")
       ReversibleCommandMixin.__init__(self)
+      self._alModel = alModel
       
    def Execute(self, name):
       oldname = self._model.CustomName()
@@ -49,7 +51,7 @@ class RenameDetachmentCmd(ModelViewCommand, ReversibleCommandMixin):
       if name!=oldname:
          self._model.SetCustomName(name)
          self._view.siNameChanged.emit(name)
-         self._view.SetModified(True)
+         self._alModel.Touch()
 
          
 #===============================================================================
@@ -107,19 +109,33 @@ class AddSpecificUnitCmd(Command, ReversibleCommandMixin):
 #===============================================================================
 # ChangeUnitCmd
 #===============================================================================
-class ChangeUnitCmd(ModelViewCommand, ReversibleCommandMixin):
-   def __init__(self, detachment, unittable):
-      ModelViewCommand.__init__(self, model=detachment, view=unittable, name="ChangeUnitCmd")
-      ReversibleCommandMixin.__init__(self)
+class ChangeUnitCmd(Command, ReversibleCommandMixin):
+   """ This command is invoked when a unit is changed by the selection combo box.
    
-   def Execute(self, row, newUnitName):
-      newProfile = self._model.Choices().GroupByName(newUnitName).ListOptions()[0]
-      newUnit = newProfile.CreateInstance(self._model)
+   This is a new-style command, changing data directly upon the model and providing
+   any update-hints for views in its 'hints' member variable. It can also be used
+   in the controller's command/undo history.
+   """
+   def __init__(self, model, detachment, unitIdx, newUnitName):
+      Command.__init__(self, name="ChangeUnitCmd")
+      ReversibleCommandMixin.__init__(self)
+      self._model = model
+      self._detachment = detachment
+      self._unitIdx = unitIdx
+      self._newUnitName = newUnitName
+      self.hints = (ArmyListModel.MODIFY_DETACHMENT, )
+   
+   def Execute(self):
+      newProfile = self._detachment.Choices().GroupByName(self._newUnitName).ListOptions()[0]
+      newUnit = newProfile.CreateInstance(self._detachment)
       
-      self._model.ReplaceUnit(row, newUnit)
-      self._view.SetRow(row, newUnit)
-      self._view.siPointsChanged.emit()
-      self._view.SetModified(True)
+      self._oldUnit = self._detachment.ListUnits()[self._unitIdx]
+      self._detachment.ReplaceUnit(self._unitIdx, newUnit)
+      self._model.Touch()
+      
+   def Undo(self):
+      self._detachment.ReplaceUnit(self._unitIdx, self._oldUnit)
+      self._model.Touch()
       
 
 #===============================================================================
@@ -137,7 +153,8 @@ class ChangeUnitSizeCmd(Command, ReversibleCommandMixin):
    
    def Execute(self):
       sizeType = kowsim.kow.sizetype.Find(self._newSize).Name()
-      self._armyCtrl.ChangeUnitSize(self._unit, sizeType)      
+      self._armyCtrl.ChangeUnitSize(self._unit, sizeType)
+      self._armyCtrl.model.Touch()
       
 
 #===============================================================================
@@ -201,9 +218,10 @@ class SetPrimaryDetachmentCmd(ModelViewCommand, ReversibleCommandMixin):
 # SetUnitOptionsCmd
 #===============================================================================
 class SetUnitOptionsCmd(ModelViewCommand, ReversibleCommandMixin):
-   def __init__(self, unit, unittable):
+   def __init__(self, alModel, unit, unittable):
       ModelViewCommand.__init__(self, model=unit, view=unittable, name="SetUnitOptionsCmd")
       ReversibleCommandMixin.__init__(self)
+      self._alModel = alModel
    
    def Execute(self, row, options):
       self._model.ClearChosenOptions()
@@ -212,7 +230,7 @@ class SetUnitOptionsCmd(ModelViewCommand, ReversibleCommandMixin):
       
       self._view.UpdateTextInRow(row)
       self._view.siPointsChanged.emit()
-      self._view.SetModified(True)
+      self._alModel.Touch()
 
 
 #===============================================================================
@@ -225,21 +243,26 @@ class DeleteUnitCmd(Command, ReversibleCommandMixin):
    any update-hints for views in its 'hints' member variable. It can also be used
    in the controller's command/undo history.
    """
-   def __init__(self, detachment, units):
+   def __init__(self, model, detachment, units):
       Command.__init__(self, name="DeleteUnitCmd")
       ReversibleCommandMixin.__init__(self)
+      self._model = model
       self._detachment = detachment
       self._delUnits = units
       self.hints = (ArmyListModel.MODIFY_DETACHMENT, )
    
    def Execute(self):
+      if len(self._delUnits)==0: return
       for unit in self._delUnits:
          self._detachment.RemoveUnit(unit)
+      self._model.Touch()
       
    def Undo(self):
+      if len(self._delUnits)==0: return
       for unit in self._delUnits:
          self._detachment.AddUnit(unit)
-            
+      self._model.Touch()
+      
 
 #===============================================================================
 # DuplicateUnitCmd
@@ -251,27 +274,30 @@ class DuplicateUnitCmd(Command, ReversibleCommandMixin):
    any update-hints for views in its 'hints' member variable. It can also be used
    in the controller's command/undo history.
    """
-   def __init__(self, detachment, units):
+   def __init__(self, model, detachment, units):
       Command.__init__(self, name="DuplicateUnitCmd")
       ReversibleCommandMixin.__init__(self)
+      self._model = model
       self._detachment = detachment
       self._dupUnits = units
    
    def Execute(self):
+      if len(self._dupUnits) == 0: return
       self._newUnits = [] 
       for unit in self._dupUnits:
          newUnit = unit.Profile().CreateInstance(self._detachment)
          for o in unit.ListChosenOptions():
             newUnit.ChooseOption(o)
-            
          self._detachment.AddUnit(newUnit)
          self._newUnits.append(newUnit)
          
       self.hints = ((ArmyListModel.MODIFY_UNIT, unit) for unit in self._newUnits)
+      self._model.Touch()
       
    def Undo(self):
+      if len(self._newUnits) == 0: return
       [self._detachment.RemoveUnit(u) for u in self._newUnits]
-      pass
+      self._model.Touch()
       
 
 #===============================================================================
@@ -300,7 +326,7 @@ class SaveArmyListCmd(ModelViewCommand):
       
       alw = ArmyListWriter(self._model)
       alw.SaveToFile(filename)
-      self._view.SetModified(False)
+      self._model.modified = False
       
 
 #===============================================================================
@@ -343,7 +369,6 @@ class LoadArmyListCmd(Command):
       view.SetLastFilename(filename)
       QtGui.qApp.DataManager.AddRecentFile(filename)
       view.siRecentFilesChanged.emit()
-      view.SetModified(False)
       return True
    
    
