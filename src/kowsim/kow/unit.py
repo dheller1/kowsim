@@ -94,7 +94,7 @@ class UnitProfile(object):
    
    # generate a fresh instance of a unit using this profile
    def CreateInstance(self, detachment):
-      return UnitInstance(self, detachment, None, [])
+      return UnitInstance(self, detachment)
       
    # derived properties
    def Footprint(self):

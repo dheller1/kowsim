@@ -86,6 +86,9 @@ class UnitTable(QtGui.QTableWidget):
       cmd = ChangeUnitSizeCmd(self._armyCtrl, unit, newSizeStr)
       cmd.Execute()
       
+   def SelectedUnits(self):
+      return [self._model.ListUnits()[row] for row in self.SelectedRows()]
+      
    def SelectedRows(self):
       rows = []
       for itm in self.selectedItems():

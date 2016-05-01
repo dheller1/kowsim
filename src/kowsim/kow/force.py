@@ -146,8 +146,8 @@ class Detachment(object):
       for u in self._units: s += u.PointsCost()
       return s
    
-   def RemoveUnit(self, index):
-      self._units.pop(index)
+   def RemoveUnit(self, unit):
+      self._units.remove(unit)
 
    def ReplaceUnit(self, index, newUnit):
       if index>=len(self._units): raise IndexError("Can't replace unit %d, only have %d units!" % (index, len(self._units)))

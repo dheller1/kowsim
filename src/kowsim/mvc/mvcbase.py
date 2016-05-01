@@ -55,7 +55,6 @@ class Controller(object):
       print "CmdHistory:", self._cmdHist
       if cmd.IsReversible():
          self._undoHist.append(cmd)
-         
       self.ProcessHints(cmd.hints)
    
    # inform views about changes in the model

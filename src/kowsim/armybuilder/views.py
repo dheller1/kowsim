@@ -288,12 +288,21 @@ class DetachmentView(QtGui.QWidget, View):
       cmd.Execute()
       
    def DeleteUnit(self):
-      cmd = DeleteUnitCmd(self._model, self)
-      cmd.Execute()
+      delUnits = self.unitTable.SelectedUnits()
+      if len(delUnits)==1:
+         confirm="This will delete the current unit.<br />Are you sure?"
+      elif len(delUnits)>1:
+         confirm="This will delete %d units.<br />Are you sure?" % len(delUnits)
+      if QtGui.QMessageBox.Yes != QtGui.QMessageBox.warning(self, "Delete unit(s)", confirm, QtGui.QMessageBox.Yes | QtGui.QMessageBox.Cancel):
+         return
+      
+      cmd = DeleteUnitCmd(self._model, delUnits)
+      self.ctrl.AddAndExecute(cmd)
+      self.unitTable.clearSelection()
       
    def DuplicateUnit(self):
-      cmd = DuplicateUnitCmd(self._model, self)
-      cmd.Execute()
+      cmd = DuplicateUnitCmd(self._model, self.unitTable.SelectedUnits())
+      self.ctrl.AddAndExecute(cmd)
    
    def RenameDetachment(self):
       cmd = RenameDetachmentCmd(self._model, self)
@@ -317,8 +326,13 @@ class DetachmentView(QtGui.QWidget, View):
          
    def UpdateContent(self, *hints):
       self.isPrimaryDetachmentCb.setChecked(self._model.IsPrimary())
+      
+      if self.unitTable.rowCount() > self._model.NumUnits():
+         self.unitTable.setRowCount(self._model.NumUnits())
+      
       for i in range(self._model.NumUnits()):
          self._UpdateUnit(i)
+         # TODO: !Update rows which might have become empty by deleting units!
       self._UpdatePoints()
       
    # "private" functions

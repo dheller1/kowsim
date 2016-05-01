@@ -218,54 +218,60 @@ class SetUnitOptionsCmd(ModelViewCommand, ReversibleCommandMixin):
 #===============================================================================
 # DeleteUnitCmd
 #===============================================================================
-class DeleteUnitCmd(ModelViewCommand, ReversibleCommandMixin):
-   def __init__(self, detachment, detview):
-      ModelViewCommand.__init__(self, model=detachment, view=detview, name="DeleteUnitCmd")
+class DeleteUnitCmd(Command, ReversibleCommandMixin):
+   """ This command allows to delete one or several units in a detachment.
+   
+   This is a new-style command, changing data directly upon the model and providing
+   any update-hints for views in its 'hints' member variable. It can also be used
+   in the controller's command/undo history.
+   """
+   def __init__(self, detachment, units):
+      Command.__init__(self, name="DeleteUnitCmd")
       ReversibleCommandMixin.__init__(self)
+      self._detachment = detachment
+      self._delUnits = units
+      self.hints = (ArmyListModel.MODIFY_DETACHMENT, )
    
    def Execute(self):
-      rowsToDelete = self._view.unitTable.SelectedRows()
+      for unit in self._delUnits:
+         self._detachment.RemoveUnit(unit)
       
-      if len(rowsToDelete)==1:
-         confirm="This will delete the current unit.<br />Are you sure?"
-      elif len(rowsToDelete)>1:
-         confirm="This will delete %d units.<br />Are you sure?" % len(rowsToDelete)
-      
-      if QtGui.QMessageBox.Yes != QtGui.QMessageBox.warning(self._view, "Delete unit", confirm, QtGui.QMessageBox.Yes | QtGui.QMessageBox.Cancel):
-         return
-      
-      # sort in descending order to not interfere with higher row IDs when popping from list
-      rowsToDelete.sort(reverse=True)
-      
-      for row in rowsToDelete:
-         self._model.RemoveUnit(row)
-         self._view.unitTable.removeRow(row)
-      
-      self._view.UpdatePoints()
-      self._view.SetModified(True)
-      
+   def Undo(self):
+      for unit in self._delUnits:
+         self._detachment.AddUnit(unit)
+            
 
 #===============================================================================
 # DuplicateUnitCmd
 #===============================================================================
-class DuplicateUnitCmd(ModelViewCommand, ReversibleCommandMixin):
-   def __init__(self, detachment, unittable):
-      ModelViewCommand.__init__(self, model=detachment, view=unittable, name="DuplicateUnitCmd")
+class DuplicateUnitCmd(Command, ReversibleCommandMixin):
+   """ This command allows to duplicate one or several units in a detachment.
+   
+   This is a new-style command, changing data directly upon the model and providing
+   any update-hints for views in its 'hints' member variable. It can also be used
+   in the controller's command/undo history.
+   """
+   def __init__(self, detachment, units):
+      Command.__init__(self, name="DuplicateUnitCmd")
       ReversibleCommandMixin.__init__(self)
+      self._detachment = detachment
+      self._dupUnits = units
    
    def Execute(self):
-      rows = self._view.unitTable.SelectedRows()
-      
-      for row in rows:
-         oldUnit = self._model.Unit(row)
-         newUnit = oldUnit.Profile().CreateInstance(self._model)
-         for o in oldUnit.ListChosenOptions():
+      self._newUnits = [] 
+      for unit in self._dupUnits:
+         newUnit = unit.Profile().CreateInstance(self._detachment)
+         for o in unit.ListChosenOptions():
             newUnit.ChooseOption(o)
-         index = self._model.AddUnit(newUnit)
-         self._view.UpdateUnit(index)
+            
+         self._detachment.AddUnit(newUnit)
+         self._newUnits.append(newUnit)
+         
+      self.hints = ((ArmyListModel.MODIFY_UNIT, unit) for unit in self._newUnits)
       
-      self._view.UpdatePoints()
-      self._view.SetModified(True)
+   def Undo(self):
+      [self._detachment.RemoveUnit(u) for u in self._newUnits]
+      pass
       
 
 #===============================================================================
