@@ -23,12 +23,8 @@ class AddDetachmentCmd(ModelViewCommand, ReversibleCommandMixin):
       
    def Execute(self):
       dlg = AddDetachmentDialog()
-      
       if QtGui.QDialog.Accepted == dlg.exec_():
-         ## BUG: WTF - This will initialize units with something != [] !?!?!?!?
-         ##detachment = Detachment(dlg.Force(), isPrimary=dlg.MakePrimary())
-         ## use this instead:
-         detachment = Detachment(dlg.Force(), None, [], dlg.MakePrimary())
+         detachment = Detachment(dlg.Force(), isPrimary=dlg.MakePrimary())
          self._model.AddDetachment(detachment)
          self._view.AddDetachmentView(detachment)
          self._model.Touch()
@@ -57,21 +53,27 @@ class RenameDetachmentCmd(ModelViewCommand, ReversibleCommandMixin):
 # RenameArmyListCmd
 #===============================================================================
 class RenameArmyListCmd(Command, ReversibleCommandMixin):
-   def __init__(self, newName, al):
+   """ This command allows to change the army list name.
+   
+   This is a new-style command, changing data directly upon the model and providing
+   any update-hints for views in its 'hints' member variable. It can also be used
+   in the controller's command/undo history.
+   """
+   def __init__(self, model, newName):
       Command.__init__(self, name="RenameArmyListCmd")
       ReversibleCommandMixin.__init__(self)
       self._newName = newName
-      self._armyList = al
-      self._previousName = self._armyList.CustomName()
-      
+      self._model = model
+      self.hints = (ArmyListModel.CHANGE_NAME, )
+
    def Execute(self):
-      self._armyList.SetCustomName(self._newName)
-   
-   def Redo(self):
-      self.Execute()
+      self._previousName = self._model.data.CustomName()
+      self._model.data.SetCustomName(self._newName)
+      self._model.Touch()
    
    def Undo(self):
-      self._armyList.SetCustomName(self._previousName)
+      self._model.data.SetCustomName(self._previousName)
+      self._model.Touch()
          
          
 #===============================================================================

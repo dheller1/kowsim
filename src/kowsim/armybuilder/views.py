@@ -11,6 +11,7 @@ from command import AddDetachmentCmd, DeleteUnitCmd, RenameDetachmentCmd, AddDef
 from kowsim.mvc.mvcbase import View
 from mvc.models import ArmyListModel
 import globals
+from kowsim.armybuilder.command import RenameArmyListCmd
 
 #===============================================================================
 # ArmyListView(QWidget)
@@ -92,7 +93,8 @@ class ArmyListView(QtGui.QWidget, View):
       if len(newName.strip())==0: # don't accept, revert
          self.customNameLe.setText(self.ctrl.model.Data().CustomName())
       elif newName != self.ctrl.model.Data().CustomName():
-         self.ctrl.RenameArmyList(newName)
+         cmd = RenameArmyListCmd(self.ctrl.model, newName)
+         self.ctrl.AddAndExecute(cmd)
    
    #============================================================================
    # Qt event handler overrides
@@ -161,11 +163,8 @@ class ArmyListView(QtGui.QWidget, View):
             self.customNameLe.setText(md.CustomName())
             continue # successfully processed hint
          unknownHints = True
-         
       if unknownHints or len(hints)==0:
          self.UpdateTitle()
-         for i in range(self.ctrl.model.Data().NumDetachments()):
-            self.UpdateDetachment(i)
       
    def UpdateDetachment(self, index):
       # detachment index is always the tab index in self.detachmentsTw
@@ -323,14 +322,22 @@ class DetachmentView(QtGui.QWidget, View):
          
    def UpdateContent(self, *hints):
       self.isPrimaryDetachmentCb.setChecked(self._model.IsPrimary())
-      
-      if self.unitTable.rowCount() > self._model.NumUnits():
-         self.unitTable.setRowCount(self._model.NumUnits())
-      
-      for i in range(self._model.NumUnits()):
-         self._UpdateUnit(i)
-         # TODO: !Update rows which might have become empty by deleting units!
       self._UpdatePoints()
+      
+      # check if unit table must be updated
+      updateUnitTable = False
+      for hint in hints:
+         if (type(hint)==int and hint not in (ArmyListModel.CHANGE_NAME, ArmyListModel.REVALIDATE)
+                     or type(hint)==tuple and hint[0] not in (ArmyListModel.CHANGE_NAME, ArmyListModel.REVALIDATE)):
+            updateUnitTable = True
+            break
+      if len(hints) == 0: updateUnitTable = True
+      
+      if updateUnitTable:
+         if self.unitTable.rowCount() > self._model.NumUnits():
+            self.unitTable.setRowCount(self._model.NumUnits())
+         for i in range(self._model.NumUnits()):
+            self._UpdateUnit(i)
       
    # "private" functions
    def _UpdatePoints(self):

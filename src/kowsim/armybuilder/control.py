@@ -4,7 +4,6 @@
 #===============================================================================
 from PySide import QtCore
 from kowsim.kow.unit import UnitInstance
-from command import RenameArmyListCmd
 from mvc.models import ArmyListModel
 import kowsim.mvc.mvcbase as MVC
 import kowsim.armybuilder.views
@@ -56,13 +55,7 @@ class ArmyListCtrl(MVC.Controller):
       
    def Revalidate(self):
       self.NotifyModelChanged(ArmyListModel.REVALIDATE)
-   
-   def RenameArmyList(self, name):
-      print "ArmyListCtrl.RenameArmyList('%s')" % name
-      self.ExecuteCmd(RenameArmyListCmd(name, self.model.Data()))
-      self.NotifyModelChanged(ArmyListModel.CHANGE_NAME)
-      self.model.Touch()
-      
+         
    def SetPrimaryDetachment(self, detachment, makePrimary):
       try: self._model.ListDetachments().index(detachment)
       except ValueError:
