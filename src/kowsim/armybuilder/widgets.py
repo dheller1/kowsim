@@ -250,7 +250,7 @@ class ValidationWidget(QtGui.QWidget, View):
       lwi.setToolTip(message._longDesc)
       return lwi
       
-   def UpdateContent(self, *hints):
+   def UpdateContent(self, hints=None):
       messages = self._validator.Check()
       self._messageLw.clear()
       valid = True

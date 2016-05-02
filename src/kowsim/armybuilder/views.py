@@ -7,11 +7,13 @@ import os
 from PySide import QtGui, QtCore
 
 from widgets import UnitTable, ValidationWidget
-from command import AddDetachmentCmd, DeleteUnitCmd, RenameDetachmentCmd, AddDefaultUnitCmd, DuplicateUnitCmd, SaveArmyListCmd, SetPrimaryDetachmentCmd
+from command import AddDetachmentCmd, DeleteUnitCmd, RenameDetachmentCmd, AddDefaultUnitCmd, DuplicateUnitCmd, SaveArmyListCmd, SetPrimaryDetachmentCmd, RenameArmyListCmd
+from dialogs import AddDetachmentDialog
 from kowsim.mvc.mvcbase import View
 from mvc.models import ArmyListModel
+import mvc.hints as ALH
+from kowsim.kow.force import Detachment
 import globals
-from kowsim.armybuilder.command import RenameArmyListCmd
 
 #===============================================================================
 # ArmyListView(QWidget)
@@ -121,7 +123,6 @@ class ArmyListView(QtGui.QWidget, View):
       dv.siModified.connect(self.SetModified)
       dv.siPrimaryToggled.connect(self.TogglePrimaryDetachment)
       
-      
    def DetachmentNameChanged(self, name):
       sender = self.sender()
       index = self.detachmentsTw.indexOf(sender)
@@ -132,8 +133,13 @@ class ArmyListView(QtGui.QWidget, View):
       tw = self.detachmentsTw
       if tw.currentIndex() == tw.count()-1:
          tw.setCurrentIndex(self._lastIndex)
-         cmd = AddDetachmentCmd(self._model, self)
-         cmd.Execute()
+         
+         dlg = AddDetachmentDialog()
+         if QtGui.QDialog.Accepted == dlg.exec_():
+            detachment = Detachment(dlg.Force(), isPrimary=dlg.MakePrimary())
+            cmd = AddDetachmentCmd(self.ctrl.model, detachment)
+            self.ctrl.AddAndExecute(cmd)
+
       else:
          self._lastIndex = tw.currentIndex()
          self.siCurrentDetachmentChanged.emit()
@@ -154,16 +160,21 @@ class ArmyListView(QtGui.QWidget, View):
    # Update content after being notified about changes in the model.
    # A partial update might be sufficient if every hint in 'hints'
    # can be handled.
-   def UpdateContent(self, *hints):
+   def UpdateContent(self, hints=None):
       md = self.ctrl.model.Data()
       unknownHints = False
       
-      for hint in hints:
-         if hint == ArmyListModel.CHANGE_NAME:
-            self.customNameLe.setText(md.CustomName())
-            continue # successfully processed hint
-         unknownHints = True
-      if unknownHints or len(hints)==0:
+      print hints
+      if hints:
+         for hint in hints:
+            if hint.IsType(ALH.ChangeNameHint):
+               self.customNameLe.setText(md.CustomName())
+            elif hint.IsType(ALH.AddDetachmentHint):
+               self.AddDetachmentView(hint.which)
+            else:
+               unknownHints = True
+      
+      if hints is None or len(hints)==0 or unknownHints:
          self.UpdateTitle()
       
    def UpdateDetachment(self, index):
@@ -320,18 +331,20 @@ class DetachmentView(QtGui.QWidget, View):
          self.duplicateUnitPb.setEnabled(False)
          self.deleteUnitPb.setEnabled(False)
          
-   def UpdateContent(self, *hints):
+   def UpdateContent(self, hints=None):
       self.isPrimaryDetachmentCb.setChecked(self._model.IsPrimary())
       self._UpdatePoints()
       
       # check if unit table must be updated
-      updateUnitTable = False
-      for hint in hints:
-         if (type(hint)==int and hint not in (ArmyListModel.CHANGE_NAME, ArmyListModel.REVALIDATE)
-                     or type(hint)==tuple and hint[0] not in (ArmyListModel.CHANGE_NAME, ArmyListModel.REVALIDATE)):
-            updateUnitTable = True
-            break
-      if len(hints) == 0: updateUnitTable = True
+      if hints is None or len(hints) == 0:
+         updateUnitTable = True # no hints ^= global update
+      else:
+         updateUnitTable = False
+         for hint in hints:
+            if (hint.IsType(ALH.ModifyDetachmentHint) and hint.which is self._model) \
+                  or  (hint.IsType(ALH.ModifyUnitHint) and hint.which in self._model.ListUnits()):
+               updateUnitTable = True
+               break
       
       if updateUnitTable:
          if self.unitTable.rowCount() > self._model.NumUnits():
@@ -391,7 +404,7 @@ class ArmyListOutputView(QtGui.QTextEdit, View):
                                                             unit.NeStr(), unit.PointsCost(), specialText)
       return pre+headRow+labelsRow+profileRow+post
       
-   def UpdateContent(self, *hints):
+   def UpdateContent(self, hints=None):
       al = self.ctrl.model.Data()
       self.setWindowTitle("Preview: " + al.CustomName())
       

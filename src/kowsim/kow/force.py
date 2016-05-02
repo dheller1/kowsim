@@ -33,6 +33,9 @@ class ArmyList(object):
    # routines
    def AddDetachment(self, detachment):
       self._detachments.append(detachment)
+      
+   def RemoveDetachment(self, detachment):
+      self._detachments.remove(detachment)
    
 
 #===============================================================================

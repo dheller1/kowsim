@@ -2,11 +2,10 @@
 
 # armybuilder/control.py
 #===============================================================================
-from PySide import QtCore
 from kowsim.kow.unit import UnitInstance
-from mvc.models import ArmyListModel
 import kowsim.mvc.mvcbase as MVC
 import kowsim.armybuilder.views
+import mvc.hints as ALH
 
 #===============================================================================
 # ArmyListCtrl
@@ -28,7 +27,7 @@ class ArmyListCtrl(MVC.Controller):
          profile = detachment.Choices().GroupByName(unitname).Default()
       detachment.AddUnit(UnitInstance(profile, detachment))
       self.model.Touch()
-      self.NotifyModelChanged(ArmyListModel.MODIFY_DETACHMENT)
+      self.NotifyModelChanged(ALH.ModifyDetachmentHint(detachment))
    
    def AttachView(self, view):
       self._views.add(view)
@@ -41,7 +40,7 @@ class ArmyListCtrl(MVC.Controller):
       
       unit.SetProfile(newProfile)
       self.model.Touch()
-      self.NotifyModelChanged(ArmyListModel.MODIFY_UNIT, unit)
+      self.NotifyModelChanged(ALH.ModifyUnitHint(unit))
    
    def DetachView(self, view):
       self._views.remove(view)
@@ -54,7 +53,7 @@ class ArmyListCtrl(MVC.Controller):
       self.NotifyModelChanged(hints)
       
    def Revalidate(self):
-      self.NotifyModelChanged(ArmyListModel.REVALIDATE)
+      self.NotifyModelChanged((ALH.RevalidateHint(), ))
          
    def SetPrimaryDetachment(self, detachment, makePrimary):
       try: self._model.ListDetachments().index(detachment)

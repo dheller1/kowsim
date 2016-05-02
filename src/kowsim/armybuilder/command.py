@@ -6,31 +6,37 @@ import os
 import kowsim.kow.sizetype
 from PySide import QtGui
 from PySide.QtCore import QSettings
-from dialogs import AddDetachmentDialog
 from kowsim.command.command import Command, ModelViewCommand, ReversibleCommandMixin
-from kowsim.kow.force import Detachment
-from kowsim.kow.unit import UnitInstance
 from kowsim.kow.fileio import ArmyListWriter, ArmyListReader
-from kowsim.armybuilder.mvc.models import ArmyListModel
+from mvc.models import ArmyListModel
+import mvc.hints as ALH
 
 #===============================================================================
 # AddDetachmentCmd
 #===============================================================================
-class AddDetachmentCmd(ModelViewCommand, ReversibleCommandMixin):
-   def __init__(self, armylist, armylistview):
-      ModelViewCommand.__init__(self, model=armylist, view=armylistview, name="AddDetachmentCmd")
+class AddDetachmentCmd(Command, ReversibleCommandMixin):
+   """ This command adds a detachment to an army list.
+   
+   This is a new-style command, changing data directly upon the model and providing
+   any update-hints for views in its 'hints' member variable. It can also be used
+   in the controller's command/undo history.
+   """
+   def __init__(self, alModel, detachment):
+      Command.__init__(self, name="AddDetachmentCmd")
       ReversibleCommandMixin.__init__(self)
+      self._model = alModel
+      self._detachment = detachment
+      self.hints = (ALH.AddDetachmentHint(self._detachment), )
       
    def Execute(self):
-      dlg = AddDetachmentDialog()
-      if QtGui.QDialog.Accepted == dlg.exec_():
-         detachment = Detachment(dlg.Force(), isPrimary=dlg.MakePrimary())
-         self._model.AddDetachment(detachment)
-         self._view.AddDetachmentView(detachment)
-         self._model.Touch()
-         self._view._ctrl.Revalidate()
+      self._model.data.AddDetachment(self._detachment)
+      self._model.Touch()
          
-         
+   def Undo(self):
+      self._model.data.RemoveDetachment(self._detachment)
+      self._model.Touch()
+
+
 #===============================================================================
 # RenameDetachmentCmd
 #===============================================================================
@@ -64,7 +70,7 @@ class RenameArmyListCmd(Command, ReversibleCommandMixin):
       ReversibleCommandMixin.__init__(self)
       self._newName = newName
       self._model = model
-      self.hints = (ArmyListModel.CHANGE_NAME, )
+      self.hints = (ALH.ChangeNameHint(), )
 
    def Execute(self):
       self._previousName = self._model.data.CustomName()
@@ -124,7 +130,7 @@ class ChangeUnitCmd(Command, ReversibleCommandMixin):
       self._detachment = detachment
       self._unitIdx = unitIdx
       self._newUnitName = newUnitName
-      self.hints = (ArmyListModel.MODIFY_DETACHMENT, )
+      self.hints = (ALH.ModifyDetachmentHint(self._detachment), )
    
    def Execute(self):
       newProfile = self._detachment.Choices().GroupByName(self._newUnitName).ListOptions()[0]
@@ -173,7 +179,7 @@ class ChangeUnitItemCmd(Command, ReversibleCommandMixin):
       ReversibleCommandMixin.__init__(self)
       self._unit = unit
       self._item = item
-      self.hints = ((ArmyListModel.MODIFY_UNIT, self._unit), )
+      self.hints = (ALH.ModifyUnitHint(self._unit), )
    
    def Execute(self):
       self._oldItem = self._unit.Item()
@@ -250,7 +256,7 @@ class DeleteUnitCmd(Command, ReversibleCommandMixin):
       self._model = model
       self._detachment = detachment
       self._delUnits = units
-      self.hints = (ArmyListModel.MODIFY_DETACHMENT, )
+      self.hints = (ALH.ModifyDetachmentHint(self._detachment), )
    
    def Execute(self):
       if len(self._delUnits)==0: return
@@ -292,7 +298,7 @@ class DuplicateUnitCmd(Command, ReversibleCommandMixin):
          self._detachment.AddUnit(newUnit)
          self._newUnits.append(newUnit)
          
-      self.hints = ((ArmyListModel.MODIFY_UNIT, unit) for unit in self._newUnits)
+      self.hints = (ALH.ModifyUnitHint(unit) for unit in self._newUnits)
       self._model.Touch()
       
    def Undo(self):
@@ -343,7 +349,7 @@ class LoadArmyListCmd(Command):
          settings = QSettings("NoCompany", "KowArmyBuilder")
          preferredFolder = settings.value("preferred_folder")
          if preferredFolder is None: preferredFolder = ".."
-         filename, fil = QtGui.QFileDialog.getOpenFileName(self._mdiArea, "Open army list", preferredFolder, "Army lists (*.lst);;All files (*.*)")
+         filename = QtGui.QFileDialog.getOpenFileName(self._mdiArea, "Open army list", preferredFolder, "Army lists (*.lst);;All files (*.*)")[0]
          if len(filename)==0: return
          else: settings.setValue("preferred_folder", os.path.dirname(filename))
       
@@ -391,4 +397,5 @@ class PreviewArmyListCmd(Command):
                return
          # if we're still here, the preview is still linked but has been closed already.
          # thus, just add a new one as if no old one was present.
-      sub = self._mdiArea.AddPreviewSubWindow(self._ctrl)
+      self._mdiArea.AddPreviewSubWindow(self._ctrl)
+      

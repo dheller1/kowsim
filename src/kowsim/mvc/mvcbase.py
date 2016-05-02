@@ -67,7 +67,7 @@ class Controller(object):
       if pause: self._updatesPaused = True
       else: self.UnpauseUpdates()
       
-   def ProcessHints(self):
+   def ProcessHints(self, hints):
       pass
       
    def UnpauseUpdates(self):
@@ -98,9 +98,9 @@ class Model(object):
       self.modified = False # True if model was modified since last save
    
    # notify Controller about changes in the model
-   def _NotifyChanges(self, *hints):
+   def _NotifyChanges(self, hints=None):
       if self._ctrl is not None:
-         self._ctrl.NotifyModelChanged(*hints)
+         self._ctrl.NotifyModelChanged(hints)
    
    # accessors
    def Ctrl(self): return self._ctrl
@@ -140,5 +140,5 @@ class View(object):
       self.ctrl.DetachView(self)
       self.ctrl = None
    
-   def UpdateContent(self, *hints):
+   def UpdateContent(self, hints=None):
       raise NotImplementedError
