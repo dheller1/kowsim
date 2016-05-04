@@ -36,8 +36,9 @@ class RevalidateHint(ArmyListHint):
       
 class ChangeNameHint(ArmyListHint):
    id = CHANGE_NAME
-   def __init__(self):
+   def __init__(self, which):
       ArmyListHint.__init__(self, "Change name", ChangeNameHint.id)
+      self.which = which
       
 class ModifyDetachmentHint(ArmyListHint):
    id = MODIFY_DETACHMENT

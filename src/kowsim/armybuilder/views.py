@@ -167,15 +167,14 @@ class ArmyListView(QtGui.QWidget, View):
       print hints
       if hints:
          for hint in hints:
-            if hint.IsType(ALH.ChangeNameHint):
+            if hint.IsType(ALH.ChangeNameHint) and hint.which is self.ctrl.model:
                self.customNameLe.setText(md.CustomName())
             elif hint.IsType(ALH.AddDetachmentHint):
                self.AddDetachmentView(hint.which)
             else:
                unknownHints = True
       
-      if hints is None or len(hints)==0 or unknownHints:
-         self.UpdateTitle()
+      self.UpdateTitle()
       
    def UpdateDetachment(self, index):
       # detachment index is always the tab index in self.detachmentsTw
@@ -291,8 +290,8 @@ class DetachmentView(QtGui.QWidget, View):
       self.isPrimaryDetachmentCb.stateChanged.connect(self.TogglePrimary)
       
    def AddUnit(self):
-      cmd = AddDefaultUnitCmd(self.ctrl, self._model)
-      cmd.Execute()
+      cmd = AddDefaultUnitCmd(self.ctrl.model, self._model)
+      self.ctrl.AddAndExecute(cmd)
       
    def DeleteUnit(self):
       delUnits = self.unitTable.SelectedUnits()
@@ -312,8 +311,10 @@ class DetachmentView(QtGui.QWidget, View):
       self.ctrl.AddAndExecute(cmd)
    
    def RenameDetachment(self):
-      cmd = RenameDetachmentCmd(self.ctrl.model, self._model, self)
-      cmd.Execute(name=self.customNameLe.text())
+      newName = self.customNameLe.text()
+      if newName != self._model.CustomName():
+         cmd = RenameDetachmentCmd(self.ctrl.model, self._model, newName)
+         self.ctrl.AddAndExecute(cmd)
       
    def SetModified(self, modified=True):
       self.siModified.emit(modified)

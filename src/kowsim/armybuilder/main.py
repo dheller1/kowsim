@@ -144,8 +144,8 @@ class MainWindow(QtGui.QMainWindow):
       elif l == 1: view = self.mdiArea.subWindowList()[0].widget()
       else: view = self.mdiArea.activeSubWindow().widget()
       
-      cmd = SaveArmyListCmd(view._model, view)
-      cmd.Execute(saveAs)
+      cmd = SaveArmyListCmd(view.ctrl.model, view, saveAs)
+      view.ctrl.AddAndExecute(cmd)
       
    def SaveArmyListAs(self):
       self.SaveArmyList(saveAs=True)

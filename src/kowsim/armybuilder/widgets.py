@@ -83,8 +83,8 @@ class UnitTable(QtGui.QTableWidget):
       newSizeStr = self.cellWidget(row, self._columns.index("Size")).currentText()
       unit = self._model.ListUnits()[row]
       
-      cmd = ChangeUnitSizeCmd(self._armyCtrl, unit, newSizeStr)
-      cmd.Execute()
+      cmd = ChangeUnitSizeCmd(self._armyCtrl.model, unit, newSizeStr)
+      self._armyCtrl.AddAndExecute(cmd)
       
    def SelectedUnits(self):
       return [self._model.ListUnits()[row] for row in self.SelectedRows()]
@@ -291,7 +291,8 @@ class UnitBrowserWidget(QtGui.QDockWidget):
       return super(UnitBrowserWidget, self).closeEvent(e)
    
    def AddUnitTriggered(self, item, col):
-      if not item: return
+      if not item or not item.parent(): # top level items are just unit type groups, they can't be added themselves
+         return
       unitname = item.text(col)
       cmd = AddSpecificUnitCmd(alModel=self._ctrlContext.model, detachment=self._detContext, unitname=unitname)
       self._ctrlContext.AddAndExecute(cmd)

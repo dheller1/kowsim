@@ -20,14 +20,6 @@ class ArmyListCtrl(MVC.Controller):
       MVC.Controller.AttachView(self, view) # call base class routine to use _addViewBuffer
       if isinstance(view, kowsim.armybuilder.views.ArmyListOutputView) and self.attachedPreview is None:
             self.attachedPreview = view
-            
-   def ChangeUnitSize(self, unit, sizeType):
-      unitname = unit.Profile().Name()
-      newProfile = unit.Detachment().Choices().GroupByName(unitname).ProfileForSize(sizeType)
-      
-      unit.SetProfile(newProfile)
-      self.model.Touch()
-      self.NotifyModelChanged(ALH.ModifyUnitHint(unit))
    
    def DetachView(self, view):
       self._views.remove(view)

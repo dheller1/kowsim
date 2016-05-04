@@ -42,19 +42,24 @@ class AddDetachmentCmd(Command, ReversibleCommandMixin):
 #===============================================================================
 # RenameDetachmentCmd
 #===============================================================================
-class RenameDetachmentCmd(ModelViewCommand, ReversibleCommandMixin):
-   def __init__(self, alModel, detachment, detachmentview):
-      ModelViewCommand.__init__(self, model=detachment, view=detachmentview, name="RenameDetachmentCmd")
+class RenameDetachmentCmd(Command, ReversibleCommandMixin):
+   """ This command allows to change the name of a detachment.
+   
+   This is a new-style command, changing data directly upon the model and providing
+   any update-hints for views in its 'hints' member variable. It can also be used
+   in the controller's command/undo history.
+   """
+   def __init__(self, alModel, detachment, newName):
+      Command.__init__(self, name="RenameDetachmentCmd")
       ReversibleCommandMixin.__init__(self)
-      self._alModel = alModel
+      self.alModel = alModel
+      self.detachment = detachment
+      self.newName = newName
+      self.hints = (ALH.ChangeNameHint(self.detachment), )
       
-   def Execute(self, name):
-      oldname = self._model.CustomName()
-      
-      if name!=oldname:
-         self._model.SetCustomName(name)
-         self._view.siNameChanged.emit(name)
-         self._alModel.Touch()
+   def Execute(self):
+      self.detachment.SetCustomName(self.newName)
+      self.alModel.Touch()
 
          
 #===============================================================================
@@ -72,7 +77,7 @@ class RenameArmyListCmd(Command, ReversibleCommandMixin):
       ReversibleCommandMixin.__init__(self)
       self._newName = newName
       self._model = model
-      self.hints = (ALH.ChangeNameHint(), )
+      self.hints = (ALH.ChangeNameHint(self._model), )
 
    def Execute(self):
       self._previousName = self._model.data.CustomName()
@@ -88,15 +93,23 @@ class RenameArmyListCmd(Command, ReversibleCommandMixin):
 # AddDefaultUnitCmd
 #===============================================================================
 class AddDefaultUnitCmd(Command, ReversibleCommandMixin):
-   def __init__(self, armyCtrl, detachment):
+   """ This command is invoked when a default unit is added to a detachment.
+
+   This is a new-style command, changing data directly upon the model and providing
+   any update-hints for views in its 'hints' member variable. It can also be used
+   in the controller's command/undo history.
+   """
+   def __init__(self, alModel, detachment):
       Command.__init__(self, name="AddDefaultUnitCmd")
       ReversibleCommandMixin.__init__(self)
-      
-      self._armyCtrl = armyCtrl
+      self._alModel = alModel
       self._detachment = detachment
+      self.hints = (ALH.ModifyDetachmentHint(detachment), )
    
    def Execute(self):
-      self._armyCtrl.AddUnitToDetachment(None, self._detachment)
+      profile = self._detachment.Choices().ListUnits()[0]
+      self._detachment.AddUnit(UnitInstance(profile, self._detachment))
+      self._alModel.Touch()
 
 
 #===============================================================================
@@ -114,11 +127,9 @@ class AddSpecificUnitCmd(Command, ReversibleCommandMixin):
    def __init__(self, alModel, detachment, unitname):
       Command.__init__(self, name="AddSpecificUnitCmd")
       ReversibleCommandMixin.__init__(self)
-      
       self._alModel = alModel
       self._unitname = unitname
       self._detachment = detachment
-      
       self.hints = (ALH.ModifyDetachmentHint(detachment), )
    
    def Execute(self):
@@ -163,20 +174,28 @@ class ChangeUnitCmd(Command, ReversibleCommandMixin):
 # ChangeUnitSizeCmd
 #===============================================================================
 class ChangeUnitSizeCmd(Command, ReversibleCommandMixin):
-   """ This command is invoked when a units' size is changed, e.g. from Regiment to Horde. """
-   def __init__(self, armyCtrl, unit, newSize):
+   """ This command is invoked when a units' size is changed, e.g. from Regiment to Horde.
+   
+   This is a new-style command, changing data directly upon the model and providing
+   any update-hints for views in its 'hints' member variable. It can also be used
+   in the controller's command/undo history.
+   """
+   def __init__(self, alModel, unit, newSize):
       Command.__init__(self, name="ChangeUnitSizeCmd")
       ReversibleCommandMixin.__init__(self)
       
-      self._armyCtrl = armyCtrl
+      self._alModel = alModel
       self._unit = unit
       self._newSize = newSize
+      self.hints = (ALH.ModifyUnitHint(unit), )
    
    def Execute(self):
       sizeType = kowsim.kow.sizetype.Find(self._newSize).Name()
-      self._armyCtrl.ChangeUnitSize(self._unit, sizeType)
-      self._armyCtrl.model.Touch()
-      
+      unitname = self._unit.Profile().Name()
+      newProfile = self._unit.Detachment().Choices().GroupByName(unitname).ProfileForSize(sizeType)
+      self._unit.SetProfile(newProfile)
+      self._alModel.Touch()
+            
 
 #===============================================================================
 # ChangeUnitItemCmd
@@ -331,30 +350,33 @@ class DuplicateUnitCmd(Command, ReversibleCommandMixin):
 #===============================================================================
 # SaveArmyListCmd
 #===============================================================================
-class SaveArmyListCmd(ModelViewCommand):
-   def __init__(self, armylist, armylistview):
-      ModelViewCommand.__init__(self, model=armylist, view=armylistview, name="SaveArmyListCmd")
+class SaveArmyListCmd(Command):
+   def __init__(self, alModel, alView, saveAs=False):
+      Command.__init__(self, name="SaveArmyListCmd")
+      self.saveAs = saveAs
+      self.alModel = alModel
+      self.alView = alView
    
-   def Execute(self, saveAs=False):
-      defaultName = self._view._lastFilename if self._view._lastFilename else "%s.lst" % self._model.CustomName()
-      if (not self._view._lastFilename) or saveAs:
+   def Execute(self):
+      defaultName = self.alView._lastFilename if self.alView._lastFilename else "%s.lst" % self.alModel.data.CustomName()
+      if (not self.alView._lastFilename) or self.saveAs:
          settings = QSettings("NoCompany", "KowArmyBuilder")
          preferredFolder = settings.value("preferred_folder")
          if preferredFolder is None: preferredFolder = ".."
          
-         filename = QtGui.QFileDialog.getSaveFileName(self._view, "Save army list as", "%s" % (os.path.join(preferredFolder, defaultName)),
-                                                      "Army lists (*.lst);;All files (*.*)")[0]
+         filename, _ = QtGui.QFileDialog.getSaveFileName(self.alView, "Save army list as", "%s" % (os.path.join(preferredFolder, defaultName)),
+                                                      "Army lists (*.lst);;All files (*.*)")
          if filename == "": return
-         else: self._view._lastFilename = filename
+         else: self.alView._lastFilename = filename
          QtGui.qApp.DataManager.AddRecentFile(filename)
          settings.setValue("preferred_folder", os.path.dirname(filename))
-         self._view.siRecentFilesChanged.emit()
+         self.alView.siRecentFilesChanged.emit()
       else:
-         filename = self._view._lastFilename
+         filename = self.alView._lastFilename
       
-      alw = ArmyListWriter(self._model)
+      alw = ArmyListWriter(self.alModel.data)
       alw.SaveToFile(filename)
-      self._model.modified = False
+      self.alModel.modified = False
       
 
 #===============================================================================
@@ -370,7 +392,7 @@ class LoadArmyListCmd(Command):
          settings = QSettings("NoCompany", "KowArmyBuilder")
          preferredFolder = settings.value("preferred_folder")
          if preferredFolder is None: preferredFolder = ".."
-         filename = QtGui.QFileDialog.getOpenFileName(self._mdiArea, "Open army list", preferredFolder, "Army lists (*.lst);;All files (*.*)")[0]
+         filename, _ = QtGui.QFileDialog.getOpenFileName(self._mdiArea, "Open army list", preferredFolder, "Army lists (*.lst);;All files (*.*)")
          if len(filename)==0: return
          else: settings.setValue("preferred_folder", os.path.dirname(filename))
       

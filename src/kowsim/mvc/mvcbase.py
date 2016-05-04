@@ -50,24 +50,23 @@ class Controller(object):
       self._isUpdating = False # can't add new views when the controller is currently updating old views,
       self._addViewBuffer = [] # thus they are buffered and registered when updating is finished.
       
-   # execute a command and, if it's reversible, add it to the undo history
    def AddAndExecute(self, cmd):
+      """ Execute a command and, if it's reversible, add it to the undo history. """
       cmd.Execute()
       self._cmdHist.append(cmd)
-      print "CmdHistory:", self._cmdHist
       if cmd.IsReversible():
          self._undoHist.append(cmd)
       self.ProcessHints(cmd.hints)
    
-   # inform views about changes in the model
    def NotifyModelChanged(self, hints):
+      """ Inform any attached views about changes in the model. """
       if self._updatesPaused: return
       self._isUpdating = True
       for view in self._views:
          view.UpdateContent(hints)
       self._isUpdating = False
-      if len(self._addViewBuffer)>0:
-         [self.AttachView(view) for view in self._addViewBuffer]
+      while self._addViewBuffer:
+         self.AttachView(self._addViewBuffer.pop())
          
    def PauseUpdates(self, pause=True):
       if pause: self._updatesPaused = True
@@ -80,8 +79,13 @@ class Controller(object):
       self._updatesPaused = False
       self.NotifyModelChanged()
    
-   # accessors
    def AttachView(self, view):
+      """ Attach a view to the model controlled by this controller.
+      
+      Should this routine be called while the controller is currently busy
+      updating its attached views, attaching the new view is postponed until
+      after the previous views' updates are finished.
+      """
       if not self._isUpdating:
          self._views.add(view)
       else:
