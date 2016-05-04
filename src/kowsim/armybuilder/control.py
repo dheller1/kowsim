@@ -15,20 +15,7 @@ class ArmyListCtrl(MVC.Controller):
       MVC.Controller.__init__(self, model)
       self.model = model
       self.attachedPreview = None
-            
-   def AddUnitToDetachment(self, unitname, detachment):
-      try: self.model.data.ListDetachments().index(detachment)
-      except ValueError:
-         raise ValueError("Can't add unit to a detachment not belonging to my armylist!")
       
-      if unitname is None:
-         profile = detachment.Choices().ListUnits()[0]
-      else:
-         profile = detachment.Choices().GroupByName(unitname).Default()
-      detachment.AddUnit(UnitInstance(profile, detachment))
-      self.model.Touch()
-      self.NotifyModelChanged(ALH.ModifyDetachmentHint(detachment))
-   
    def AttachView(self, view):
       MVC.Controller.AttachView(self, view) # call base class routine to use _addViewBuffer
       if isinstance(view, kowsim.armybuilder.views.ArmyListOutputView) and self.attachedPreview is None:

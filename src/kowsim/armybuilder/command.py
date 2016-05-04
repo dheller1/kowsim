@@ -7,6 +7,7 @@ import kowsim.kow.sizetype
 from PySide import QtGui
 from PySide.QtCore import QSettings
 from kowsim.command.command import Command, ModelViewCommand, ReversibleCommandMixin
+from kowsim.kow.unit import UnitInstance
 from kowsim.kow.fileio import ArmyListWriter, ArmyListReader
 from mvc.models import ArmyListModel
 import mvc.hints as ALH
@@ -98,19 +99,31 @@ class AddDefaultUnitCmd(Command, ReversibleCommandMixin):
 
 
 #===============================================================================
-# AddSpecificUnitCmd - !!! CURRENTLY NOT USED !!!
+# AddSpecificUnitCmd
 #===============================================================================
 class AddSpecificUnitCmd(Command, ReversibleCommandMixin):
-   def __init__(self, armyCtrl, detachment, unitname):
+   """ This command is invoked when a specific unit is added to a detachment.
+
+   Currently, it is only invoked by double-clicking on a unit in the unit browser.
+   
+   This is a new-style command, changing data directly upon the model and providing
+   any update-hints for views in its 'hints' member variable. It can also be used
+   in the controller's command/undo history.
+   """
+   def __init__(self, alModel, detachment, unitname):
       Command.__init__(self, name="AddSpecificUnitCmd")
       ReversibleCommandMixin.__init__(self)
       
-      self._armyCtrl = armyCtrl
+      self._alModel = alModel
       self._unitname = unitname
       self._detachment = detachment
+      
+      self.hints = (ALH.ModifyDetachmentHint(detachment), )
    
    def Execute(self):
-      self._armyCtrl.AddUnitToDetachment(self._unitname, self._detachment)
+      profile = self._detachment.Choices().GroupByName(self._unitname).Default()
+      self._detachment.AddUnit(UnitInstance(profile, self._detachment))
+      self._alModel.Touch()
       
       
 #===============================================================================

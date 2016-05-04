@@ -7,12 +7,12 @@ import os
 from PySide import QtGui, QtCore
 from PySide.QtCore import Qt
 
-from command import ChangeUnitCmd, ChangeUnitSizeCmd, ChangeUnitItemCmd, SetUnitOptionsCmd
+from command import AddSpecificUnitCmd, ChangeUnitCmd, ChangeUnitSizeCmd, ChangeUnitItemCmd, SetUnitOptionsCmd
 from kowsim.kow.unittype import ALL_UNITTYPES
 from kowsim.kow.validation import ArmyListValidator, ValidationMessage, ALL_VALIDATIONRULES 
 from kowsim.mvc.mvcbase import View
 import kowsim.kow.stats as st
-import globals
+import globals 
 
 
 #===============================================================================
@@ -278,7 +278,7 @@ class UnitBrowserWidget(QtGui.QDockWidget):
       super(UnitBrowserWidget, self).__init__("Unit browser", parent)
       self.setObjectName("UnitBrowser")
       self._ctrlContext = None # points to the army list control to which the unit browser was linked, such that if a unit shall be added it will be added to the right army list
-      self._detContext = None  # points to the detachment model which is linked with the unit browser so that a unit can be added to the right detachment
+      self._detContext = None  # points to the detachment which is linked with the unit browser so that a unit can be added to the right detachment
       
       self.listWdg = QtGui.QTreeWidget(self)
       self.listWdg.setColumnCount(1)
@@ -293,7 +293,8 @@ class UnitBrowserWidget(QtGui.QDockWidget):
    def AddUnitTriggered(self, item, col):
       if not item: return
       unitname = item.text(col)
-      self._ctrlContext.AddUnitToDetachment(unitname, self._detContext)
+      cmd = AddSpecificUnitCmd(alModel=self._ctrlContext.model, detachment=self._detContext, unitname=unitname)
+      self._ctrlContext.AddAndExecute(cmd)
    
    def Update(self, detContext=None, ctrlContext=None):
       if detContext is self._detContext:

@@ -60,11 +60,11 @@ class Controller(object):
       self.ProcessHints(cmd.hints)
    
    # inform views about changes in the model
-   def NotifyModelChanged(self, *hints):
+   def NotifyModelChanged(self, hints):
       if self._updatesPaused: return
       self._isUpdating = True
       for view in self._views:
-         view.UpdateContent(*hints)
+         view.UpdateContent(hints)
       self._isUpdating = False
       if len(self._addViewBuffer)>0:
          [self.AttachView(view) for view in self._addViewBuffer]
