@@ -65,8 +65,8 @@ class UnitTable(QtGui.QTableWidget):
          if act.isChecked():
             chosenOpts.append(opt)
       
-      cmd = SetUnitOptionsCmd(self._armyCtrl.model, unit, self)
-      cmd.Execute(row, chosenOpts)
+      cmd = SetUnitOptionsCmd(self._armyCtrl.model, unit, chosenOpts)
+      self._armyCtrl.AddAndExecute(cmd)
       
    def ChangeUnit(self, newindex):
       sender = self.sender() # determine which exact combobox was changed

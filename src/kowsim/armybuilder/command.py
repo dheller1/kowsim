@@ -11,6 +11,7 @@ from kowsim.kow.unit import UnitInstance
 from kowsim.kow.fileio import ArmyListWriter, ArmyListReader
 from mvc.models import ArmyListModel
 import mvc.hints as ALH
+from kowsim.armybuilder.mvc.hints import ModifyUnitHint
 
 #===============================================================================
 # AddDetachmentCmd
@@ -237,19 +238,26 @@ class SetPrimaryDetachmentCmd(ModelViewCommand, ReversibleCommandMixin):
 #===============================================================================
 # SetUnitOptionsCmd
 #===============================================================================
-class SetUnitOptionsCmd(ModelViewCommand, ReversibleCommandMixin):
-   def __init__(self, alModel, unit, unittable):
-      ModelViewCommand.__init__(self, model=unit, view=unittable, name="SetUnitOptionsCmd")
+class SetUnitOptionsCmd(Command, ReversibleCommandMixin):
+   """ This command modifies the chosen options of a unit, it is triggered by the unit table.
+   
+   This is a new-style command, changing data directly upon the model and providing
+   any update-hints for views in its 'hints' member variable. It can also be used
+   in the controller's command/undo history.
+   """
+   def __init__(self, alModel, unit, options):
+      Command.__init__(self, name="SetUnitOptionsCmd")
       ReversibleCommandMixin.__init__(self)
       self._alModel = alModel
-   
-   def Execute(self, row, options):
-      self._model.ClearChosenOptions()
-      for opt in options:
-         self._model.ChooseOption(opt)
+      self._unit = unit
+      self._options = options
       
-      self._view.UpdateTextInRow(row)
-      self._view.siPointsChanged.emit()
+      self.hints = (ModifyUnitHint(self._unit), )
+   
+   def Execute(self):
+      self._unit.ClearChosenOptions()
+      for opt in self._options:
+         self._unit.ChooseOption(opt)
       self._alModel.Touch()
 
 
