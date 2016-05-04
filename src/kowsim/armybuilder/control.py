@@ -30,7 +30,7 @@ class ArmyListCtrl(MVC.Controller):
       self.NotifyModelChanged(ALH.ModifyDetachmentHint(detachment))
    
    def AttachView(self, view):
-      self._views.add(view)
+      MVC.Controller.AttachView(self, view) # call base class routine to use _addViewBuffer
       if isinstance(view, kowsim.armybuilder.views.ArmyListOutputView) and self.attachedPreview is None:
             self.attachedPreview = view
             

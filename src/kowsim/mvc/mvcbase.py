@@ -47,6 +47,8 @@ class Controller(object):
       self._updatesPaused = False
       self._cmdHist = []
       self._undoHist = []
+      self._isUpdating = False # can't add new views when the controller is currently updating old views,
+      self._addViewBuffer = [] # thus they are buffered and registered when updating is finished.
       
    # execute a command and, if it's reversible, add it to the undo history
    def AddAndExecute(self, cmd):
@@ -60,8 +62,12 @@ class Controller(object):
    # inform views about changes in the model
    def NotifyModelChanged(self, *hints):
       if self._updatesPaused: return
+      self._isUpdating = True
       for view in self._views:
          view.UpdateContent(*hints)
+      self._isUpdating = False
+      if len(self._addViewBuffer)>0:
+         [self.AttachView(view) for view in self._addViewBuffer]
          
    def PauseUpdates(self, pause=True):
       if pause: self._updatesPaused = True
@@ -75,7 +81,12 @@ class Controller(object):
       self.NotifyModelChanged()
    
    # accessors
-   def AttachView(self, view): self._views.add(view)
+   def AttachView(self, view):
+      if not self._isUpdating:
+         self._views.add(view)
+      else:
+         self._addViewBuffer.append(view)
+      
    def DetachView(self, view): self._views.remove(view)
    def Views(self): return self._views
    

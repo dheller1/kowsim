@@ -33,7 +33,7 @@ class ModelViewCommand(Command):
 #===============================================================================
 class ReversibleCommandMixin(object):
    def __init__(self):
-      self._reversible = False
+      self._reversible = True
       self._timesExecuted = 0
       self._timesUndone = 0
    
