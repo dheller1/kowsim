@@ -29,7 +29,7 @@ Large Infantry,Earth Elementals,Regiment (3),5,4,-,6,9,-/14,"CS (1), Pathfinder,
 Large Infantry,Earth Elementals,Horde (6),5,4,-,6,18,-/17,"CS (1), Pathfinder, Shambling",,200,40x40
 Monster,Greater Earth Elemental,Individual,5,4,-,6,8,-/18,"CS (3), Pathfinder, Shambling",,160,50x50
 War Engine,Ironbelcher Cannon,Individual,4,-,5,5,1,10/12,"Blast (D6+2), Piercing (4), Reload!, Headstrong, Warsmith (Blast (D6+3))",,110,50x50
-War Engine,Ironbelcher Organ Gun,Individual,4,-,5,5,15,10/12,"Range 24“, Piercing (2), Reload!, Headstrong, Warsmith (Elite)",,85,50x50
+War Engine,Ironbelcher Organ Gun,Individual,4,-,5,5,15,10/12,"Range 24, Piercing (2), Reload!, Headstrong, Warsmith (Elite)",,85,50x50
 War Engine,Flame Belcher,Individual,4,-,-,5,18,10/12,"Breath Attack (Att), Headstrong, Warsmith (Elite)",,85,50x50
 War Engine,Jarrun Bombard,Individual,4,-,5,5,1,10/12,"Blast (D6+3), Lob it!, Piercing (2), Reload!, Headstrong",,110,50x50
 Monster,Battle Driller,Individual,4,4,-,5,0,10/12,"Random Attacks (D6+6), Height 1, Brutal, CS (1), Headstrong, Individual",,70,25x50
