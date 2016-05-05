@@ -38,6 +38,9 @@ class ArmyListView(QtGui.QWidget, View):
       self.detachmentsTw.setCurrentIndex(0)
       self.ctrl.Revalidate()
       
+   def __repr__(self):
+      return "ArmyListView(%s,%s)" % (self.ctrl.model.Data().CustomName(), self._lastFilename)
+      
    def _initChildren(self):
       md = self.ctrl.model.Data()
       self.customNameLe = QtGui.QLineEdit(md.CustomName())

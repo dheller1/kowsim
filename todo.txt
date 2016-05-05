@@ -22,6 +22,8 @@
 [ ]  ModifyBaseSizeEffect
 [ ]  Menus updaten wenn MdiWindow wechselt
 [ ]  Icon Registry anstatt mehrfach laden
+[x]  Hints vernünftig implementieren anstatt Tupel mit variabler (!) Länge ...
+[ ]	 MdiArea muss sich merken welche Dateien geoeffnet sind und bei Laden, Speichern und Schließen von Armeelisten updaten.
 
 
 Stil/Design:

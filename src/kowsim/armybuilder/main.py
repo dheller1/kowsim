@@ -252,6 +252,7 @@ class MdiArea(QtGui.QMdiArea):
       self.setTabsMovable(True)
       #self.AddArmySubWindow()
       self.subWindowActivated.connect(QtGui.qApp.MainWindow.CurrentDetachmentChanged)
+      self.currentFiles = set()
       
    def AddArmySubWindow(self, armyListModel=None):
       if armyListModel is None:
@@ -307,7 +308,6 @@ def initDefaultSettings():
 #===============================================================================
 def main():
    """ Application entry point """
-   print os.path.dirname(os.path.realpath(__file__))
    app = QtGui.QApplication(sys.argv)
    initDefaultSettings()
    globals.LoadSettings()

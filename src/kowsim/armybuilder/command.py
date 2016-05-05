@@ -413,7 +413,7 @@ class LoadArmyListCmd(Command):
       view.SetLastFilename(filename)
       QtGui.qApp.DataManager.AddRecentFile(filename)
       view.siRecentFilesChanged.emit()
-      return True
+      return view
    
    
 #===============================================================================
