@@ -20,14 +20,6 @@ class Command(object):
    
    def IsReversible(self): return self._reversible
    
-#===============================================================================
-# ModelViewCommand
-#===============================================================================
-class ModelViewCommand(Command):
-   def __init__(self, model, view, name):
-      Command.__init__(self, name)
-      self._model = model
-      self._view = view
    
 #===============================================================================
 # ReversibleCommandMixin

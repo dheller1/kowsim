@@ -6,12 +6,12 @@ import os
 import kowsim.kow.sizetype
 from PySide import QtGui
 from PySide.QtCore import QSettings
-from kowsim.command.command import Command, ModelViewCommand, ReversibleCommandMixin
+from kowsim.command.command import Command, ReversibleCommandMixin
 from kowsim.kow.unit import UnitInstance
 from kowsim.kow.fileio import ArmyListWriter, ArmyListReader
 from mvc.models import ArmyListModel
 import mvc.hints as ALH
-from kowsim.armybuilder.mvc.hints import ModifyUnitHint
+from kowsim.armybuilder.mvc.hints import ModifyUnitHint, ToggleModifiedHint
 
 #===============================================================================
 # AddDetachmentCmd
@@ -225,33 +225,22 @@ class ChangeUnitItemCmd(Command, ReversibleCommandMixin):
 #===============================================================================
 # SetPrimaryDetachmentCmd
 #===============================================================================
-class SetPrimaryDetachmentCmd(ModelViewCommand, ReversibleCommandMixin):
-   def __init__(self, detachment, alview):
-      ModelViewCommand.__init__(self, model=detachment, view=alview, name="SetPrimaryDetachmentCmd")
+class SetPrimaryDetachmentCmd(Command, ReversibleCommandMixin):
+   def __init__(self, alModel, detachment, makePrimary):
+      Command.__init__(self, name="SetPrimaryDetachmentCmd")
       ReversibleCommandMixin.__init__(self)
+      self.alModel = alModel
+      self.detachment = detachment
+      self.makePrimary = makePrimary
+      self.hints = (ALH.ChangePrimaryDetachmentHint(), )
    
-   def Execute(self, makePrimary):
-      dets = self._view._model.ListDetachments()
-      ctrl = self._view._ctrl
-      numPrimary = 0
-      for det in dets:
-         if det.IsPrimary(): numPrimary += 1
-      if makePrimary and numPrimary > 0:
-         res = QtGui.QMessageBox.warning(self._view, "Set primary detachment", "You already have a primary detachment.\nDo you want to make %s primary instead?" % self._model.CustomName(),
-                                         QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)
-         if res != QtGui.QMessageBox.Ok:
-            return
-         for det in self._view._model.ListDetachments():
-            ctrl.SetPrimaryDetachment(det, False)
-
-      elif not makePrimary and numPrimary == 1:
-         res = QtGui.QMessageBox.warning(self._view, "Set primary detachment", "You are about to remove the primary detachment, invalidating your army list.\nDo you want to proceed?",
-                                         QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)
-         if res != QtGui.QMessageBox.Ok:
-            return
-
-      ctrl.SetPrimaryDetachment(self._model, makePrimary)
-      self._view.Update()
+   def Execute(self):
+      for det in self.alModel.data.ListDetachments():
+         if det is self.detachment:
+            det._isPrimary = self.makePrimary
+         else:
+            det._isPrimary = False
+      self.alModel.Touch()
       
       
 #===============================================================================
@@ -374,9 +363,14 @@ class SaveArmyListCmd(Command):
       else:
          filename = self.alView._lastFilename
       
-      alw = ArmyListWriter(self.alModel.data)
-      alw.SaveToFile(filename)
-      self.alModel.modified = False
+      try:
+         alw = ArmyListWriter(self.alModel.data)
+         alw.SaveToFile(filename)
+      except IOError as e:
+         QtGui.QMessageBox.critical(self.alView, "Error while saving", "An error occurred while saving the army list:\n  %s" % e)
+      else:
+         self.alModel.modified = False
+         self.hints = (ToggleModifiedHint(), )
       
 
 #===============================================================================

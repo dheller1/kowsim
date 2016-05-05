@@ -29,15 +29,8 @@ class ArmyListCtrl(MVC.Controller):
    def ProcessHints(self, hints):
       # Currently, all hints are forwarded. As soon as commands which do not modify a model
       # are introduced (e.g. printing), these should be filtered and ignored here.
+      print hints
       self.NotifyModelChanged(hints)
-      
+            
    def Revalidate(self):
       self.NotifyModelChanged((ALH.RevalidateHint(), ))
-         
-   def SetPrimaryDetachment(self, detachment, makePrimary):
-      try: self._model.ListDetachments().index(detachment)
-      except ValueError:
-         raise ValueError("Can't modify a detachment not belonging to my armylist!")
-      
-      detachment._isPrimary = makePrimary
-      self.Revalidate()

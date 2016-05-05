@@ -8,6 +8,8 @@ CHANGE_NAME             = 10002
 MODIFY_DETACHMENT       = 10003
 MODIFY_UNIT             = 10004 # additional arg: reference to unit
 ADD_DETACHMENT          = 10005 # additional arg: reference to new detachment
+CHANGE_PRIMARY_DETACHMENT = 10006
+TOGGLE_MODIFIED           = 10007
 
 #===============================================================================
 # ArmyListHint
@@ -57,3 +59,13 @@ class AddDetachmentHint(ArmyListHint):
    def __init__(self, which):
       ArmyListHint.__init__(self, "Add detachment", AddDetachmentHint.id)
       self.which = which
+      
+class ChangePrimaryDetachmentHint(ArmyListHint):
+   id = CHANGE_PRIMARY_DETACHMENT
+   def __init__(self):
+      ArmyListHint.__init__(self, "Modify primary detachment", ChangePrimaryDetachmentHint.id)
+
+class ToggleModifiedHint(ArmyListHint):
+   id = TOGGLE_MODIFIED
+   def __init__(self):
+      ArmyListHint.__init__(self, "Toggle modified status", ToggleModifiedHint.id)

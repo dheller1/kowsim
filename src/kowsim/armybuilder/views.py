@@ -104,14 +104,16 @@ class ArmyListView(QtGui.QWidget, View):
    def closeEvent(self, e):
       if self.ctrl.model.modified:
          res = QtGui.QMessageBox.question(self, "Close army list", "You have unsaved changes in this army list.\nDo you want to save before closing?", 
-                                          QtGui.QMessageBox.Yes | QtGui.QMessageBox.No | QtGui.QMessageBox.Cancel, QtGui.QMessageBox.Yes)
-         
+                                          QtGui.QMessageBox.Yes | QtGui.QMessageBox.No | QtGui.QMessageBox.Cancel, QtGui.QMessageBox.Yes)         
          if res == QtGui.QMessageBox.Cancel:
             e.ignore()
             return
          elif res == QtGui.QMessageBox.Yes:
-            cmd = SaveArmyListCmd(self._model, self) # TODO: If Save is actually SaveAs and the Dialog is aborted, abort the close event!
-            cmd.Execute()                            # (e.g. check if document is still in modified status after the Save command)
+            cmd = SaveArmyListCmd(self.ctrl.model, self)
+            self.ctrl.AddAndExecute(cmd)
+            if self.ctrl.model.modified: # if it is still modified, saving was not successful (could be an aborted filename dialog)
+               e.ignore()                # don't close the window in this case
+               return
       
       super(ArmyListView, self).closeEvent(e)
       
@@ -121,7 +123,6 @@ class ArmyListView(QtGui.QWidget, View):
       self.detachmentsTw.setCurrentIndex(self.detachmentsTw.count()-2) # switch to new tab
       dv.siNameChanged.connect(self.DetachmentNameChanged)
       dv.siModified.connect(self.SetModified)
-      dv.siPrimaryToggled.connect(self.TogglePrimaryDetachment)
       
    def DetachmentNameChanged(self, name):
       sender = self.sender()
@@ -151,30 +152,20 @@ class ArmyListView(QtGui.QWidget, View):
    def SetModified(self):
       self.UpdateTitle()
 
-   def TogglePrimaryDetachment(self, makePrimary):
-      sender = self.sender()
-      det = sender._model
-      cmd = SetPrimaryDetachmentCmd(det, self)
-      cmd.Execute(makePrimary)
-      
    # Update content after being notified about changes in the model.
    # A partial update might be sufficient if every hint in 'hints'
    # can be handled.
    def UpdateContent(self, hints=None):
       md = self.ctrl.model.Data()
-      unknownHints = False
-      
-      print hints
-      if hints:
-         for hint in hints:
-            if hint.IsType(ALH.ChangeNameHint) and hint.which is self.ctrl.model:
-               self.customNameLe.setText(md.CustomName())
-            elif hint.IsType(ALH.AddDetachmentHint):
-               self.AddDetachmentView(hint.which)
-            else:
-               unknownHints = True
       
       self.UpdateTitle()
+      for hint in hints:
+         if hint.IsType(ALH.ChangeNameHint) and hint.which is self.ctrl.model:
+            self.customNameLe.setText(md.CustomName())
+         elif hint.IsType(ALH.AddDetachmentHint):
+            self.AddDetachmentView(hint.which)
+         else:
+            continue # ignore hint
       
    def UpdateDetachment(self, index):
       # detachment index is always the tab index in self.detachmentsTw
@@ -196,7 +187,6 @@ class ArmyListView(QtGui.QWidget, View):
 class DetachmentView(QtGui.QWidget, View):
    siModified = QtCore.Signal(bool)
    siNameChanged = QtCore.Signal(str)
-   siPrimaryToggled = QtCore.Signal(bool)
    
    def __init__(self, model, ctrl, parent=None):
       QtGui.QWidget.__init__(self, parent)
@@ -287,7 +277,7 @@ class DetachmentView(QtGui.QWidget, View):
       self.duplicateUnitPb.clicked.connect(self.DuplicateUnit)
       self.unitTable.itemSelectionChanged.connect(self.UnitSelectionChanged)
       self.unitTable.siModified.connect(self.SetModified)
-      self.isPrimaryDetachmentCb.stateChanged.connect(self.TogglePrimary)
+      self.isPrimaryDetachmentCb.clicked.connect(self.TogglePrimary)
       
    def AddUnit(self):
       cmd = AddDefaultUnitCmd(self.ctrl.model, self._model)
@@ -320,7 +310,10 @@ class DetachmentView(QtGui.QWidget, View):
       self.siModified.emit(modified)
       
    def TogglePrimary(self):
-      self.siPrimaryToggled.emit(self.isPrimaryDetachmentCb.isChecked())
+      det = self._model
+      makePrimary = self.isPrimaryDetachmentCb.isChecked()
+      cmd = SetPrimaryDetachmentCmd(self.ctrl.model, det, makePrimary)
+      self.ctrl.AddAndExecute(cmd)
             
    def UnitSelectionChanged(self):
       rows = self.unitTable.SelectedRows()
@@ -371,6 +364,10 @@ class ArmyListOutputView(QtGui.QTextEdit, View):
       View.__init__(self, ctrl)
       self.setReadOnly(True)
       self.UpdateContent()
+      
+   def closeEvent(self, e):
+      self.ctrl.DetachView(self)
+      QtGui.QWidget.closeEvent(self, e)
       
    def _UnitTable(self, unit):
       specialText = ", ".join(unit.ListSpecialRules())

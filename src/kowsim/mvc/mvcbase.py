@@ -56,7 +56,10 @@ class Controller(object):
       self._cmdHist.append(cmd)
       if cmd.IsReversible():
          self._undoHist.append(cmd)
-      self.ProcessHints(cmd.hints)
+      if cmd.hints:
+         self.ProcessHints(cmd.hints)
+      else:
+         print "No hints for command %s. Skipping update." % cmd
    
    def NotifyModelChanged(self, hints):
       """ Inform any attached views about changes in the model. """
@@ -150,10 +153,6 @@ class View(object):
       """
       self.ctrl = ctrl
       self.ctrl.AttachView(self)
-      
-   def __del__(self):
-      self.ctrl.DetachView(self)
-      self.ctrl = None
-   
+         
    def UpdateContent(self, hints=None):
       raise NotImplementedError
