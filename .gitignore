@@ -45,6 +45,8 @@ coverage.xml
 *.log
 # Sphinx documentation
 docs/_build/
+doc/sphinx/
+doc/sphinx_apidoc/
 # PyBuilder
 target/
 # Pydev
@@ -54,3 +56,4 @@ target/
 /kowsim.zip
 *.zip
 *.lst
+*.rst
