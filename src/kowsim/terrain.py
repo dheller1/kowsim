@@ -66,7 +66,7 @@ class TerrainGraphicsItem(QtGui.QGraphicsPixmapItem):
          
    def InitMovement(self):
       if self.scene().mouseMode == MOUSE_MOVE_TERRAIN:
-         self.scene().mouseMode == MOUSE_DEFAULT
+         self.scene().mouseMode = MOUSE_DEFAULT
          self.scene().ResetStatusMessage()
       
       else:
@@ -77,7 +77,7 @@ class TerrainGraphicsItem(QtGui.QGraphicsPixmapItem):
       
    def InitRotation(self):
       if self.scene().mouseMode == MOUSE_ROTATE_TERRAIN:
-         self.scene().mouseMode == MOUSE_DEFAULT
+         self.scene().mouseMode = MOUSE_DEFAULT
          self.scene().ResetStatusMessage()
       
       else:
