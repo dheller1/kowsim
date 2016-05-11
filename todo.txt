@@ -16,6 +16,7 @@
 [x]  Keine multiplen Detachments gleicher Fraktionen, Verbünden nur wenn kompatibel
 [x]	 Unit Browser (ListWidget; Doppelklick fügt gleich die richtige Einheit ein)]
 [x]  Optionseffekte um Sonderregeln (z.B. Ausrüstung) wegzunehmen, wenn z.B. Schusswaffen gewechselt werden
+[ ]  Detachments entfernbar
 [ ]  Sonderregel-Implementierung um z.B. mit CS-Erhöhungen usw. zurecht zu kommen
 [ ]  Effekte für magische Artefakte analog zu OptionsEffekten.
 [ ]  Zusätzliche Unit-properties: Unit Type (u.a. für Helden), Height, Unique, Irregular

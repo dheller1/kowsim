@@ -54,9 +54,15 @@ class ArmyListView(QtGui.QWidget, View):
       self.validationWdg = ValidationWidget(self.ctrl, parent=self)
       
       self.detachmentsTw = QtGui.QTabWidget(parent=self)
+      self.detachmentsTw.setTabsClosable(True)
       self.detachmentsTw.addTab(QtGui.QWidget(), "+")
+      
+      # remove close button for '+'-pseudo tab
+      self.detachmentsTw.tabBar().setTabButton(0, QtGui.QTabBar.RightSide, None)
+      
       for det in md.ListDetachments():
          self.AddDetachmentView(det)
+         
       
       self.generalGb = QtGui.QGroupBox("General")
       self.detachmentsGb = QtGui.QGroupBox("Detachments")
