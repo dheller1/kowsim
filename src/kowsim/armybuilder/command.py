@@ -39,6 +39,29 @@ class AddDetachmentCmd(Command, ReversibleCommandMixin):
       self._model.Touch()
 
 
+class RemoveDetachmentCmd(Command, ReversibleCommandMixin):
+   """ This command removes a detachment from an army list.
+
+   This is a new-style command, changing data directly upon the model and providing
+   any update-hints for views in its 'hints' member variable. It can also be used
+   in the controller's command/undo history.
+   """
+   def __init__(self, alModel, detachment):
+      Command.__init__(self, name="RemoveDetachmentCmd")
+      ReversibleCommandMixin.__init__(self)
+      self._model = alModel
+      self._detachment = detachment
+      self.hints = (ALH.ModifyDetachmentHint(self._detachment), )
+      
+   def Execute(self):
+      self._model.data.RemoveDetachment(self._detachment)
+      self._model.Touch()
+      
+   def Undo(self):
+      self._model.data.AddDetachment(self._detachment)
+      self._model.Touch()
+      
+      
 #===============================================================================
 # RenameDetachmentCmd
 #===============================================================================
@@ -413,6 +436,7 @@ class LoadArmyListCmd(Command):
       view.SetLastFilename(filename)
       QtGui.qApp.DataManager.AddRecentFile(filename)
       view.siRecentFilesChanged.emit()
+      print view.ctrl._views
       return view
    
    

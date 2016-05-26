@@ -9,25 +9,24 @@ from PySide import QtGui, QtCore
 from widgets import UnitTable, ValidationWidget
 from command import AddDetachmentCmd, DeleteUnitCmd, RenameDetachmentCmd, AddDefaultUnitCmd, DuplicateUnitCmd, SaveArmyListCmd, SetPrimaryDetachmentCmd, RenameArmyListCmd
 from dialogs import AddDetachmentDialog
-from kowsim.mvc.mvcbase import View
+from kowsim.mvc.mvcbase import View, TextEditView
 from mvc.models import ArmyListModel
 import mvc.hints as ALH
 from kowsim.kow.force import Detachment
 import globals
+from kowsim.armybuilder.command import RemoveDetachmentCmd
 
-#===============================================================================
-# ArmyListView(QWidget)
-#   Widget showing a complete kow.ArmyList instance and allowing to edit it.
-#   Will contain one or more DetachmentViews which in turn contain a UnitTable
-#   each.
-#===============================================================================
-class ArmyListView(QtGui.QWidget, View):
+class ArmyListView(View):
+   """ Widget showing a complete kow.ArmyList instance and allowing to edit it.
+   
+   Will contain one or more DetachmentViews which in turn contain a UnitTable
+   each.
+   """
    siRecentFilesChanged = QtCore.Signal()
    siCurrentDetachmentChanged = QtCore.Signal()
    
    def __init__(self, ctrl, parent=None):
-      QtGui.QWidget.__init__(self, parent)
-      View.__init__(self, ctrl)
+      View.__init__(self, ctrl, parent)
       self._attachedPreview = None
       self._lastIndex = 0
       self._lastFilename = None
@@ -42,6 +41,7 @@ class ArmyListView(QtGui.QWidget, View):
       return "ArmyListView(%s,%s)" % (self.ctrl.model.Data().CustomName(), self._lastFilename)
       
    def _initChildren(self):
+      """ Initialize child widgets, particularly the detachments tabwidget. """
       md = self.ctrl.model.Data()
       self.customNameLe = QtGui.QLineEdit(md.CustomName())
       
@@ -62,7 +62,6 @@ class ArmyListView(QtGui.QWidget, View):
       
       for det in md.ListDetachments():
          self.AddDetachmentView(det)
-         
       
       self.generalGb = QtGui.QGroupBox("General")
       self.detachmentsGb = QtGui.QGroupBox("Detachments")
@@ -95,6 +94,7 @@ class ArmyListView(QtGui.QWidget, View):
    def _initConnections(self):
       self.detachmentsTw.currentChanged.connect(self.DetachmentTabChanged)
       self.customNameLe.editingFinished.connect(self._HandleArmyNameEdited)
+      self.detachmentsTw.tabCloseRequested.connect(self.RemoveDetachmentRequested)
    
    #============================================================================
    # "SLOTS" ('private' event handlers)
@@ -107,10 +107,8 @@ class ArmyListView(QtGui.QWidget, View):
          cmd = RenameArmyListCmd(self.ctrl.model, newName)
          self.ctrl.AddAndExecute(cmd)
    
-   #============================================================================
-   # Qt event handler overrides
-   #============================================================================
    def closeEvent(self, e):
+      """ Allows to save changes to the document before closing. """
       if self.ctrl.model.modified:
          res = QtGui.QMessageBox.question(self, "Close army list", "You have unsaved changes in this army list.\nDo you want to save before closing?", 
                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No | QtGui.QMessageBox.Cancel, QtGui.QMessageBox.Yes)         
@@ -125,8 +123,12 @@ class ArmyListView(QtGui.QWidget, View):
                return
       
       super(ArmyListView, self).closeEvent(e)
-      
+
    def AddDetachmentView(self, detachment):
+      """ Add a new detachment view to the ArmyListView.
+      
+      :param detachment: Detachment object to be added.
+      :type detachment: kow.Detachment """
       dv = DetachmentView(detachment, self.ctrl)
       self.detachmentsTw.insertTab(self.detachmentsTw.count()-1, dv, detachment.CustomName())
       self.detachmentsTw.setCurrentIndex(self.detachmentsTw.count()-2) # switch to new tab
@@ -134,6 +136,10 @@ class ArmyListView(QtGui.QWidget, View):
       dv.siModified.connect(self.SetModified)
       
    def DetachmentNameChanged(self, name):
+      """ Update a detachment's name in corresponding the tab header.
+      
+      Qt's sender() method is used to determine which specific detachment was changed.
+      """
       sender = self.sender()
       index = self.detachmentsTw.indexOf(sender)
       self.detachmentsTw.setTabText(index, name)
@@ -153,6 +159,24 @@ class ArmyListView(QtGui.QWidget, View):
       else:
          self._lastIndex = tw.currentIndex()
          self.siCurrentDetachmentChanged.emit()
+   
+   def RemoveDetachmentRequested(self, index):
+      if len(self.ctrl.model.data.ListDetachments())<=1:
+         QtGui.QMessageBox.critical(self, "Error", "Unable to remove detachment:\nYou can not remove the last detachment in the army list.", QtGui.QMessageBox.Ok)
+         return
+      
+      res = QtGui.QMessageBox.warning(self, "Remove detachment", "Do you really want to remove this detachment?", 
+                                          QtGui.QMessageBox.Yes | QtGui.QMessageBox.Cancel, QtGui.QMessageBox.Yes)
+      if res == QtGui.QMessageBox.Yes:
+         if(index>=1): # set index to not end up on the '+' tab accidentally. 
+            self.detachmentsTw.setCurrentIndex(index-1)
+         else:
+            self.detachmentsTw.setCurrentIndex(0)
+         cmd = RemoveDetachmentCmd(self.ctrl.model, self.ctrl.model.data.ListDetachments()[index])
+         self.ctrl.AddAndExecute(cmd)
+         self.detachmentsTw.removeTab(index) # FIXME: This might be better situated within the command(?)
+         print self.ctrl._views
+         self.ctrl.DetachView(self.detachmentsTw.widget(index))
          
    def SetLastFilename(self, name):
       self._lastFilename = name
@@ -160,11 +184,16 @@ class ArmyListView(QtGui.QWidget, View):
    
    def SetModified(self):
       self.UpdateTitle()
-
-   # Update content after being notified about changes in the model.
-   # A partial update might be sufficient if every hint in 'hints'
-   # can be handled.
+   
    def UpdateContent(self, hints=None):
+      """ Update content after being notified about changes in the model.
+      
+      A partial update might be sufficient if every hint in 'hints'
+      can be handled.
+      
+      :param hints: Update hints used to determine if a full update is needed.
+      :type hints: list of ArmyListHint objects
+      """
       md = self.ctrl.model.Data()
       
       self.UpdateTitle()
@@ -177,6 +206,11 @@ class ArmyListView(QtGui.QWidget, View):
             continue # ignore hint
       
    def UpdateDetachment(self, index):
+      """ Triggers UpdateContent() in the detachment view given by *index*.
+      
+      :param index: Index of detachment/detachment view to be updated.
+      :type index: int 
+      """
       # detachment index is always the tab index in self.detachmentsTw
       self.detachmentsTw.widget(index).UpdateContent()
       
@@ -189,17 +223,18 @@ class ArmyListView(QtGui.QWidget, View):
 
 #===============================================================================
 # DetachmentView(QWidget)
-#   Widget showing a single kow.Detachment instance and allowing to edit it.
-#   Usually used within an ArmyListView, which will show each of its DetachmentViews
-#   in a TabWidget.
 #===============================================================================
-class DetachmentView(QtGui.QWidget, View):
+class DetachmentView(View):
+   """ Widget showing a single kow.Detachment instance and allowing to edit it.
+   
+   Usually used within an ArmyListView, which will show each of its DetachmentViews
+   in a TabWidget.
+   """
    siModified = QtCore.Signal(bool)
    siNameChanged = QtCore.Signal(str)
    
    def __init__(self, model, ctrl, parent=None):
-      QtGui.QWidget.__init__(self, parent)
-      View.__init__(self, ctrl) # ctrl is an ArmyListCtrl
+      View.__init__(self, ctrl, parent) # ctrl is an ArmyListCtrl
       self._model = model # Detachment
       self._initChildren()
       self._initLayout()
@@ -367,18 +402,20 @@ class DetachmentView(QtGui.QWidget, View):
 #===============================================================================
 # ArmyListOutputView
 #===============================================================================
-class ArmyListOutputView(QtGui.QTextEdit, View):      
+class ArmyListOutputView(TextEditView):
+   """ View for an **ArmyListModel** acting as a read-only HTML/PDF style export/print preview. """
    def __init__(self, ctrl, parent=None):
-      QtGui.QTextEdit.__init__(self, parent)
-      View.__init__(self, ctrl)
+      super(ArmyListOutputView, self).__init__(ctrl, parent)
       self.setReadOnly(True)
       self.UpdateContent()
       
    def closeEvent(self, e):
+      """ Close view and detach from controller. """
       self.ctrl.DetachView(self)
       QtGui.QWidget.closeEvent(self, e)
       
    def _UnitTable(self, unit):
+      """ Create and return HTML code for unit table. """
       specialText = ", ".join(unit.ListSpecialRules())
       if len(unit.ListChosenOptions())>0:
          optsText = ", ".join(["<b>%s</b>" % o.Name() for o in unit.ListChosenOptions()])
@@ -412,6 +449,7 @@ class ArmyListOutputView(QtGui.QTextEdit, View):
       return pre+headRow+labelsRow+profileRow+post
       
    def UpdateContent(self, hints=None):
+      """ Update view content upon model changes. """
       al = self.ctrl.model.Data()
       self.setWindowTitle("Preview: " + al.CustomName())
       

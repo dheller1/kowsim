@@ -3,6 +3,8 @@
 # mvc/mvcbase.py
 #===============================================================================
 
+from PySide.QtGui import QWidget, QTextEdit
+
 #===============================================================================
 # MVCError
 #===============================================================================
@@ -136,7 +138,7 @@ class Model(object):
 #============================================================================
 # View
 #============================================================================
-class View(object):
+class View(QWidget):
    """Abstract base class for a View in a MVC (Model-View-Controller) architecture
    
    A view visualizes the data stored in a model and communicates changes (actively
@@ -146,11 +148,30 @@ class View(object):
    function, possibly reacting to HINTS defined in the controller and only doing
    a partial update.
    """
-   def __init__(self, ctrl):
+   def __init__(self, ctrl, parent=None):
       """View constructor
          parameters:
             -ctrl         the controller of the model to which to attach to
       """
+      super(View, self).__init__(parent)
+      self.ctrl = ctrl
+      self.ctrl.AttachView(self)
+         
+   def UpdateContent(self, hints=None):
+      raise NotImplementedError
+
+
+#============================================================================
+# View
+#============================================================================
+class TextEditView(QTextEdit):
+   """ Special abstract base class for a QTextEdit-based View in a MVC (Model-View-Controller) architecture """
+   def __init__(self, ctrl, parent=None):
+      """View constructor
+         parameters:
+            -ctrl         the controller of the model to which to attach to
+      """
+      super(TextEditView, self).__init__(parent)
       self.ctrl = ctrl
       self.ctrl.AttachView(self)
          
