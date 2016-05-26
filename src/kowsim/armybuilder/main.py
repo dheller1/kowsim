@@ -59,6 +59,7 @@ class MainWindow(QtGui.QMainWindow):
       self.openAction = self.toolBar.addAction(QtGui.QIcon(os.path.join(globals.BASEDIR,"data","icons","open.png")), "Open", self.OpenArmyList)
       self.saveAction = self.toolBar.addAction(QtGui.QIcon(os.path.join(globals.BASEDIR,"data","icons","save.png")), "Save", self.SaveArmyList)
       self.saveAction.setEnabled(False)
+      self.previewAction = self.toolBar.addAction(QtGui.QIcon(os.path.join(globals.BASEDIR,"data","icons","viewmag.png")), "Preview", self.PreviewArmyList)
       
       self.addToolBar(self.toolBar)
       
@@ -185,7 +186,9 @@ class MainMenu(QtGui.QMenuBar):
       # edit menu
       self.editMenu = self.addMenu("&Edit")
       self.undoAct = self.editMenu.addAction("&Undo")
+      self.undoAct.setEnabled(False)
       self.redoAct = self.editMenu.addAction("&Redo")
+      self.redoAct.setEnabled(False)
       
       # view menu
       self.viewMenu = self.addMenu("&View")
