@@ -92,9 +92,7 @@ class SaveAndReloadArmyListTestCase(SaveArmyListTestCase):
       SaveArmyListTestCase.runTest(self)
       oldPts = self.alModel.data.PointsTotal()
       oldNumUnits = self.alModel.data.ListDetachments()[0].NumUnits()
-      self.alView.close()
-      for wnd in self.mainWnd.mdiArea.subWindowList():
-         print wnd.widget()
+      self.mainWnd.mdiArea.closeAllSubWindows() # somehow this is necessary instead of self.alView.close()
       cmd = LoadArmyListCmd(self.mainWnd.mdiArea)
       newAlView = cmd.Execute(os.path.join(preferredFolder, "unittest_list.lst"))
       # check that the models are equal
