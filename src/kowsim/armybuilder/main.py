@@ -10,11 +10,11 @@ from kowsim.kow.force import Detachment
 from mvc.models import ArmyListModel
 from load_data import DataManager
 from views import ArmyListView, ArmyListOutputView
-from command import SaveArmyListCmd, LoadArmyListCmd, PreviewArmyListCmd
+from command import SaveArmyListCmd, LoadArmyListCmd, PreviewArmyListCmd, ExportAsHtmlCmd
 from dialogs import NewArmyListDialog
 from control import ArmyListCtrl
 from widgets import UnitBrowserWidget
-import globals
+import globals 
 
 #===============================================================================
 # MainWindow
@@ -59,7 +59,9 @@ class MainWindow(QtGui.QMainWindow):
       self.openAction = self.toolBar.addAction(QtGui.QIcon(os.path.join(globals.BASEDIR,"data","icons","open.png")), "Open", self.OpenArmyList)
       self.saveAction = self.toolBar.addAction(QtGui.QIcon(os.path.join(globals.BASEDIR,"data","icons","save.png")), "Save", self.SaveArmyList)
       self.saveAction.setEnabled(False)
-      self.previewAction = self.toolBar.addAction(QtGui.QIcon(os.path.join(globals.BASEDIR,"data","icons","viewmag.png")), "Preview", self.PreviewArmyList)
+      self.toolBar.addSeparator()
+      self.previewAction = self.toolBar.addAction(QtGui.QIcon(os.path.join(globals.BASEDIR,"data","icons","kghostview.png")), "Preview", self.PreviewArmyList)
+      self.exportHtmlAction = self.toolBar.addAction(QtGui.QIcon(os.path.join(globals.BASEDIR,"data","icons","html.png")), "Export as HTML", self.ExportHtml)
       
       self.addToolBar(self.toolBar)
       
@@ -121,6 +123,17 @@ class MainWindow(QtGui.QMainWindow):
    def CurrentWindowChanged(self, wnd):
       if wnd: self.saveAction.setEnabled(True)
       else: self.saveAction.setEnabled(False)
+      
+   def ExportHtml(self):
+      l = len(self.mdiArea.subWindowList())
+      # somehow if there's only one subwindow it is not registered as active,
+      # so do this as a workaround.
+      if l == 0: return
+      elif l == 1: view = self.mdiArea.subWindowList()[0].widget()
+      else: view = self.mdiArea.activeSubWindow().widget()
+      
+      cmd = ExportAsHtmlCmd(view.ctrl.model, view)
+      view.ctrl.AddAndExecute(cmd)
    
    def NewArmyList(self):
       self.mdiArea.AddArmySubWindow()
@@ -296,7 +309,7 @@ def initDefaultSettings():
    """ Initialize default settings possibly needed before the first program start """
    # this file is in subfolder src/kowsim/armybuilder
    basedir = os.path.normpath( os.path.join( os.path.dirname(os.path.realpath(__file__)),"..", "..", "..") )
-   print basedir
+   #print basedir
    defaultSettings = [ ("Recent/NumRecent", 5),
                        ("Basedir", basedir) ]
    

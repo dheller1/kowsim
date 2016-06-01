@@ -413,61 +413,8 @@ class ArmyListOutputView(TextEditView):
       """ Close view and detach from controller. """
       self.ctrl.DetachView(self)
       QtGui.QWidget.closeEvent(self, e)
-      
-   def _UnitTable(self, unit):
-      """ Create and return HTML code for unit table. """
-      specialText = ", ".join(unit.ListSpecialRules())
-      if len(unit.ListChosenOptions())>0:
-         optsText = ", ".join(["<b>%s</b>" % o.Name() for o in unit.ListChosenOptions()])
-         specialText += ", " + optsText
-      
-      tableStyle = "{ border: #000000 1px solid; }"
-      
-      pre = "<table style='%s'>\n" % tableStyle
-      post = "</table>\n\n"
-      name = "%s (%s)" % (unit.CustomName(), unit.Profile().Name()) if len(unit.CustomName())>0 else unit.Profile().Name()
-      headRow = "<tr><td colspan='7'><b>%s</b></td><td colspan='2' align='right'><b>%s</b></td></tr>\n" % (name, unit.UnitType().Name())
-      labelsRow="""<tr><td width='120'>Unit Size</td>
-                       <td width='40'>Sp</td>
-                       <td width='40'>Me</td>
-                       <td width='40'>Ra</td>
-                       <td width='40'>De</td>
-                       <td width='40'>At</td>
-                       <td width='55'>Ne</td>
-                       <td width='55'>Pts</td>
-                       <td width='250'>Special</td></tr>\n"""
-      profileRow="""<tr><td width='120'>%s</td>
-                       <td width='40'>%d</td>
-                       <td width='40'>%s</td>
-                       <td width='40'>%s</td>
-                       <td width='40'>%s</td>
-                       <td width='40'>%s</td>
-                       <td width='55'>%s</td>
-                       <td width='55'>%d</td>
-                       <td width='250'>%s</td></tr>\n""" % (unit.SizeType().Name(), unit.Sp(), unit.MeStr(), unit.RaStr(), unit.DeStr(), unit.AtStr(),
-                                                            unit.NeStr(), unit.PointsCost(), specialText)
-      return pre+headRow+labelsRow+profileRow+post
-      
+            
    def UpdateContent(self, hints=None):
       """ Update view content upon model changes. """
-      al = self.ctrl.model.Data()
-      self.setWindowTitle("Preview: " + al.CustomName())
-      
-      header = """<html>\n
-      <head>\n
-         <title>%s (%dp)</title>\n
-      </head>\n
-      <body>\n""" % (al.CustomName(), al.PointsLimit())
-      
-      footer = """</body>\n
-      </html>\n"""
-      
-      content  = "   <h1>%s (%dp)</h1>\n" % (al.CustomName(), al.PointsLimit())
-      content += "   <h4>%d detachment%s</h4>\n" % (al.NumDetachments(), "s" if al.NumDetachments()>1 else "")
-      
-      for det in al.ListDetachments():
-         content += "   <h2>%s (%s)</h2>\n" % (det.CustomName(), det.Choices().Name())
-         content += "   <h4>%d units, %d points</h4>\n" % (det.NumUnits(), det.PointsTotal())
-         content += "</p>\n".join([self._UnitTable(unit) for unit in det.ListUnits()])
-               
-      self.setHtml(header + content + footer)
+      self.setHtml(self.ctrl.model.GenerateHtml())
+      self.setWindowTitle("Preview: " + self.ctrl.model.Data().CustomName())
