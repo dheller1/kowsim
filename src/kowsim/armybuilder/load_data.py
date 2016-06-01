@@ -3,6 +3,7 @@
 # armybuilder/load_data.py
 #===============================================================================
 import os
+import sys
 from collections import deque
 
 from PySide.QtCore import QSettings
@@ -30,12 +31,17 @@ class DataManager(object):
       for fn in os.listdir(os.path.join(globals.BASEDIR, "data", "kow", "forces")):
          if fn.startswith(".") or fn.endswith("#") or not fn.endswith(".csv"): # skip temporary lock files and unknown files
             continue
-         pars.ReadLinesFromFile(os.path.join(globals.BASEDIR, "data", "kow", "forces", fn))
-         force = pars.Parse()
-         print "Parsed %s (%d units)." % (force.Name(), force.NumUnits())
          
-         self._forceChoices.append(force)
-         self._forceChoicesByName[force.Name()] = force
+         try:
+            pars.ReadLinesFromFile(os.path.join(globals.BASEDIR, "data", "kow", "forces", fn))
+            force = pars.Parse()
+            #print "Parsed %s (%d units)." % (force.Name(), force.NumUnits())
+         
+            self._forceChoices.append(force)
+            self._forceChoicesByName[force.Name()] = force
+         
+         except Exception as e:
+            sys.stderr.write("Error while parsing %s: %s\n" % (fn, e))
          
    def LoadItems(self):
       self._items = []
