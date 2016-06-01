@@ -1,3 +1,3 @@
 echo off
-cd src
+cd dist
 armybuilder.exe
