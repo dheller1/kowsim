@@ -339,7 +339,7 @@ class DuplicateUnitCmd(Command, ReversibleCommandMixin):
       self._model = model
       self._detachment = detachment
       self._dupUnits = units
-   
+      
    def Execute(self):
       if len(self._dupUnits) == 0: return
       self._newUnits = [] 
@@ -349,8 +349,8 @@ class DuplicateUnitCmd(Command, ReversibleCommandMixin):
             newUnit.ChooseOption(o)
          self._detachment.AddUnit(newUnit)
          self._newUnits.append(newUnit)
-         
-      self.hints = (ALH.ModifyUnitHint(unit) for unit in self._newUnits)
+      
+      self.hints = tuple( [ALH.ModifyUnitHint(unit) for unit in self._newUnits] )
       self._model.Touch()
       
    def Undo(self):
@@ -459,4 +459,30 @@ class PreviewArmyListCmd(Command):
          # if we're still here, the preview is still linked but has been closed already.
          # thus, just add a new one as if no old one was present.
       self._mdiArea.AddPreviewSubWindow(self._ctrl)
+
+
+class ExportAsHtmlCmd(Command):
+   """ Export army list as HTML file. """
+   def __init__(self, alModel, alView):
+      Command.__init__(self, name="ExportAsHtmlCmd")
+      self.alModel = alModel
+      self.alView = alView
+         
+   def Execute(self):
+      defaultName = self.alView._lastFilename if self.alView._lastFilename else "%s.lst" % self.alModel.data.CustomName()
+      defaultName = defaultName[:-4] + ".html" # replace '.lst' by '.html'
       
+      settings = QSettings("NoCompany", "KowArmyBuilder")
+      preferredFolder = settings.value("preferred_folder_HTML")
+      if preferredFolder is None: preferredFolder = ".."
+         
+      filename, _ = QtGui.QFileDialog.getSaveFileName(self.alView, "Export army list as HTML", "%s" % (os.path.join(preferredFolder, defaultName)),
+                                                   "HTML files (*.html);;All files (*.*)")
+      if filename == "": return
+      settings.setValue("preferred_folder_HTML", os.path.dirname(filename))
+      
+      try:
+         with open(filename, 'w') as f:
+            f.write(self.alModel.GenerateHtml())
+      except IOError as e:
+         QtGui.QMessageBox.critical(self.alView, "Error while exporting", "An error occurred while saving the army list:\n  %s" % e)
