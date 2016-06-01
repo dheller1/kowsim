@@ -14,8 +14,8 @@ def LoadSettings():
    global BASEDIR, _BASEDIR_LOADED
    
    if not _BASEDIR_LOADED:
-      print "Loading Basedir setting"
+      #print "Loading Basedir setting"
       settings = QtCore.QSettings("NoCompany", "KowArmyBuilder")
       BASEDIR = settings.value("Basedir")
-      print BASEDIR
+      #print BASEDIR
       _BASEDIR_LOADED = True
