@@ -1,0 +1,39 @@
+# name,alignment,,,,,,,,,,,
+Abyssal Dwarfs,Evil,,,,,,,,,,,
+# type,unit,size,Sp,Me,Ra,De,At,Ne,Special,Options,Points,Base
+Infantry,Blacksouls,Troop (10),4,4,-,5,10,10/12,Vicious,Mutated Throwing Mastiff|+15,80,20x20
+Infantry,Blacksouls,Regiment (20),4,4,-,5,12,14/16,Vicious,Mutated Throwing Mastiff|+15,115,20x20
+Infantry,Blacksouls,Horde (40),4,4,-,5,25,21/23,Vicious,Mutated Throwing Mastiff|+15,190,20x20
+Infantry,Abyssal Berserkers,Troop (10),5,4,-,3,20,-/13,"CS (1), Vicious",,125,20x20
+Infantry,Abyssal Berserkers,Regiment (20),5,4,-,3,25,-/17,"CS (1), Vicious",,180,20x20
+Infantry,Immortal Guard,Troop (10),4,3,-,5,10,-/13,Vicious,"Two-handed weapons|+0|Set(Defense,4)|Grant(CS(1));Mutated Throwing Mastiff|+15",100,20x20
+Infantry,Immortal Guard,Regiment (20),4,3,-,5,12,-/17,Vicious,"Two-handed weapons|+0|Set(Defense,4)|Grant(CS(1));Mutated Throwing Mastiff|+15",145,20x20
+Infantry,Decimators,Troop (10),4,5,-,4,10,10/12,"Breath Attack (Att), Piercing (1), Vicious",,120,20x20
+Infantry,Decimators,Regiment (20),4,5,-,4,12,14/16,"Breath Attack (Att), Piercing (1), Vicious",,160,20x20
+Infantry,Decimators,Horde (40),4,5,-,4,25,21/23,"Breath Attack (Att), Piercing (1), Vicious",,255,20x20
+Infantry,Slave Orcs*,Troop (10),5,4,-,4,10,9/11,"CS (1), Yellow-Bellied",,65,25x25
+Infantry,Slave Orcs*,Regiment (20),5,4,-,4,12,13/15,"CS (1), Yellow-Bellied",,90,25x25
+Infantry,Slave Orcs*,Horde (40),5,4,-,4,25,20/22,"CS (1), Yellow-Bellied",,150,25x25
+Infantry,Gargoyles*,Troop (10),10,4,-,3,8,9/11,"Fly, Regeneration (3+), Vicious","Vile Spawn|+20|Set(Defense,4)|Grant(CS(1))",80,25x25
+Cavalry,Slave Orc Gore Riders*,Troop (5),8,4,-,4,8,9/11,"CS (1), TC (1), Yellow-Bellied",,85,25x50
+Cavalry,Slave Orc Gore Riders*,Regiment (10),8,4,-,4,16,12/14,"CS (1), TC (1), Yellow-Bellied",,130,25x50
+Cavalry,Abyssal Halfbreeds,Troop (5),8,3,-,4,8,11/13,"CS (1), TC (1), Regeneration (5+), Vicious",,125,25x50
+Cavalry,Abyssal Halfbreeds,Regiment (10),8,3,-,4,16,14/16,"CS (1), TC (1), Regeneration (5+), Vicious",,195,25x50
+Large Infantry,Lesser Obsidian Golems,Regiment (3),5,4,-,6,9,-/14,"CS (2), Shambling, Height 3, Vicious",,135,50x50
+Large Infantry,Lesser Obsidian Golems,Horde (6),5,4,-,6,18,-/17,"CS (2), Shambling, Height 3, Vicious",,210,50x50
+Large Cavalry,Abyssal Grotesques,Regiment (3),7,4,-,5,9,12/14,"CS (2), TC (1), Brutal, Regeneration (5+), Vicious",,165,50x50
+Large Cavalry,Abyssal Grotesques,Horde (6),7,4,-,5,18,16/18,"CS (2), TC (1), Brutal, Regeneration (5+), Vicious",,250,50x50
+Monster,Greater Obsidian Golem,Individual,5,4,-,6,8,-/18,"CS (3), Shambling, Vicious",,160,50x50
+War Engine,Grog Mortar,Individual,4,-,5,5,1,10/12,"Blast (D6+2), Indirect Fire, Piercing (2), Reload!, Vicious",,100,50x50
+War Engine,Angkor Heavy Mortar,Individual,4,-,5,5,1,10/12,"Blast (D6+4), Indirect Fire, Piercing (3), Reload!, Vicious",,120,50x50
+War Engine,Katsuchan Rocket Launcher,Individual,4,-,5,5,3,10/12,"Blast (D3), Indirect Fire, Piercing (1), Reload!, Vicious",,85,50x50
+War Engine,'Dragon' Fire-team,Individual,4,-,-,4,10,10/12,"Breath Attack (Att), Individual, Vicious",,50,25x50
+Hero,Overmaster,Individual,4,3,-,6,5,13/15,"CS (1), Individual, Inspiring, Vicious",,120,20x20
+Hero,Overmaster on Great Abyssal Dragon,Individual,10,3,-,5,8,17/19,"CS (3), Fly, Breath Attack (10), Inspiring, Vicious",,280,50x50
+Hero,Slavedriver,Individual,4,5,-,5,1,10/12,"Individual, Inspiring, Vicious",,50,20x20
+Hero,Abyssal Halfbreed Champion,Individual,8,3,-,5,6,12/14,"CS (3), Individual, Inspiring, Regeneration (5+), Vicious",,160,25x50
+Hero,Abyssal Grotesque Champion,Individual,7,3,-,5,5,12/14,"CS (2), TC (1), Brutal, Nimble, Regeneration (5+), Vicious",,140,50x50
+Hero,Iron-caster,Individual,4,4,-,5,2,11/13,"CS (1), Fireball (6), Heal (3, War Engines, Golems, Immortal Guard only), Individual, Inspiring (War Engines only), Vicious",Lightning Bolt (3)|+20;Surge (8)|+15,105,20x20
+Hero,Supreme Iron-caster on Great Winged Halfbreed,Individual,10,4,-,5,5,15/17,"CS (2), Fireball (10), Fly, Heal (4, War Engines, Golems, Immortal Guard only), Inspiring, Vicious",Lightning Bolt (3)|+20;Surge (10)|+20,190,50x50
+Hero,Ba'su'su the Vile [1],Individual,10,3,-,5,8,15/17,"CS (2), Fly, Individual, Inspiring (Gargoyles only), Regeneration (5+), Vicious",,220,25x25
+Hero,Brakki Barka [1],Individual,8,3,-,5,6,14/16,"Bhardoom! (12“ Inspiring), CS (3), Individual, Regeneration (5+), Vicious",,200,25x50
