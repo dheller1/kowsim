@@ -5,6 +5,7 @@
 from kowsim.kow.alignment import AL_GOOD, AL_EVIL
 import kowsim.kow.unittype as ut
 import kowsim.kow.sizetype as st
+from _collections import defaultdict
 
 #===============================================================================
 # ValidationMessage
@@ -155,5 +156,29 @@ class AlliedAlignmentsOkRule(ValidationRule):
                failed = True
                break
       return msgs
+   
 
-ALL_VALIDATIONRULES = (PointsLimitFulfilledRule(), NumberOfPrimaryDetachmentsOkRule(), AlliedAlignmentsOkRule(), NumberOfNonRegimentsOkRule())
+class MagicArtefactsAreUniqueRule(ValidationRule):
+   """ Check if each magic artefact is used only once in the army. """
+   def __init__(self):
+      ValidationRule.__init__(self, "MagicArtefactsAreUnique")
+   
+   def Check(self, obj):
+      msgs = []
+      
+      itemmap = defaultdict(int) # {str:int} map with ItemName=>number of occurrences entries
+      
+      for det in obj.ListDetachments():
+         for unit in det.ListUnits():
+            if unit.Item() is not None:
+               itemmap[unit.Item().Name()] += 1
+      
+      for itemName, occs in itemmap.iteritems():
+         if occs > 1:
+            msgs.append(ValidationMessage(ValidationMessage.VM_CRITICAL, "Item %s used more than once. (%d times)" % (itemName, occs),
+                                          "Each magic artefact may only be used once in an army list, but %s is present %d times." % (itemName, occs)))
+      
+      return msgs
+   
+
+ALL_VALIDATIONRULES = (PointsLimitFulfilledRule(), NumberOfPrimaryDetachmentsOkRule(), AlliedAlignmentsOkRule(), NumberOfNonRegimentsOkRule(), MagicArtefactsAreUniqueRule())
