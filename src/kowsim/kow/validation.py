@@ -3,6 +3,8 @@
 # kow/validation.py
 #===============================================================================
 from kowsim.kow.alignment import AL_GOOD, AL_EVIL
+import kowsim.kow.unittype as ut
+import kowsim.kow.sizetype as st
 
 #===============================================================================
 # ValidationMessage
@@ -79,7 +81,57 @@ class NumberOfPrimaryDetachmentsOkRule(ValidationRule):
       elif numPrimary > 1: msgs.append(ValidationMessage(ValidationMessage.VM_CRITICAL, "Multiple (%d) primary detachments" % numPrimary,
             "Each army list must have exactly one primary detachment. Click the checkbox in %d of your detachments to unmark it as primary." % (numPrimary-1)))
       return msgs
+   
+   
+class NumberOfNonRegimentsOkRule(ValidationRule):
+   """ Checks if the allowed number of Monsters, War engines and Heroes is not exceeded. """ 
+   def __init__(self):
+      ValidationRule.__init__(self, "NumberOfNonRegimentsOk")
+   
+   def Check(self, obj):
+      msgs = []
+      for det in obj.ListDetachments():
+         nHeroes = 0
+         nWarengs = 0
+         nMonsters = 0
+         
+         nTroops = 0
+         nRegiments = 0
+         nHordes = 0
 
+         for unit in det.ListUnits(): # count unit type occasions
+            if unit.UnitType() == ut.UT_HERO:
+               nHeroes += 1
+            elif unit.UnitType() == ut.UT_WENG:
+               nWarengs += 1
+            elif unit.UnitType() == ut.UT_MON:
+               nMonsters += 1
+            elif unit.UnitType() in (ut.UT_INF, ut.UT_LINF, ut.UT_CAV, ut.UT_LCAV):
+               if unit.SizeType() == st.ST_REG:
+                  nRegiments += 1
+               elif unit.SizeType() in (st.ST_HRD, st.ST_LEG):
+                  nHordes += 1
+               elif unit.SizeType() == st.ST_TRP:
+                  nTroops += 1
+                  
+         # hordes allow one of each
+         excessiveHeroSlotsUsed = max(nHeroes - nHordes, 0)
+         excessiveWengSlotsUsed = max(nWarengs - nHordes, 0)
+         excessiveMonsterSlotsUsed = max(nMonsters - nHordes, 0)
+         
+         # regiments allow any one (1) slot each
+         if excessiveHeroSlotsUsed+excessiveMonsterSlotsUsed+excessiveWengSlotsUsed > nRegiments:
+            msgs.append(ValidationMessage(ValidationMessage.VM_CRITICAL, "%s: More Heroes/War engines/Monsters than allowed." % det.CustomName(),
+                  "For each horde/legion in a detachment there may be 1 Hero, 1 War engine, AND 1 Monster; plus 1 Hero, War engine, OR Monster for each regiment.\n" +
+                  "You may include %d Heroes, War engines, and Monsters plus another %d of any kind." % (nHordes, nRegiments)))
+         
+         # regiments allow 2 troops each, while hordes/legions allow 4
+         if nTroops > 2*nRegiments + 4*nHordes:
+            msgs.append(ValidationMessage(ValidationMessage.VM_CRITICAL, "%s: Too many troops fielded, need more regiments or hordes." % det.CustomName(),
+                  "The number of troops (%d) in the detachment must not exceed %d.\n(Two per regiment plus four per horde or legion)." % (nTroops, 2*nRegiments + 4*nHordes)))          
+      
+      return msgs
+               
 
 #===============================================================================
 # AlliedAlignmentsOkRule
@@ -104,4 +156,4 @@ class AlliedAlignmentsOkRule(ValidationRule):
                break
       return msgs
 
-ALL_VALIDATIONRULES = (PointsLimitFulfilledRule(), NumberOfPrimaryDetachmentsOkRule(), AlliedAlignmentsOkRule())
+ALL_VALIDATIONRULES = (PointsLimitFulfilledRule(), NumberOfPrimaryDetachmentsOkRule(), AlliedAlignmentsOkRule(), NumberOfNonRegimentsOkRule())
