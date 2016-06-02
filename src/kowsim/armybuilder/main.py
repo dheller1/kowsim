@@ -43,7 +43,6 @@ class MainWindow(QtGui.QMainWindow):
       #=========================================================================
       self.unitBrowser = UnitBrowserWidget()
       self.addDockWidget(Qt.LeftDockWidgetArea, self.unitBrowser)
-      self.unitBrowser.hide()
       
       self.mdiArea = MdiArea()
       self.setCentralWidget(self.mdiArea)
@@ -308,7 +307,7 @@ class MdiArea(QtGui.QMdiArea):
 def initDefaultSettings():
    """ Initialize default settings possibly needed before the first program start """
    # this file is in subfolder src/kowsim/armybuilder
-   basedir = os.path.normpath( os.path.join( os.path.dirname(os.path.realpath(__file__)),"..", "..", "..") )
+   basedir = os.path.normpath( os.path.join( os.path.dirname(os.path.realpath(__file__)), "..", "..", "..", "..") ) # py2exe kind of breaks this, need two additional parent folders here when compared to the .exe location
    #print basedir
    defaultSettings = [ ("Recent/NumRecent", 5),
                        ("Basedir", basedir) ]

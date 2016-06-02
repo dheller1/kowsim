@@ -3,7 +3,7 @@ cd src
 python setup_ab.py py2exe
 cd ..
 mkdir dist
-move src\dist\* dist\
+move src\dist\* dist
 rmdir src\dist
 del /Q src\build\*
 rmdir /S /Q src\build
