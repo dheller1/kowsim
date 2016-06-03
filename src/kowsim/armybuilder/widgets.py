@@ -20,6 +20,7 @@ import globals
 #===============================================================================
 class UnitTable(QtGui.QTableWidget):
    siPointsChanged = QtCore.Signal()
+   siAddUnitRequested = QtCore.Signal(str)
    siModified = QtCore.Signal(bool)
    DefaultRowHeight = 22
    
@@ -35,6 +36,25 @@ class UnitTable(QtGui.QTableWidget):
       for idx, col in enumerate(self._columns):
          self.setColumnWidth(idx, self._colWidths[col])
       self.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+      
+      self.setAcceptDrops(True) # for unit browser drag&drop
+      
+   def dragEnterEvent(self, e):
+      if e.mimeData().hasFormat("text/plain"):
+         e.acceptProposedAction()
+      else:
+         super(UnitTable, self).dragEnterEvent(e)
+      
+   def dragMoveEvent(self, e):
+      if e.mimeData().hasFormat("text/plain"):
+         e.acceptProposedAction()
+      else:
+         super(UnitTable, self).dragMoveEvent(e)
+         
+   def dropEvent(self, e):
+      if e.mimeData().hasFormat("text/plain"):
+         e.acceptProposedAction()
+         self.siAddUnitRequested.emit(e.mimeData().text())
    
    def ChangeItem(self):
       sender = self.sender()
@@ -279,9 +299,7 @@ class UnitBrowserWidget(QtGui.QDockWidget):
       self._ctrlContext = None # points to the army list control to which the unit browser was linked, such that if a unit shall be added it will be added to the right army list
       self._detContext = None  # points to the detachment which is linked with the unit browser so that a unit can be added to the right detachment
       
-      self.listWdg = QtGui.QTreeWidget(self)
-      self.listWdg.setColumnCount(1)
-      self.listWdg.setHeaderLabel("No detachment active")
+      self.listWdg = UnitBrowserTreeWidget(self)
       self.setWidget(self.listWdg)
       self.listWdg.itemDoubleClicked[QtGui.QTreeWidgetItem, int].connect(self.AddUnitTriggered)
       
@@ -317,3 +335,46 @@ class UnitBrowserWidget(QtGui.QDockWidget):
                for u in units:
                   tli.addChild(QtGui.QTreeWidgetItem(tli, [u.Name()]))
          self.listWdg.expandAll()
+         
+         
+class UnitBrowserTreeWidget(QtGui.QTreeWidget):
+   """ Overridden QTreeWidget for the unit browser with custom drag&drop capabilities. """
+   def __init__(self, parent=None):
+      super(UnitBrowserTreeWidget, self).__init__(parent)
+      self.setColumnCount(1)
+      self.setHeaderLabel("No detachment active")
+      self.dragStartPosition = None
+      self.dragItem = None
+      
+   def mousePressEvent(self, e):
+      startDrag = False
+      if e.button() == Qt.LeftButton:
+         itm = self.itemAt(e.pos())
+         if itm and itm.parent(): # don't drag top-level items (i.e. unit categories)
+            self.dragItem = itm
+            self.dragStartPosition = e.pos()
+            startDrag = True
+            
+      if not startDrag:
+         self.dragItem = None
+         self.dragStartPosition = None
+      
+      super(UnitBrowserTreeWidget, self).mousePressEvent(e)
+      
+   def mouseMoveEvent(self, e):
+      if e.buttons() & Qt.LeftButton and self.dragStartPosition and self.dragItem:
+         dist = (e.pos() - self.dragStartPosition).manhattanLength()
+         if dist > QtGui.QApplication.startDragDistance():
+            # start drag
+            lbl = QtGui.QLabel(self.dragItem.text(0))
+            pm = QtGui.QPixmap(lbl.size())
+            lbl.render(pm)
+            md = QtCore.QMimeData()
+            md.setText(self.dragItem.text(0))
+            drag = QtGui.QDrag(self)
+            drag.setMimeData(md)
+            drag.setPixmap(pm)
+            drag.exec_(Qt.CopyAction)
+            
+            self.dragItem = None
+            self.dragStartPosition = None

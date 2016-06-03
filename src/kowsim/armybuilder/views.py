@@ -7,14 +7,12 @@ import os
 from PySide import QtGui, QtCore
 
 from widgets import UnitTable, ValidationWidget
-from command import AddDetachmentCmd, DeleteUnitCmd, RenameDetachmentCmd, AddDefaultUnitCmd, DuplicateUnitCmd, SaveArmyListCmd, SetPrimaryDetachmentCmd, RenameArmyListCmd
+from command import AddDetachmentCmd, DeleteUnitCmd, RenameDetachmentCmd, AddDefaultUnitCmd, DuplicateUnitCmd, SaveArmyListCmd, SetPrimaryDetachmentCmd, RenameArmyListCmd, RemoveDetachmentCmd, AddSpecificUnitCmd
 from dialogs import AddDetachmentDialog
 from kowsim.mvc.mvcbase import View, TextEditView
-from mvc.models import ArmyListModel
 import mvc.hints as ALH
 from kowsim.kow.force import Detachment
 import globals
-from kowsim.armybuilder.command import RemoveDetachmentCmd
 
 class ArmyListView(View):
    """ Widget showing a complete kow.ArmyList instance and allowing to edit it.
@@ -321,10 +319,15 @@ class DetachmentView(View):
       self.duplicateUnitPb.clicked.connect(self.DuplicateUnit)
       self.unitTable.itemSelectionChanged.connect(self.UnitSelectionChanged)
       self.unitTable.siModified.connect(self.SetModified)
+      self.unitTable.siAddUnitRequested.connect(self.AddUnitDragAndDrop)
       self.isPrimaryDetachmentCb.clicked.connect(self.TogglePrimary)
       
    def AddUnit(self):
       cmd = AddDefaultUnitCmd(self.ctrl.model, self._model)
+      self.ctrl.AddAndExecute(cmd)
+      
+   def AddUnitDragAndDrop(self, unitname):
+      cmd = AddSpecificUnitCmd(self.ctrl.model, self._model, unitname)
       self.ctrl.AddAndExecute(cmd)
       
    def DeleteUnit(self):
