@@ -42,7 +42,7 @@ class ArmyList(object):
 # KowUnitGroup
 #===============================================================================
 class KowUnitGroup(object):
-   def __init__(self, name, default=None):
+   def __init__(self, name, default):
       self._name = name
       self._defaultOption = default
       self._sizeOptions = [] # list of KowUnitProfiles
@@ -53,6 +53,7 @@ class KowUnitGroup(object):
    def Default(self): return self._defaultOption
    def ListOptions(self): return self._sizeOptions
    def Name(self): return self._name
+   def DisplayName(self): return self._defaultOption.DisplayName()
    def ProfileForSize(self, size): return self._optionsByName[size]
       
    def AddSizeOption(self, opt):

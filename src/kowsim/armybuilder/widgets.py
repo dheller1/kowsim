@@ -142,10 +142,10 @@ class UnitTable(QtGui.QTableWidget):
       # unit options
       unitCb = QtGui.QComboBox()
       for unitgroup in unit.Detachment().Choices().ListGroups():
-         unitCb.addItem(unitgroup.Name())
+         unitCb.addItem(unitgroup.DisplayName())
       self.setCellWidget(row, self._columns.index("Unit"), unitCb)
       unitCb.rowForWidget = row
-      unitCb.setCurrentIndex(unitCb.findText(unit.Profile().Name()))
+      unitCb.setCurrentIndex(unitCb.findText(unit.Profile().DisplayName()))
    
       # size type options
       sizeCb = QtGui.QComboBox()
@@ -333,7 +333,7 @@ class UnitBrowserWidget(QtGui.QDockWidget):
                tli = QtGui.QTreeWidgetItem(self.listWdg, [ut.PluralName()])
                self.listWdg.addTopLevelItem(tli)
                for u in units:
-                  tli.addChild(QtGui.QTreeWidgetItem(tli, [u.Name()]))
+                  tli.addChild(QtGui.QTreeWidgetItem(tli, [u.DisplayName()]))
          self.listWdg.expandAll()
          
          

@@ -62,6 +62,8 @@ class UnitProfile(object):
       self._specialRules = args[12] if len(args)>12 else []
       self._item = args[13] if len(args)>13 else None
       self._options = args[14] if len(args)>14 else []
+      self.irregular = args[15] if len(args)>15 else False
+      self.unique = args[16] if len(args)>16 else False
             
    def __repr__(self):
       return "UnitProfile(%s)" % self._name
@@ -72,6 +74,11 @@ class UnitProfile(object):
    def CanHaveItem(self): return self._unitType not in (ut.UT_MON, ut.UT_WENG)
    def De(self): return self._defense
    def DeStr(self): return "%d+" % self.De()
+   def DisplayName(self):
+      s = self._name
+      if (self.irregular): s+="*"
+      if (self.unique): s+=" [1]"
+      return s
    def Me(self): return self._melee
    def MeStr(self): return "%d+" % self.Me() if self.Me()>0 else "-"
    def Ne(self): return (self._nerveWaver, self._nerveBreak)
@@ -136,6 +143,15 @@ class UnitProfile(object):
    
    # static generators
    @staticmethod
+   def NameFromDisplayName(dispname):
+      n = dispname
+      if(n.endswith(" [1]")):
+         n = n[:-4]
+      if(n.endswith("*")):
+         n = n[:-1]
+      return n
+   
+   @staticmethod
    def FromCsv(cols):
       """ Generate from a CSV row (individual columns given as list). """
       if len(cols)<13: 
@@ -177,7 +193,10 @@ class UnitProfile(object):
       baseW, baseH = cols[12].split('x') # Base Size
       base = Size(int(baseW), int(baseH))
       
-      p = UnitProfile(name, sp, me, ra, de, at, nv[0], nv[1], points, utype, stype, base, specRules, None, opts)
+      irregular = bool(cols[13])
+      unique = bool(cols[14])
+      
+      p = UnitProfile(name, sp, me, ra, de, at, nv[0], nv[1], points, utype, stype, base, specRules, None, opts, irregular, unique)
       return p
    
    @staticmethod
@@ -251,6 +270,7 @@ class UnitInstance(object):
    def De(self): return self._StatWithModifiers(stats.ST_DEFENSE)
    def DeStr(self): return "%d+" % self.De()
    def Detachment(self): return self._detachment
+   def DisplayName(self): return self._profile.DisplayName()
    def Item(self): return self._chosenItem
    def ListChosenOptions(self): return self._chosenOptions
    def ListSpecialRules(self):
