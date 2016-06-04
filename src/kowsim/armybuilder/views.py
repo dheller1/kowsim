@@ -5,6 +5,7 @@
 import os
 
 from PySide import QtGui, QtCore
+from PySide.QtCore import Qt
 
 from widgets import UnitTable, ValidationWidget
 from command import AddDetachmentCmd, DeleteUnitCmd, RenameDetachmentCmd, AddDefaultUnitCmd, DuplicateUnitCmd, SaveArmyListCmd, SetPrimaryDetachmentCmd, RenameArmyListCmd, RemoveDetachmentCmd, AddSpecificUnitCmd
@@ -74,6 +75,8 @@ class ArmyListView(View):
       genlay.addWidget(QtGui.QLabel("Points limit:"), row, 0)
       genlay.addWidget(self.pointsLimitSb, row, 1)
       row += 1
+      genlay.addWidget(QtGui.QLabel(), row, 0)
+      genlay.setRowStretch(row, 10)
       self.generalGb.setLayout(genlay)
       
       self.detachmentsGb.setLayout(QtGui.QVBoxLayout())
@@ -83,12 +86,22 @@ class ArmyListView(View):
       vallay.addWidget(self.validationWdg)
       self.valGb.setLayout(vallay)
       
-      mainlay = QtGui.QGridLayout()
-      mainlay.addWidget(self.generalGb, 0, 0)
-      mainlay.addWidget(self.valGb, 0, 1)
-      mainlay.addWidget(self.detachmentsGb, 1, 0, 1, 2)
-      self.setLayout(mainlay)
-   
+      vSplitter = QtGui.QSplitter(Qt.Vertical, self)
+      vSplitter.setChildrenCollapsible(False)
+      #vSplitter.setHandleWidth(5)
+      hSplitterTop = QtGui.QSplitter(Qt.Horizontal, self)
+      hSplitterTop.setChildrenCollapsible(False)
+      #hSplitterTop.setHandleWidth(3)
+      hSplitterTop.addWidget(self.generalGb)
+      hSplitterTop.addWidget(self.valGb)
+      vSplitter.addWidget(hSplitterTop)
+      vSplitter.addWidget(self.detachmentsGb)
+      vSplitter.setSizes([0,999])
+      
+      mainLay = QtGui.QVBoxLayout()
+      mainLay.addWidget(vSplitter)
+      self.setLayout(mainLay)
+      
    def _initConnections(self):
       self.detachmentsTw.currentChanged.connect(self.DetachmentTabChanged)
       self.customNameLe.editingFinished.connect(self._HandleArmyNameEdited)

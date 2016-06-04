@@ -246,12 +246,10 @@ class ValidationWidget(View):
       
       self._validator = ArmyListValidator(armyCtrl.model.data, ALL_VALIDATIONRULES) # FIXME: Direct data access really necessary?
       self.setMinimumWidth(300)
-      self.setFixedHeight(150)
+      self.setMinimumHeight(120)
       
       # child widgets
       self._messageLw = QtGui.QListWidget()
-      #self._messageLw.setFixedHeight(130)
-      #self.pointsTotalLbl = QtGui.QLabel("Total points: <b>0</b>/2000")
       
       # layout
       lay = QtGui.QGridLayout()
