@@ -272,6 +272,9 @@ class UnitInstance(object):
    def Detachment(self): return self._detachment
    def DisplayName(self): return self._profile.DisplayName()
    def Item(self): return self._chosenItem
+   @property
+   def irregular(self):
+      return self._profile.irregular
    def ListChosenOptions(self): return self._chosenOptions
    def ListSpecialRules(self):
       specRules = []
@@ -301,6 +304,9 @@ class UnitInstance(object):
       
    def SizeType(self): return self._profile.SizeType()
    def Sp(self): return self._StatWithModifiers(stats.ST_SPEED)
+   @property
+   def unique(self):
+      return self._profile.unique
    def UnitType(self): return self._profile.UnitType()
    
    # Setters

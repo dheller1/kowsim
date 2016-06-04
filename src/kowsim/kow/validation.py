@@ -7,6 +7,9 @@ import kowsim.kow.unittype as ut
 import kowsim.kow.sizetype as st
 from _collections import defaultdict
 
+
+""" When you add a new validation rule, don't forget to add an instance of it to ALL_VALIDATIONRULES way down in this file! """
+
 #===============================================================================
 # ValidationMessage
 #===============================================================================
@@ -108,9 +111,9 @@ class NumberOfNonRegimentsOkRule(ValidationRule):
             elif unit.UnitType() == ut.UT_MON:
                nMonsters += 1
             elif unit.UnitType() in (ut.UT_INF, ut.UT_LINF, ut.UT_CAV, ut.UT_LCAV):
-               if unit.SizeType() == st.ST_REG:
+               if unit.SizeType() == st.ST_REG and not unit.irregular:
                   nRegiments += 1
-               elif unit.SizeType() in (st.ST_HRD, st.ST_LEG):
+               elif unit.SizeType() in (st.ST_HRD, st.ST_LEG) and not unit.irregular:
                   nHordes += 1
                elif unit.SizeType() == st.ST_TRP:
                   nTroops += 1
@@ -123,7 +126,7 @@ class NumberOfNonRegimentsOkRule(ValidationRule):
          # regiments allow any one (1) slot each
          if excessiveHeroSlotsUsed+excessiveMonsterSlotsUsed+excessiveWengSlotsUsed > nRegiments:
             msgs.append(ValidationMessage(ValidationMessage.VM_CRITICAL, "%s: More Heroes/War engines/Monsters than allowed." % det.CustomName(),
-                  "For each horde/legion in a detachment there may be 1 Hero, 1 War engine, AND 1 Monster; plus 1 Hero, War engine, OR Monster for each regiment.\n" +
+                  "For each non-irregular horde/legion in a detachment there may be 1 Hero, 1 War engine, AND 1 Monster; plus 1 Hero, War engine, OR Monster for each regiment.\n" +
                   "You may include %d Heroes, War engines, and Monsters plus another %d of any kind." % (nHordes, nRegiments)))
          
          # regiments allow 2 troops each, while hordes/legions allow 4
@@ -165,9 +168,7 @@ class MagicArtefactsAreUniqueRule(ValidationRule):
    
    def Check(self, obj):
       msgs = []
-      
       itemmap = defaultdict(int) # {str:int} map with ItemName=>number of occurrences entries
-      
       for det in obj.ListDetachments():
          for unit in det.ListUnits():
             if unit.Item() is not None:
@@ -175,10 +176,31 @@ class MagicArtefactsAreUniqueRule(ValidationRule):
       
       for itemName, occs in itemmap.iteritems():
          if occs > 1:
-            msgs.append(ValidationMessage(ValidationMessage.VM_CRITICAL, "Item %s used more than once. (%d times)" % (itemName, occs),
+            msgs.append(ValidationMessage(ValidationMessage.VM_CRITICAL, "Item '%s' used more than once. (%d times)" % (itemName, occs),
                                           "Each magic artefact may only be used once in an army list, but %s is present %d times." % (itemName, occs)))
+      return msgs
+   
+   
+class UniqueUnitsAreUniqueRule(ValidationRule):
+   """ Check if units flagged as unique actually are unique in the army, regardless of their detachment.
+   (E.g. The Green Lady might occur in both Elves and Forces of Nature detachments.) """
+   def __init__(self):
+      ValidationRule.__init__(self, "UniqueUnitsAreUnique")
       
+   def Check(self, obj):
+      msgs = []
+      uniqmap = defaultdict(int) # {str:int} map with UnitName=>number of occurrences entries
+      for det in obj.ListDetachments():
+         for unit in det.ListUnits():
+            if unit.unique:
+               uniqmap[unit.Name()] += 1
+               
+      for unitName, occs in uniqmap.iteritems():
+         if occs > 1:
+            msgs.append(ValidationMessage(ValidationMessage.VM_CRITICAL, "Unique unit '%s' included more than once." % (unitName),
+                                          "A unique unit may only occur once in the whole army list, but %s is present %d times." % (unitName, occs)))
       return msgs
    
 
-ALL_VALIDATIONRULES = (PointsLimitFulfilledRule(), NumberOfPrimaryDetachmentsOkRule(), AlliedAlignmentsOkRule(), NumberOfNonRegimentsOkRule(), MagicArtefactsAreUniqueRule())
+ALL_VALIDATIONRULES = (PointsLimitFulfilledRule(), NumberOfPrimaryDetachmentsOkRule(), AlliedAlignmentsOkRule(),
+                       NumberOfNonRegimentsOkRule(), MagicArtefactsAreUniqueRule(), UniqueUnitsAreUniqueRule())
