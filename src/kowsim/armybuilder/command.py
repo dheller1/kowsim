@@ -2,12 +2,13 @@
 
 # armybuilder/command.py
 #===============================================================================
+import codecs
 import os
 import kowsim.kow.sizetype
 from PySide import QtGui
 from PySide.QtCore import QSettings
 from kowsim.command.command import Command, ReversibleCommandMixin
-from kowsim.kow.unit import UnitInstance
+from kowsim.kow.unit import UnitInstance, UnitProfile
 from kowsim.kow.fileio import ArmyListWriter, ArmyListReader
 from mvc.models import ArmyListModel
 import mvc.hints as ALH
@@ -151,7 +152,7 @@ class AddSpecificUnitCmd(Command, ReversibleCommandMixin):
       Command.__init__(self, name="AddSpecificUnitCmd")
       ReversibleCommandMixin.__init__(self)
       self._alModel = alModel
-      self._unitname = unitname
+      self._unitname = UnitProfile.NameFromDisplayName(unitname)
       self._detachment = detachment
       self.hints = (ALH.ModifyDetachmentHint(detachment), )
    
@@ -177,7 +178,7 @@ class ChangeUnitCmd(Command, ReversibleCommandMixin):
       self._model = model
       self._detachment = detachment
       self._unitIdx = unitIdx
-      self._newUnitName = newUnitName
+      self._newUnitName = UnitProfile.NameFromDisplayName(newUnitName)
       self.hints = (ALH.ModifyDetachmentHint(self._detachment), )
    
    def Execute(self):
@@ -482,7 +483,7 @@ class ExportAsHtmlCmd(Command):
       settings.setValue("preferred_folder_HTML", os.path.dirname(filename))
       
       try:
-         with open(filename, 'w') as f:
+         with codecs.open(filename, 'w', 'UTF-8') as f:
             f.write(self.alModel.GenerateHtml())
       except IOError as e:
          QtGui.QMessageBox.critical(self.alView, "Error while exporting", "An error occurred while saving the army list:\n  %s" % e)

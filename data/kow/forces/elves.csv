@@ -1,40 +1,40 @@
-# name,alignment,,,,,,,,,,,
-Elves,Good,,,,,,,,,,,
-# type,unit,size,Sp,Me,Ra,De,At,Ne,Special,Options,Points,Base
-Infantry,Kindred Tallspears,Troop (10),6,4,-,4,10,10/12,"Elite, Phalanx",,100,20x20
-Infantry,Kindred Tallspears,Regiment (20),6,4,-,4,15,14/16,"Elite, Phalanx",,140,20x20
-Infantry,Kindred Tallspears,Horde (40),6,4,-,4,30,21/23,"Elite, Phalanx",,230,20x20
-Infantry,Kindred Archers,Troop (10),6,5,4,4,8,10/12,"Elite, Bows",,115,20x20
-Infantry,Kindred Archers,Regiment (20),6,5,4,4,10,14/16,"Elite, Bows",,150,20x20
-Infantry,Kindred Archers,Horde (40),6,5,4,4,20,21/23,"Elite, Bows",,250,20x20
-Infantry,Therennian Sea Guard,Regiment (20),6,4,5,4,12,14/16,"Elite, Bows, Phalanx",,170,20x20
-Infantry,Therennian Sea Guard,Horde (40),6,4,5,4,25,21/23,"Elite, Bows, Phalanx",,280,20x20
-Infantry,Kindred Gladestalkers,Troop (10),6,4,4,3,8,10/12,"Elite, Bows, Pathfinder, Vanguard",,130,20x20
-Infantry,Kindred Gladestalkers,Regiment (20),6,4,4,3,10,14/16,"Elite, Bows, Pathfinder, Vanguard",,175,20x20
-Infantry,Palace Guard,Troop (10),6,3,-,4,10,11/13,"Elite, CS (1)",,105,20x20
-Infantry,Palace Guard,Regiment (20),6,3,-,4,12,15/17,"Elite, CS (1)",,150,20x20
-Infantry,Hunters of the Wild,Troop (10),6,4,-,4,20,10/12,"Vanguard, Pathfinder",,135,20x20
-Infantry,Hunters of the Wild,Regiment (20),6,4,-,4,25,14/16,"Vanguard, Pathfinder",Green Lady's Wild Guard|+20,190,20x20
-Large Infantry,Forest Shamblers,Regiment (3),6,4,-,5,9,-/14,"CS (1), Vanguard, Pathfinder, Shambling",,125,40x40
-Large Infantry,Forest Shamblers,Horde (6),6,4,-,5,18,-/17,"CS (1), Vanguard, Pathfinder, Shambling",,190,40x40
-Cavalry,Stormwind Cavalry,Troop (5),9,3,-,5,8,11/13,"Elite, TC (2)",,140,25x50
-Cavalry,Stormwind Cavalry,Regiment (10),9,3,-,5,16,14/16,"Elite, TC (2)",,215,25x50
-Cavalry,Silverbreeze Cavalry,Troop (5),10,5,4,4,7,11/13,"Elite, Bows, Nimble",,145,25x50
-Large Cavalry,Drakon Riders,Regiment (3),10,3,-,5,9,12/14,"Elite, CS (1), TC (1), Fly",,175,50x50
-Large Cavalry,Drakon Riders,Horde (6),10,3,-,5,18,15/17,"Elite, CS (1), TC (1), Fly",,270,50x50
-Large Cavalry,War Chariots,Regiment (3),8,4,4,4,8,12/14,"Elite, Bows. TC (2)",,140,50x100
-Large Cavalry,War Chariots,Horde (6),8,4,4,4,16,15/17,"Elite, Bows. TC (2)",,215,50x100
-War Engine,Bolt Thrower,Individual,6,-,4,4,2,10/12,"Elite, Reload!, Blast (1D3), Piercing (2)",,90,50x50
-War Engine,Dragon Breath,Individual,6,-,4,4,0,10/12,"Elite, Breath Attack (15)",,90,50x50
-Hero,Tree Herder,Individual,6,3,-,6,7,18/20,"CS (3), Vanguard, Inspiring, Pathfinder, Surge (8)",,260,50x50
-Hero,Elven King,Individual,6,3,-,5,5,13/15,"Elite, CS (1), Individual, Inspiring","Horse|+20|Set (Speed,9);Sabre-Toothed Pussycat|+10",120,20x20
-Hero,Drakon Rider Lord,Individual,10,3,-,5,5,13/15,"Elite, CS (1), TC (1), Fly, Inspiring",,160,50x50
-Hero,Dragon Kindred Lord,Individual,10,3,-,5,10,17/19,"Elite, CS (3), Fly, Inspiring, Breath Attack (15)",,310,50x50
-Hero,Elven Prince,Individual,6,3,-,5,3,11/13,"Elite, CS (1), Individual","Horse|+15|Set (Speed,9);Sabre-Toothed Pussycat|+10",60,20x20
-Hero,Noble War Chariot,Individual,8,3,4,4,4,11/13,"Elite, TC (2), Bow",,90,50x100
-Hero,Elven Mage,Individual,6,5,-,4,1,10/12,"Elite, Individual, Heal (3)","Lightning Bolt (5)|+45;Wind Blast (5)|+30;Fireball (10)|+10;Bane Chant (2)|+15;Horse|+15|Set (Speed,9);Sabre-Toothed Pussycat|+10",75,20x20
-Hero,Forest Warden,Individual,6,4,-,5,3,11/13,"CS (2), Vanguard, Nimble, Pathfinder",,75,40x40
-Hero,Army Standard Bearer,Individual,6,5,-,4,1,10/12,"Elite, Individual, Inspiring","Horse|+15|Set (Speed,9)",50,20x20
-Hero,Master Hunter,Individual,7,3,3,4,3,11/13,"Elite, Bow. Individual, Piercing (1), Stealthy, Pathfinder, Vanguard",Sabre-Toothed Pussycat|+10,90,20x20
-Hero,The Green Lady[1],Individual,10,-,-,6,0,14/16,"Elite, Fly, Inspiring, Regeneration (5+), Heal (8), Pathfinder, Sylvan Guard",Sabre-Toothed Pussycat|+10;Sabre-Toothed Pussycat|+10,200,20x20
-Hero,Argus Rodinar[1],Individual,-,-,-,5,-,-/13,"Elite, Individual, Altar of the Elements",,50,50x50
+# name,alignment,,,,,,,,,,,,,
+Elves,Good,,,,,,,,,,,,,
+# type,unit,size,Sp,Me,Ra,De,At,Ne,Special,Options,Points,Base,Irregular,Unique
+Infantry,Kindred Tallspears,Troop (10),6,4,-,4,10,10/12,"Elite, Phalanx",,100,20x20,,
+Infantry,Kindred Tallspears,Regiment (20),6,4,-,4,15,14/16,"Elite, Phalanx",,140,20x20,,
+Infantry,Kindred Tallspears,Horde (40),6,4,-,4,30,21/23,"Elite, Phalanx",,230,20x20,,
+Infantry,Kindred Archers,Troop (10),6,5,4,4,8,10/12,"Elite, Bows",,115,20x20,,
+Infantry,Kindred Archers,Regiment (20),6,5,4,4,10,14/16,"Elite, Bows",,150,20x20,,
+Infantry,Kindred Archers,Horde (40),6,5,4,4,20,21/23,"Elite, Bows",,250,20x20,,
+Infantry,Therennian Sea Guard,Regiment (20),6,4,5,4,12,14/16,"Elite, Bows, Phalanx",,170,20x20,,
+Infantry,Therennian Sea Guard,Horde (40),6,4,5,4,25,21/23,"Elite, Bows, Phalanx",,280,20x20,,
+Infantry,Kindred Gladestalkers,Troop (10),6,4,4,3,8,10/12,"Elite, Bows, Pathfinder, Vanguard",,130,20x20,,
+Infantry,Kindred Gladestalkers,Regiment (20),6,4,4,3,10,14/16,"Elite, Bows, Pathfinder, Vanguard",,175,20x20,,
+Infantry,Palace Guard,Troop (10),6,3,-,4,10,11/13,"Elite, CS (1)",,105,20x20,,
+Infantry,Palace Guard,Regiment (20),6,3,-,4,12,15/17,"Elite, CS (1)",,150,20x20,,
+Infantry,Hunters of the Wild,Troop (10),6,4,-,4,20,10/12,"Vanguard, Pathfinder",,135,20x20,,
+Infantry,Hunters of the Wild,Regiment (20),6,4,-,4,25,14/16,"Vanguard, Pathfinder",Green Lady's Wild Guard|+20,190,20x20,,
+Large Infantry,Forest Shamblers,Regiment (3),6,4,-,5,9,-/14,"CS (1), Vanguard, Pathfinder, Shambling",,125,40x40,,
+Large Infantry,Forest Shamblers,Horde (6),6,4,-,5,18,-/17,"CS (1), Vanguard, Pathfinder, Shambling",,190,40x40,,
+Cavalry,Stormwind Cavalry,Troop (5),9,3,-,5,8,11/13,"Elite, TC (2)",,140,25x50,,
+Cavalry,Stormwind Cavalry,Regiment (10),9,3,-,5,16,14/16,"Elite, TC (2)",,215,25x50,,
+Cavalry,Silverbreeze Cavalry,Troop (5),10,5,4,4,7,11/13,"Elite, Bows, Nimble",,145,25x50,,
+Large Cavalry,Drakon Riders,Regiment (3),10,3,-,5,9,12/14,"Elite, CS (1), TC (1), Fly",,175,50x50,,
+Large Cavalry,Drakon Riders,Horde (6),10,3,-,5,18,15/17,"Elite, CS (1), TC (1), Fly",,270,50x50,,
+Large Cavalry,War Chariots,Regiment (3),8,4,4,4,8,12/14,"Elite, Bows. TC (2)",,140,50x100,,
+Large Cavalry,War Chariots,Horde (6),8,4,4,4,16,15/17,"Elite, Bows. TC (2)",,215,50x100,,
+War Engine,Bolt Thrower,Individual,6,-,4,4,2,10/12,"Elite, Reload!, Blast (1D3), Piercing (2)",,90,50x50,,
+War Engine,Dragon Breath,Individual,6,-,4,4,0,10/12,"Elite, Breath Attack (15)",,90,50x50,,
+Hero,Tree Herder,Individual,6,3,-,6,7,18/20,"CS (3), Vanguard, Inspiring, Pathfinder, Surge (8)",,260,50x50,,
+Hero,Elven King,Individual,6,3,-,5,5,13/15,"Elite, CS (1), Individual, Inspiring","Horse|+20|Set (Speed,9);Sabre-Toothed Pussycat|+10",120,20x20,,
+Hero,Drakon Rider Lord,Individual,10,3,-,5,5,13/15,"Elite, CS (1), TC (1), Fly, Inspiring",,160,50x50,,
+Hero,Dragon Kindred Lord,Individual,10,3,-,5,10,17/19,"Elite, CS (3), Fly, Inspiring, Breath Attack (15)",,310,50x50,,
+Hero,Elven Prince,Individual,6,3,-,5,3,11/13,"Elite, CS (1), Individual","Horse|+15|Set (Speed,9);Sabre-Toothed Pussycat|+10",60,20x20,,
+Hero,Noble War Chariot,Individual,8,3,4,4,4,11/13,"Elite, TC (2), Bow",,90,50x100,,
+Hero,Elven Mage,Individual,6,5,-,4,1,10/12,"Elite, Individual, Heal (3)","Lightning Bolt (5)|+45;Wind Blast (5)|+30;Fireball (10)|+10;Bane Chant (2)|+15;Horse|+15|Set (Speed,9);Sabre-Toothed Pussycat|+10",75,20x20,,
+Hero,Forest Warden,Individual,6,4,-,5,3,11/13,"CS (2), Vanguard, Nimble, Pathfinder",,75,40x40,,
+Hero,Army Standard Bearer,Individual,6,5,-,4,1,10/12,"Elite, Individual, Inspiring","Horse|+15|Set (Speed,9)",50,20x20,,
+Hero,Master Hunter,Individual,7,3,3,4,3,11/13,"Elite, Bow. Individual, Piercing (1), Stealthy, Pathfinder, Vanguard",Sabre-Toothed Pussycat|+10,90,20x20,,
+Hero,The Green Lady,Individual,10,-,-,6,0,14/16,"Elite, Fly, Inspiring, Regeneration (5+), Heal (8), Pathfinder, Sylvan Guard",Sabre-Toothed Pussycat|+10;Sabre-Toothed Pussycat|+10,200,20x20,,1
+Hero,Argus Rodinar,Individual,-,-,-,5,-,-/13,"Elite, Individual, Altar of the Elements",,50,50x50,,1

@@ -32,7 +32,8 @@ Stil/Design:
 
 Bugs:
 [ ]  Profilwert der auf '-' steht kann nicht mit Set(...,4) umgesetzt werden (z.B. Naiad Stalker mit Harpoon-gun bei Forces of Nature)
-
+[ ]  Beliebig viele Previews lassen sich oeffnen (Armee mit 2 Detachments, FoN und KoM, KoM als zweites und primary)
+[ ]  Wenn Preview-View offen ist, kann man keinen HTML-Export machen. Der Request sollte zum zug. Basisdokument zurückgeleitet werden.
 
 Langfristig:
 [ ]  Stat overhaul. Alle Stats sind Objekte, z.B. abgeleitet von D6Stat (Me/Ra/De z.b. 5+), IntStat (Sp, At), CompositeStat (Ne)
