@@ -16,6 +16,9 @@ class ArmyListModel(Model):
       else:
          name, points = args
          Model.__init__(self, ArmyList(name, points))
+         
+      self.settings = {}
+      self.settings["UseCokValidation"] = False
    
    def _GetHtmlUnitTable(self, unit):
       """ Create and return HTML code for unit table. """

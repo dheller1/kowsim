@@ -201,6 +201,48 @@ class UniqueUnitsAreUniqueRule(ValidationRule):
                                           "A unique unit may only occur once in the whole army list, but %s is present %d times." % (unitName, occs)))
       return msgs
    
+   
+class CokSpecialUnitsMaxThreeTimesRule(ValidationRule):
+   """ Check if units flagged as unique actually are unique in the army, regardless of their detachment.
+   (E.g. The Green Lady might occur in both Elves and Forces of Nature detachments.) """
+   def __init__(self):
+      ValidationRule.__init__(self, "COK_SpecialUnitsMaxThreeTimes")
+      
+   def Check(self, obj):
+      msgs = []
+      for det in obj.ListDetachments():
+         maxn = 3 if det.IsPrimary() else 1
+         unitMap = defaultdict(int)
+         for unit in det.ListUnits():
+            if unit.UnitType() in (ut.UT_HERO, ut.UT_WENG, ut.UT_MON):
+               unitMap[unit.Name()] += 1
+         for unitName, occs in unitMap.iteritems():
+            if occs > maxn:
+               msgs.append(ValidationMessage(ValidationMessage.VM_CRITICAL, "Unit %s chosen too often: Only %d allowed, but you fielded %d." % (unitName, maxn, occs),
+                                            "In a primary detachment, each Hero, War Engine, or Monster may only appear up to three times. In an allied detachment, only one occurrence is allowed."))
+      
+      return msgs
+
+
+class CokNoMagicItemsForAlliesRule(ValidationRule):
+   """ Check if units flagged as unique actually are unique in the army, regardless of their detachment.
+   (E.g. The Green Lady might occur in both Elves and Forces of Nature detachments.) """
+   def __init__(self):
+      ValidationRule.__init__(self, "COK_NoMagicItemsForAllies")
+      
+   def Check(self, obj):
+      msgs = []
+      for det in obj.ListDetachments():
+         if not det.IsPrimary():
+            for unit in det.ListUnits():
+               if unit.Item() is not None:
+                  msgs.append(ValidationMessage(ValidationMessage.VM_CRITICAL, "Allies may not be given magic artifacts (detachment %s)" % (det.CustomName()),
+                                            "The detachment '%s' has at least one magic artifact, but as an allied detachment it may not have any."))
+                  break
+      
+      return msgs
 
 ALL_VALIDATIONRULES = (PointsLimitFulfilledRule(), NumberOfPrimaryDetachmentsOkRule(), AlliedAlignmentsOkRule(),
                        NumberOfNonRegimentsOkRule(), MagicArtefactsAreUniqueRule(), UniqueUnitsAreUniqueRule())
+
+COK_ADDITIONALRULES = (CokSpecialUnitsMaxThreeTimesRule(), CokNoMagicItemsForAlliesRule())

@@ -9,7 +9,7 @@ from PySide.QtCore import Qt
 
 from command import AddSpecificUnitCmd, ChangeUnitCmd, ChangeUnitSizeCmd, ChangeUnitItemCmd, SetUnitOptionsCmd
 from kowsim.kow.unittype import ALL_UNITTYPES
-from kowsim.kow.validation import ArmyListValidator, ValidationMessage, ALL_VALIDATIONRULES 
+from kowsim.kow.validation import ArmyListValidator, ValidationMessage, ALL_VALIDATIONRULES, COK_ADDITIONALRULES
 from kowsim.mvc.mvcbase import View
 import kowsim.kow.stats as st
 import globals 
@@ -268,6 +268,12 @@ class ValidationWidget(View):
       return lwi
       
    def UpdateContent(self, hints=None):
+      # check if the rules have changed
+      if self.ctrl.model.settings["UseCokValidation"]:
+         self._validator._rules = ALL_VALIDATIONRULES + COK_ADDITIONALRULES
+      else:
+         self._validator._rules = ALL_VALIDATIONRULES
+         
       messages = self._validator.Check()
       self._messageLw.clear()
       valid = True

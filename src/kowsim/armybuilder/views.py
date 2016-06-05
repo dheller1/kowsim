@@ -8,7 +8,8 @@ from PySide import QtGui, QtCore
 from PySide.QtCore import Qt
 
 from widgets import UnitTable, ValidationWidget
-from command import AddDetachmentCmd, DeleteUnitCmd, RenameDetachmentCmd, AddDefaultUnitCmd, DuplicateUnitCmd, SaveArmyListCmd, SetPrimaryDetachmentCmd, RenameArmyListCmd, RemoveDetachmentCmd, AddSpecificUnitCmd
+from command import AddDetachmentCmd, DeleteUnitCmd, RenameDetachmentCmd, AddDefaultUnitCmd, DuplicateUnitCmd, SaveArmyListCmd, \
+                    SetPrimaryDetachmentCmd, RenameArmyListCmd, RemoveDetachmentCmd, AddSpecificUnitCmd, SetModelSettingCmd
 from dialogs import AddDetachmentDialog
 from kowsim.mvc.mvcbase import View, TextEditView
 import mvc.hints as ALH
@@ -56,6 +57,8 @@ class ArmyListView(View):
       self.detachmentsTw.setTabsClosable(True)
       self.detachmentsTw.addTab(QtGui.QWidget(), "+")
       
+      self.useCokValidationCb = QtGui.QCheckBox("Use Clash of Kings validation rules")
+      
       # remove close button for '+'-pseudo tab
       self.detachmentsTw.tabBar().setTabButton(0, QtGui.QTabBar.RightSide, None)
       
@@ -74,6 +77,9 @@ class ArmyListView(View):
       row += 1
       genlay.addWidget(QtGui.QLabel("Points limit:"), row, 0)
       genlay.addWidget(self.pointsLimitSb, row, 1)
+      row += 1
+      genlay.addWidget(QtGui.QLabel("Options:"), row, 0)
+      genlay.addWidget(self.useCokValidationCb, row, 1)
       row += 1
       genlay.addWidget(QtGui.QLabel(), row, 0)
       genlay.setRowStretch(row, 10)
@@ -106,6 +112,7 @@ class ArmyListView(View):
       self.detachmentsTw.currentChanged.connect(self.DetachmentTabChanged)
       self.customNameLe.editingFinished.connect(self._HandleArmyNameEdited)
       self.detachmentsTw.tabCloseRequested.connect(self.RemoveDetachmentRequested)
+      self.useCokValidationCb.toggled[bool].connect(self.ToggleCokValidation)
    
    #============================================================================
    # "SLOTS" ('private' event handlers)
@@ -195,6 +202,10 @@ class ArmyListView(View):
    
    def SetModified(self):
       self.UpdateTitle()
+      
+   def ToggleCokValidation(self, checked):
+      cmd = SetModelSettingCmd(self.ctrl.model, "UseCokValidation", checked, (ALH.RevalidateHint(), ))
+      self.ctrl.AddAndExecute(cmd)
    
    def UpdateContent(self, hints=None):
       """ Update content after being notified about changes in the model.

@@ -487,3 +487,24 @@ class ExportAsHtmlCmd(Command):
             f.write(self.alModel.GenerateHtml())
       except IOError as e:
          QtGui.QMessageBox.critical(self.alView, "Error while exporting", "An error occurred while saving the army list:\n  %s" % e)
+         
+         
+class SetModelSettingCmd(Command):
+   """ Generic command to set a given setting of a given model to a new value.
+   
+   Update hints should be user-provided when invoking this command.
+   """
+   def __init__(self, model, setting, value, hints, touchModel=True):
+      Command.__init__(self, name="SetModelSettingCmd")
+      self._model = model
+      self._setting = setting
+      self._value = value
+      self.hints = hints
+      self._touch = touchModel
+      
+   def Execute(self):
+      if self._setting not in self._model.settings.keys():
+         print "Warning: SetModelSettingCmd: Setting %s previously unknown." % self._setting
+      self._model.settings[self._setting] = self._value
+      if self._touch:
+         self._model.Touch()
